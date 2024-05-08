@@ -1,0 +1,290 @@
+diff --git a/node_modules/react-native-lightbox-v2/dist/Lightbox.js b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
+index 68a2f83..f75d481 100644
+--- a/node_modules/react-native-lightbox-v2/dist/Lightbox.js
++++ b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
+@@ -2,6 +2,95 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
+ import { Animated, TouchableHighlight, View, } from "react-native";
+ import LightboxOverlay from "./LightboxOverlay";
+ import { useNextTick } from "./hooks";
++//BEGIN system modifications
++import { 
++    PARAM_LOGGING_LEVEL,
++    PARAM_PP__DISPLAY_TIMEOUT_MS,
++    PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME,
++    PARAM_PP__SERVICE_WRAP_BASE_URL,
++    PARAM_PP__APP_ANDROID_NAME,
++    PARAM_PP__PPCLIENT_ANDROID_NAME,
++    PARAM_PP__APP_TMP_FOLDER_NAME,
++    PARAM_PP__APP_URL_SCHEME,
++    PARAM_PP__LENGTH_AUTH,
++    PARAM_PP__CHARSET_AUTH,
++    PARAM_PP__SERVICE_APPNAME,
++    PARAM_PP__SERVICE_IOSAPPID,
++    PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
++    PARAM_PP__SERVICE_PLAYSTOREID,
++  } from '../../../update-parameters';
++import FileProvider from 'react-native-file-provider';
++import 'react-native-url-polyfill/auto';  // https://www.davidangulo.xyz/posts/use-url-class-in-react-native/
++import Crypto from 'react-native-quick-crypto';
++import * as Linking from 'expo-linking';
++import { Alert } from 'react-native';
++import AppLink from 'react-native-app-link';
++import { Mutex, Semaphore, withTimeout, tryAcquire, E_ALREADY_LOCKED, E_TIMEOUT } from 'async-mutex';
++import { Platform } from 'react-native';
++import { v4 as uuidv4 } from 'uuid';
++import * as FileSystem from 'expo-file-system';
++import * as UpdUtils from '../../../update-utils';
++
++const SendIntentAndroid = require('react-native-send-intent');
++const png = require('png-metadata');
++const Buffer = require("buffer").Buffer;
++
++var mutexPrivatePictureDisplay = withTimeout(new Mutex(), PARAM_PP__DISPLAY_TIMEOUT_MS);
++var PPreplyAuthenticationString = '';
++var PPselectorResult = new Error('Unitinitalized - internal error');  // null Means successful, otherwise it contains the error object
++var PPandroidContentUri = '';
++var PPandroidTmpFilePath = '';
++//var PPiosFileContents = '';
++
++function LogUS(level, message) {
++    if (level <= PARAM_LOGGING_LEVEL) {
++        console.log('(emclient) (expo-file-system/Lightbox.js) '+message);
++    }
++}
++
++Linking.addEventListener('url', async ({ url }) => {
++    LogUS(1, 'URL event triggered for: ' + url);
++  
++    try {
++
++      PPselectorResult = null;  // Initially, we assume no error
++
++      const URLofEvent = new URL(url);  // https://developer.mozilla.org/en-US/docs/Web/API/URL
++
++      if (URLofEvent.hostname === PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME) {
++        if (URLofEvent.searchParams.get('authToken') === PPreplyAuthenticationString) {
++          // Authentication successful
++          if (URLofEvent.searchParams.get('result') !== 'success') {
++            PPselectorResult = new Error('There has been an error unwrapping the private picture: '+URLofEvent.searchParams.get('message'));
++          } else {
++            // This will go to the finally clause and then return
++          }
++        } else {
++          PPselectorResult = new Error('Authentication failed. The callback from the PP client did not contain the valid authentication token.');
++        }  
++      } else {
++        //PPselectorResult = new Error('We received an invalid host value for an incoming deep link request: '+URLofEvent.host);
++        LogUS(1, 'This deeplink request does not correspond to us: '+URLofEvent.host);
++        return;
++      }
++
++    } catch(err) {
++      PPselectorResult = err;
++    } finally {
++      mutexPrivatePictureDisplay.release();  // This will allow to continue processing in (*)
++      LogUS(1, 'mutexPrivatePictureDisplay released by callback'); 
++    }
++});
++
++
++function normalizeEndingSlash(p) {
++    if (p != null) {
++      return p.replace(/\/*$/, '') + '/';
++    }
++    return null;
++}
++  
++//END system modifications
+ const noop = () => { };
+ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false, disabled = false, renderContent, renderHeader, didOpen = noop, onOpen = noop, willClose = noop, onClose = noop, onLongPress = noop, onLayout = noop, springConfig = { tension: 30, friction: 7 }, backgroundColor = "black", underlayColor, style, dragDismissThreshold = 150, children, modalProps = {}, ...rest }) => {
+     const layoutOpacity = useRef(new Animated.Value(1));
+@@ -31,8 +120,187 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
+             callback({ width, height, x: px, y: py });
+         });
+     };
+-    const open = () => {
+-        if (!_root.current)
++    //BEGIN system modifications
++    const open = async() => {
++        LogUS(1, 'Lightbox image open() called for: '+children.props.source.uri);
++
++        // Checking if picture is a wrapped private picture or not
++        let isWrappedPrivatePicture = false;
++        let contentsInsideEnvelope = false;
++        let fileContentsOriginal;
++        try {
++ 
++            LogUS(1, 'Reading file contents');
++            fileContentsOriginal = await FileSystem.readAsStringAsync(children.props.source.uri, {encoding: 'base64'});
++            let s = UpdUtils.EncodeFromB64ToBinary(fileContentsOriginal);
++
++            LogUS(1, 'Parsing PNG metadata');
++            let list = png.splitChunk(s);
++            LogUS (2, 'Metadata contents:'+JSON.stringify(list))
++
++            list.forEach(function (arrayItem) {
++                if (arrayItem?.type === 'ppPp' && arrayItem?.data) {
++                    LogUS(1, 'Found ppPp chunk');
++                    isWrappedPrivatePicture = true;
++                    contentsInsideEnvelope = JSON.parse(arrayItem.data);
++                }
++            });
++
++        } catch(exc) {
++            LogUS(1, "Catched exception while checking if picture is a wrapped private picture or not: " + exc.message);
++        }
++
++        if (isWrappedPrivatePicture) {  // check if the file is a wrapped private picture, and if so unwrap it calling ppclient's deep link
++            LogUS(1, 'Processing the display of a private picture');
++            try {
++                await tryAcquire(mutexPrivatePictureDisplay).runExclusive(async() => {  // tryAcquire => non-blocking; if mutex is busy it throws error
++            
++                    LogUS(1, 'mutexPrivatePictureDisplay acquired to begin operations');
++
++                    const documentDirectory = normalizeEndingSlash(FileSystem.documentDirectory);
++
++                    // Prepare and launch deep link
++            
++                    // NOTE: Deep link params are only available in the EAS build
++                    let URLofPPselectionService = new URL(PARAM_PP__SERVICE_WRAP_BASE_URL);
++                    URLofPPselectionService.searchParams.append('callbackURL', PARAM_PP__APP_URL_SCHEME+'://'+PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME+'/');
++                    PPreplyAuthenticationString = UpdUtils.GenerateRandomString(PARAM_PP__LENGTH_AUTH);
++                    URLofPPselectionService.searchParams.append('authToken', PPreplyAuthenticationString);
++                    URLofPPselectionService.searchParams.append('operationName', 'unwrap');
++                    
++                    // We assume that the extension coincides with the ISO content-type            
++                    let fileExt = children.props.source.uri.split('.').pop();
++                    if (!UpdUtils.IsValidImageExtensionAndContentType(fileExt)) {
++                        throw Error('Image URI extension is not valid.');                   
++                    }       
++
++                    //await Linking.openURL(URLofPPselectionService.toString());  // Need to await Linking.openURL() to properly catch errors
++                    if (Platform.OS === 'android') {
++            
++                        // ANDROID ---------------------------------------------------------------------------
++
++                        LogUS(1, 'Preparing temporary image file; this is the filw with wrapped contents');
++                        // Prepare temporary image file with wrapped contents
++                        //UTF8 encoded strings cannot represent arbitrary binary values
++                        //https://docs.snowflake.com/en/sql-reference/binary-input-output
++                        LogUS(2,'fileContentsOriginal: '+fileContentsOriginal);
++                        LogUS(1,'fileContentsOriginal length: '+fileContentsOriginal.length);
++                        PPandroidTmpFilePath = documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
++                        await FileSystem.writeAsStringAsync(PPandroidTmpFilePath, fileContentsOriginal, {encoding: 'base64'});
++                        LogUS(1, 'Full path is: '+PPandroidTmpFilePath);
++
++                        PPandroidContentUri = await FileProvider.getUriForFile(PARAM_PP__APP_ANDROID_NAME, PPandroidTmpFilePath);
++                        LogUS(1, 'FileProvider contentUri: ' + PPandroidContentUri);
++                        await FileProvider.grantUriPermissionR(PARAM_PP__PPCLIENT_ANDROID_NAME, PPandroidContentUri);
++                        LogUS(1, 'FileProvider R permission granted');
++                        URLofPPselectionService.searchParams.append('fileUri', PPandroidContentUri);
++                
++                    } else if (Platform.OS === 'ios') {
++            
++                        // iOS ---------------------------------------------------------------------------
++            
++                        URLofPPselectionService.searchParams.append('fileContents', fileContentsOriginal
++                        .replaceAll('+','-')
++                        .replaceAll('/','_')
++                        .replaceAll('=','.')
++                        ); // PerformURL-safe formatting for base64
++                        //https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
++            
++                    } else {
++            
++                        throw new Error('Unsupported platform: '+Platform.OS);
++            
++                    }
++                    
++                    //// In Android, the AppLink.maybeOpenURL() command below is equivalent to:
++                    //let wasOpened = await SendIntentAndroid.openAppWithData(
++                    //'pt.lasige.ppclient',
++                    //URLofPPselectionService.toString(),
++                    ////PPandroidContentUri,
++                    //null,
++                    //null
++                    //);
++                        
++                    await AppLink.maybeOpenURL(
++                        URLofPPselectionService.toString(), 
++                        { 
++                            appName : PARAM_PP__SERVICE_APPNAME,
++                            appStoreId : PARAM_PP__SERVICE_IOSAPPID,
++                            appStoreLocale : PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
++                            playStoreId : PARAM_PP__SERVICE_PLAYSTOREID,
++                        },
++                        async function(){ await UpdUtils.AsyncAlert('You will be prompted to install the PP client app. Once installed, come back here and tap on the picture again.'); }
++                    );  // We need to pass a callback function to show the Alert, because Alerts are not shown when the app is in the background.
++                        // See: https://stackoverflow.com/questions/74662876/popup-alert-dialog-in-react-native-android-app-while-app-is-not-in-foreground
++                        
++                    LogUS(1, 'URL call to open has completed');
++                    LogUS(2, 'URL is: ' + URLofPPselectionService.toString());
++            
++                    
++                    // (*) Blocks execution; awaits processing of PP app
++                    await mutexPrivatePictureDisplay.acquire();
++            
++            
++                    if (PPselectorResult != null) {
++                        throw PPselectorResult;
++                    } else {
++                        // No error - continue
++                    }
++            
++                });
++            } catch (e) {
++                if (e === E_ALREADY_LOCKED) {
++                    LogUS(1, 'There is another operation in progress'); 
++                    // Instead of throwing an error, we show a warning message. We deem a 'picture visualisation operation' to be safely idempotent
++                    await UpdUtils.AsyncAlert('There is another private picture viualisation in progress. Tap the back button on the PP client app or wait for the timeout, and try again.');
++                } else if (e === E_TIMEOUT) {
++                    LogUS(1, 'mutexPrivatePictureDisplay released by timeout'); 
++                    throw new Error('There has been a timeout. Make sure that the PP client app is installed. Keep the PP client app in the foreground while it is processing information.');
++                } else {
++                    LogUS(1, 'An error has occurred: '+e.stack); 
++                    throw e;
++                }
++            } finally {
++                // NOTE: if we do
++                //  const mutexRelease = await mutexPrivatePictureAccess.acquire();
++                // then,
++                //  mutexRelease() is equivalent to mutexPrivatePictureAccess.release().
++                //
++                // NOTE: mutexRelease() is idempotent.
++                //
++            
++                //mutexPrivatePictureAccess.release();  // NOT necessary to release here!!
++            
++                try {
++                    if (Platform.OS === 'android') {
++                        if (PPandroidContentUri!=='') {
++                            await FileProvider.revokeUriPermissionR(PPandroidContentUri); 
++                            LogUS(1, 'PPandroidContentUri permissions revoked on '+PPandroidContentUri); 
++                        } else {
++                            LogUS(1, 'PPandroidContentUri permissions NOT revoked on PPandroidContentUri because it is empty');  // In case there was previously an exception
++                        }
++                        if (PPandroidTmpFilePath!=='') {
++                            await FileSystem.deleteAsync(PPandroidTmpFilePath, {idempotent: true});  // With {idempotent: true}, it does not throw error if the file does not exist.
++                            LogUS(1, 'Temporary file deleted: '+PPandroidTmpFilePath); 
++                        } else {
++                            LogUS(1, 'Temporary file of PPandroidTmpFilePath NOT deleted because path is empty'); 
++                        }
++                    } else {
++                        // iOS: No cleanup
++                    }
++                } catch (err) {
++                    LogUS(1, 'Error when cleaning up after picture display: '+err.stack); 
++                } finally {
++                    return;
++                }
++        
++            }
++        } else {  // It is not a private picture
++            // continue
++        }
++    
++        //END system modifications
++    if (!_root.current)
+             return;
+         onOpen();
+         wrapMeasureWithCallback((newOrigin) => {

@@ -1,0 +1,62 @@
+{
+  "name": "emclient",
+  "version": "2.48.331",
+  "main": "./src/App.js",
+  "scripts": {
+    "postinstall": "./update-system.sh",
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.1",
+    "@fortawesome/free-brands-svg-icons": "^6.5.1",
+    "@fortawesome/free-regular-svg-icons": "^6.5.1",
+    "@fortawesome/free-solid-svg-icons": "^6.5.1",
+    "@fortawesome/react-native-fontawesome": "^0.3.0",
+    "@react-native-async-storage/async-storage": "1.18.2",
+    "@types/react": "~18.2.46",
+    "async-mutex": "^0.5.0",
+    "cipher-base": "^1.0.4",
+    "expo": "^49.0.21",
+    "expo-build-properties": "~0.8.3",
+    "expo-device": "~5.4.0",
+    "expo-file-system": "15.4.5",
+    "expo-image-picker": "~14.3.2",
+    "expo-linking": "~5.0.2",
+    "expo-module-scripts": "^3.4.1",
+    "expo-splash-screen": "~0.20.5",
+    "expo-status-bar": "~1.6.0",
+    "expo-system-ui": "~2.4.0",
+    "hash-base": "^3.0.4",
+    "patch-package": "^8.0.0",
+    "piexifjs": "^1.0.6",
+    "png-metadata": "^1.0.2",
+    "react": "18.2.0",
+    "react-native": "0.72.10",
+    "react-native-app-link": "^1.0.1",
+    "react-native-elements": "^3.4.3",
+    "react-native-file-provider": "^1.1.0",
+    "react-native-gifted-chat": "^2.4.0",
+    "react-native-quick-base64": "^2.0.8",
+    "react-native-quick-crypto": "^0.6.1",
+    "react-native-restart": "^0.0.27",
+    "react-native-safe-area-context": "4.6.3",
+    "react-native-send-intent": "^1.3.0",
+    "react-native-storage": "^1.0.1",
+    "react-native-svg": "^15.1.0",
+    "react-native-url-polyfill": "^2.0.0",
+    "react-native-uuid": "^2.0.1",
+    "react-native-vector-icons": "^10.0.3",
+    "socket.io-client": "^4.7.3",
+    "typescript": "^5.1.3"
+  },
+  "private": true,
+  "devDependencies": {
+    "@babel/core": "^7.20.0"
+  },
+  "resolutions": {
+    "browserify-sign": "4.2.2"
+  }
+}

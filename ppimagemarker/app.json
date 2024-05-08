@@ -1,0 +1,74 @@
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your contacts in private chats."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 33,
+            "targetSdkVersion": 34,
+            "usesCleartextTraffic": true
+          },
+          "ios": {
+            "deploymentTarget": "16.0"
+          }
+        }
+      ]
+    ],
+    "name": "ppimagemarker",
+    "slug": "ppimagemarker",
+    "scheme": "ppimagemarker",
+    "version": "2.2.396",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "pt.lasige.ppimagemarker",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to let users share images in private chats.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA_ROLL",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "package": "pt.lasige.ppimagemarker",
+      "versionCode": 276
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ee367600-6098-42d0-a95e-539944cfc964"
+      }
+    }
+  }
+}

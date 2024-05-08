@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "plugins": [
+      [
+        "./plugins/androidmanifesthttptraffic.js"
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your contacts in private chats."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 33,
+            "targetSdkVersion": 34,
+            "usesCleartextTraffic": true
+          },
+          "ios": {
+            "deploymentTarget": "16.0"
+          }
+        }
+      ]
+    ],
+    "name": "ppclient",
+    "slug": "ppclient",
+    "scheme": "pripro",
+    "version": "2.2.416",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "pt.lasige.ppclient",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to let users share images in private chats.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA_ROLL",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "package": "pt.lasige.ppclient",
+      "versionCode": 273
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e95e0e42-d7a5-4b52-8f94-9a71a98d0aba"
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+diff --git a/node_modules/expo-image-multiple-picker/lib/index.js b/node_modules/expo-image-multiple-picker/lib/index.js
+index ca8f7ea..31f2cf6 100644
+--- a/node_modules/expo-image-multiple-picker/lib/index.js
++++ b/node_modules/expo-image-multiple-picker/lib/index.js
+@@ -78,6 +78,16 @@ const styles = StyleSheet.create({
+         backgroundColor: 'white',
+         elevation: 1,
+     },
++    defaultHeaderButtonInvisible: {
++        opacity: 0,
++        alignItems: 'center',
++        justifyContent: 'center',
++        paddingVertical: 6,
++        paddingHorizontal: 12,
++        borderRadius: 4,
++        elevation: 3,
++        backgroundColor: 'black',
++    },
+     defaultHeaderButton: {
+         alignItems: 'center',
+         justifyContent: 'center',
+@@ -241,6 +251,16 @@ export class ImagePickerCarousel extends Component {
+         if (this.props.onSelect) {
+             this.props.onSelect([...this.state.selectedAssets.values()].map((s) => s.asset));
+         }
++
++        // Auto-save whenever there is a change
++        if (this.props.onSaveCarousel) {
++            this.props.onSaveCarousel([...this.state.selectedAssets.values()].map((s) => s.asset));
++        }
++        // Process individual image change
++        if (this.props.onImageChange) {
++            this.props.onImageChange(selected.asset, checked);
++        }
++
+         return true;
+     }
+     exists(asset_id) {
+@@ -515,7 +535,7 @@ function DefaultHeader(props) {
+                     props.imagesPicked,
+                     " images")),
+                 !props.multiple && (React.createElement(Text, { style: { fontSize: 20 } }, "Selected")),
+-                React.createElement(Pressable, { style: styles.defaultHeaderButton, onPress: props.save },
++                React.createElement(Pressable, { style: styles.defaultHeaderButtonInvisible, onPress: props.save },
+                     React.createElement(Text, { style: styles.defaultHeaderButtonText }, "SAVE")))))),
+         props.view == 'album' && (React.createElement(React.Fragment, null,
+             React.createElement(Text, { style: { fontSize: 20 } }, "Select an album")))));
+@@ -613,7 +633,7 @@ export function ImagePicker(props) {
+             React.createElement(View, { style: styles.rootHeader },
+                 React.createElement(Header, { view: 'gallery', imagesPicked: selectedAssets.length, picked: selectedAssets.length > 0, multiple: props.multiple || false, noAlbums: props.noAlbums || false, album: selectedAlbum, goToAlbum: goToAlbum, save: () => (props.onSave ? props.onSave(selectedAssets) : void 0) })),
+             React.createElement(View, { style: styles.rootBody },
+-                React.createElement(ImagePickerCarousel, { onSelect: setSelectedAssets, albumID: selectedAlbum ? selectedAlbum.id : undefined, multiple: props.multiple || false, columns: props.galleryColumns || 2, check: (_d = props.theme) === null || _d === void 0 ? void 0 : _d.check, selected: selectedAssets, max: props.limit, timeSlider: props.timeSlider, timeSliderHeight: props.timeSliderHeight, slider: (_e = props.theme) === null || _e === void 0 ? void 0 : _e.slider, video: props.video, videoComponent: (_f = props.theme) === null || _f === void 0 ? void 0 : _f.video, image: noImages ? false : true }))));
++                React.createElement(ImagePickerCarousel, { onSaveCarousel: (param1) => {props.onSave(param1)}, onImageChange: (param1, param2) => {props.onChange(param1, param2)}, onSelect: setSelectedAssets, albumID: selectedAlbum ? selectedAlbum.id : undefined, multiple: props.multiple || false, columns: props.galleryColumns || 2, check: (_d = props.theme) === null || _d === void 0 ? void 0 : _d.check, selected: selectedAssets, max: props.limit, timeSlider: props.timeSlider, timeSliderHeight: props.timeSliderHeight, slider: (_e = props.theme) === null || _e === void 0 ? void 0 : _e.slider, video: props.video, videoComponent: (_f = props.theme) === null || _f === void 0 ? void 0 : _f.video, image: noImages ? false : true }))));
+     }
+     else {
+         return (React.createElement(View, { style: styles.root },

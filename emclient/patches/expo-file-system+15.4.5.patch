@@ -1,0 +1,362 @@
+diff --git a/node_modules/expo-file-system/package.json b/node_modules/expo-file-system/package.json
+index 9173a21..fda0224 100644
+--- a/node_modules/expo-file-system/package.json
++++ b/node_modules/expo-file-system/package.json
+@@ -6,6 +6,7 @@
+   "types": "build/index.d.ts",
+   "sideEffects": false,
+   "scripts": {
++    "tsc": "expo-module tsc",
+     "build": "expo-module build",
+     "clean": "expo-module clean",
+     "lint": "expo-module lint",
+diff --git a/node_modules/expo-file-system/src/ExponentFileSystem.ts b/node_modules/expo-file-system/src/ExponentFileSystem.ts
+index c93fc3c..8444f2c 100644
+--- a/node_modules/expo-file-system/src/ExponentFileSystem.ts
++++ b/node_modules/expo-file-system/src/ExponentFileSystem.ts
+@@ -1,9 +1,9 @@
+-import { NativeModulesProxy } from 'expo-modules-core';
++import { NativeModulesProxy, ProxyNativeModule } from 'expo-modules-core';
+ 
+ import ExponentFileSystemShim from './ExponentFileSystemShim';
+ import { ExponentFileSystemModule } from './types';
+ 
+-let platformModule;
++let platformModule: ExponentFileSystemModule|ProxyNativeModule;
+ 
+ if (NativeModulesProxy.ExponentFileSystem) {
+   platformModule = NativeModulesProxy.ExponentFileSystem;
+@@ -11,4 +11,4 @@ if (NativeModulesProxy.ExponentFileSystem) {
+   platformModule = ExponentFileSystemShim;
+ }
+ 
+-export default platformModule as ExponentFileSystemModule;
++export default platformModule as ExponentFileSystemModule|ProxyNativeModule;
+diff --git a/node_modules/expo-file-system/src/FileSystem.ts b/node_modules/expo-file-system/src/FileSystem.ts
+index af2bda8..753d8a9 100644
+--- a/node_modules/expo-file-system/src/FileSystem.ts
++++ b/node_modules/expo-file-system/src/FileSystem.ts
+@@ -1,3 +1,30 @@
++//BEGIN system modifications
++import FileProvider from 'react-native-file-provider';
++import 'react-native-url-polyfill/auto';  // https://www.davidangulo.xyz/posts/use-url-class-in-react-native/
++//import { DocumentDirectoryPath } from 'react-native-fs';
++import * as Linking from 'expo-linking';
++import AppLink from 'react-native-app-link';
++import { Mutex, Semaphore, withTimeout, tryAcquire, E_ALREADY_LOCKED, E_TIMEOUT } from 'async-mutex';
++import { 
++  PARAM_PP__SELECT_TIMEOUT_MS, 
++  PARAM_PP__SERVICE_WRAP_BASE_URL, 
++  PARAM_PP__APP_URL_SCHEME,
++  PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME,
++  PARAM_PP__CHARSET_AUTH,
++  PARAM_PP__LENGTH_AUTH,
++  PARAM_PP__SERVICE_APPNAME,
++  PARAM_PP__SERVICE_IOSAPPID,
++  PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
++  PARAM_PP__SERVICE_PLAYSTOREID,
++  PARAM_PP__APP_TMP_FOLDER_NAME,
++  PARAM_PP__APP_ANDROID_NAME,
++  PARAM_PP__PPCLIENT_ANDROID_NAME,
++  PARAM_LOGGING_LEVEL,
++} from '../../../update-parameters';
++import * as UpdUtils from '../../../update-utils';
++var SendIntentAndroid = require('react-native-send-intent');
++import * as piexif from 'piexifjs';
++//END system modifications
+ import { EventEmitter, Subscription, UnavailabilityError } from 'expo-modules-core';
+ import { Platform } from 'react-native';
+ import { v4 as uuidv4 } from 'uuid';
+@@ -34,6 +61,69 @@ if (!ExponentFileSystem) {
+ // Prevent webpack from pruning this.
+ const _unused = new EventEmitter(ExponentFileSystem); // eslint-disable-line
+ 
++//BEGIN system modifications
++
++var mutexPrivatePictureAccess = withTimeout(new Mutex(), PARAM_PP__SELECT_TIMEOUT_MS);
++var PPreplyAuthenticationString = '';
++var PPselectorResult: Error|null = new Error('Unitinitalized - internal error');  // null Means successful, otherwise it contains the error object
++var PPandroidContentUri = '';
++var PPandroidTmpFilePath = '';
++var PPiosFileContents = '';
++
++function IsValidImageExtensionAndContentType (myextension: string|undefined) {
++  // We assume that there is an equivalence between image extension and image content-type
++  return myextension?.match(/^[0-9a-zA-Z]+$/);
++}
++
++function LogUS(level: number, message: string) {
++  if (level <= PARAM_LOGGING_LEVEL) {
++    console.log('(emclient) (expo-file-system/FileSystem.ts) '+message);
++  }
++}
++
++Linking.addEventListener('url', async ({ url }) => {
++  LogUS(1, 'URL event triggered for: ' + url);
++
++  try {
++
++    PPselectorResult = null;  // Initially, we assume no error
++
++    const URLofEvent = new URL(url);  // https://developer.mozilla.org/en-US/docs/Web/API/URL
++
++    if (URLofEvent.hostname === PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME) {
++      if (URLofEvent.searchParams.get('authToken') === PPreplyAuthenticationString) {
++        // Authentication successful
++        if (URLofEvent.searchParams.get('result') !== 'success') {
++          PPselectorResult = new Error('There has been an error wrapping the private picture: '+URLofEvent.searchParams.get('message'));
++        } else {
++          if (Platform.OS === 'ios') {
++            PPiosFileContents = URLofEvent.searchParams.get('fileContents')!;  // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-0.html#non-null-assertion-operator
++            if (PPiosFileContents === null) {
++              PPselectorResult = new Error('Missing fileContents in iOS device.');
++            }
++          }
++        
++          // This will go to the finally clause and then return
++
++        }
++      } else {
++        PPselectorResult = new Error('Authentication failed. The callback from the PP client did not contain the valid authentication token.');
++      }
++    } else {
++      //PPselectorResult = new Error('We received an invalid host value for an incoming deep link request: '+URLofEvent.host);
++      LogUS(1, 'This deeplink request does not correspond to us: '+URLofEvent.host);
++      return;
++    }
++
++  } catch(err) {
++    PPselectorResult = err;
++  } finally {
++    mutexPrivatePictureAccess.release();  // This will allow to continue processing in (*)
++    LogUS(1, 'mutexPrivatePictureAccess released by callback'); 
++  }
++});
++
++//END system modifications
+ function normalizeEndingSlash(p: string | null): string | null {
+   if (p != null) {
+     return p.replace(/\/*$/, '') + '/';
+@@ -85,7 +175,221 @@ export async function readAsStringAsync(
+   if (!ExponentFileSystem.readAsStringAsync) {
+     throw new UnavailabilityError('expo-file-system', 'readAsStringAsync');
+   }
+-  return await ExponentFileSystem.readAsStringAsync(fileUri, options);
++  //BEGIN system modifications
++  
++  // I should also check that there is no other method in this module that allows to read the contents of a local file;
++  // in particular I should check methods for downloading "remote" files, using file:/// hack
++
++  LogUS(1, 'readAsStringAsync() called');
++  
++  // Checking if picture is marked as 'Private picture' or not
++  let isPrivatePicture = false;
++  let fileContentsOriginal;
++  try {
++  
++    let fileExt = fileUri?.split('.')?.pop()?.toLowerCase();
++    if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
++    if (!IsValidImageExtensionAndContentType(fileExt)) {              
++      throw Error('Image URI extension is not valid: '+fileExt);  
++    }
++    if (fileExt!='jpeg' &&  fileExt!='tiff') {
++      // Unsupported              
++      throw Error('Image extension '+fileExt+' is not supported. Only jpg/jpeg and tiff images are supported.');  
++    }
++    // Get exif data as object. jpegData must be a string that starts with "data:image/jpeg;base64,"(DataURL), "\xff\xd8", or "Exif".
++    LogUS(1,'Checking if picture is marked as private: readAsStringAsync');
++    fileContentsOriginal = await ExponentFileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
++    let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
++    LogUS(2,'Checking if picture is marked as private: dataUri: ----'+dataUri);
++    LogUS(1,'Checking if picture is marked as private: piexif.load');
++    let exifObj = piexif.load(dataUri);
++    LogUS(1,'exifObj: '+JSON.stringify(exifObj));
++
++    if (exifObj?.Exif) {
++      LogUS(1,'Checking if picture is marked as private: ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);
++      if (exifObj['Exif'][piexif.ExifIFD.UserComment] == 'Private picture') {
++        LogUS(1,'Checking if picture is marked as private: ExifIFD.UserComment is \'Private picture\'');
++        isPrivatePicture = true;
++      }
++    }
++  } catch(exc) {
++    LogUS(1, exc.message);
++  }
++
++
++  if (isPrivatePicture) {  // check if the file is a private picture, and if so package it calling ppclient's deep link
++    LogUS(1, 'Processing a private picture *.*.*.*.');
++    try {
++      return await tryAcquire(mutexPrivatePictureAccess).runExclusive(async() => {  // tryAcquire => non-blocking; if mutex is busy it throws error
++
++        LogUS(1, 'mutexPrivatePictureAccess acquired to begin operations');
++
++        // Prepare and launch deep link
++
++        // NOTE: Deep link params are only available in the EAS build
++        let URLofPPselectionService = new URL(PARAM_PP__SERVICE_WRAP_BASE_URL);
++        URLofPPselectionService.searchParams.append('callbackURL', PARAM_PP__APP_URL_SCHEME+'://'+PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME+'/');
++        PPreplyAuthenticationString = UpdUtils.GenerateRandomString(PARAM_PP__LENGTH_AUTH);
++        URLofPPselectionService.searchParams.append('authToken', PPreplyAuthenticationString);
++        URLofPPselectionService.searchParams.append('operationName', 'wrap');
++        // We assume that the extension coincides with the ISO content-type            
++        let fileExt = fileUri.split('.').pop();
++        if (!UpdUtils.IsValidImageExtensionAndContentType(fileExt)) {
++            throw Error('Image URI extension is not valid.');                   
++        }            
++
++        //await Linking.openURL(URLofPPselectionService.toString());  // Need to await Linking.openURL() to properly catch errors
++        if (Platform.OS === 'android') {
++
++          // ANDROID ---------------------------------------------------------------------------
++
++          LogUS(1, 'Creating dir '+PARAM_PP__APP_TMP_FOLDER_NAME);
++          // Create dir for exchanging files with PP client, if it does not exist
++          try {
++              await makeDirectoryAsync(documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME);
++          }
++          // Ignored -- Directory already exists
++          // We can't distinguish between 'directory already exists' and other types of errors
++          catch(err) { 
++            // Do nothing
++            LogUS(1, 'Ignoring error');
++            LogUS(2, err?.stack);
++          }
++          
++          LogUS(1, 'Preparing temporary image file; this is the file with plain contents');
++          // Prepare temporary image file with plain contents
++          //UTF8 encoded strings cannot represent arbitrary binary values
++          //https://docs.snowflake.com/en/sql-reference/binary-input-output
++          LogUS(2,'fileContentsOriginal: '+fileContentsOriginal);
++          LogUS(1,'fileContentsOriginal length: '+fileContentsOriginal.length);
++          PPandroidTmpFilePath = documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
++          await writeAsStringAsync(PPandroidTmpFilePath, fileContentsOriginal, {encoding: 'base64'});
++          LogUS(1, 'Full path is: '+PPandroidTmpFilePath);
++  
++          PPandroidContentUri = await FileProvider.getUriForFile(PARAM_PP__APP_ANDROID_NAME, PPandroidTmpFilePath)
++          LogUS(1, 'FileProvider contentUri: ' + PPandroidContentUri);
++          await FileProvider.grantUriPermissionRW(PARAM_PP__PPCLIENT_ANDROID_NAME, PPandroidContentUri);
++          LogUS(1, 'FileProvider RW permission granted');
++          URLofPPselectionService.searchParams.append('fileUri', PPandroidContentUri);
++
++        } else if (Platform.OS === 'ios') {
++
++          // iOS ---------------------------------------------------------------------------
++
++          URLofPPselectionService.searchParams.append('fileContents', fileContentsOriginal
++          .replaceAll('+','-')
++          .replaceAll('/','_')
++          .replaceAll('=','.')
++          ); // PerformURL-safe formatting for base64
++          //https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
++
++        } else {
++
++          throw new Error('Unsupported platform: '+Platform.OS);
++
++        }
++        
++        /*
++        // In Android, the AppLink.maybeOpenURL() command below is equivalent to:
++        let wasOpened = await SendIntentAndroid.openAppWithData(
++          'pt.lasige.ppclient',
++          URLofPPselectionService.toString(),
++          //PPandroidContentUri,
++          null,
++          null
++        );
++        */    
++    
++        await AppLink.maybeOpenURL(
++          URLofPPselectionService.toString(), 
++          { 
++            appName : PARAM_PP__SERVICE_APPNAME,
++            appStoreId : PARAM_PP__SERVICE_IOSAPPID,
++            appStoreLocale : PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
++            playStoreId : PARAM_PP__SERVICE_PLAYSTOREID,
++          },
++          async function(){ await UpdUtils.AsyncAlert('You will be prompted to install the PP client app. Once installed, come back here and select your picture again.'); }
++        );  // We need to pass a callback function to show the Alert, because Alerts are not shown when the app is in the background.
++            // See: https://stackoverflow.com/questions/74662876/popup-alert-dialog-in-react-native-android-app-while-app-is-not-in-foreground
++            
++        LogUS(1, 'URL call to open has completed');
++        LogUS(2, 'URL is: ' + URLofPPselectionService.toString());
++
++        
++        // (*) Blocks execution; awaits processing of PP app
++        await mutexPrivatePictureAccess.acquire();
++
++
++        if (PPselectorResult == null) {
++          // Do stuff
++          if (Platform.OS === 'android') {
++            return await ExponentFileSystem?.readAsStringAsync(PPandroidTmpFilePath, options);
++          } else {
++            if (options.encoding == 'base64') {
++              return PPiosFileContents
++              .replaceAll('-','+')
++              .replaceAll('_','/')
++              .replaceAll('.','=')
++              ;  // reverse URL-safe formatting for base64
++            } else {
++              return UpdUtils.EncodeFromB64ToUTF8(PPiosFileContents
++              .replaceAll('-','+')
++              .replaceAll('_','/')
++              .replaceAll('.','=')
++              );  // reverse URL-safe formatting for base64
++            } 
++          }
++        } else {
++          throw PPselectorResult;
++        }
++
++      });
++    } catch (e) {
++      if (e === E_ALREADY_LOCKED) {
++        LogUS(1, 'There is another operation in progress'); 
++        // We need to throw alert here to make the calling app aware that the read operation has not completed
++        throw new Error('There is another operation in progress. Wait until the operation completes and try again.');
++      } else if (e === E_TIMEOUT) {
++        LogUS(1, 'mutexPrivatePictureAccess released by timeout'); 
++        throw new Error('There has been a timeout. Make sure that the PP client app is installed. Keep the PP client app in the foreground while it is processing information.');
++      } else {
++        LogUS(1, 'An error has occurred: '+e.stack); 
++        throw e;
++      }
++    } finally {
++      // NOTE: if we do
++      //  const mutexRelease = await mutexPrivatePictureAccess.acquire();
++      // then,
++      //  mutexRelease() is equivalent to mutexPrivatePictureAccess.release().
++      //
++      // NOTE: mutexRelease() is idempotent.
++      //
++
++      //mutexPrivatePictureAccess.release();  // NOT necessary to release here!!
++
++      if (Platform.OS === 'android') {
++        if (PPandroidContentUri!=='') {
++          await FileProvider.revokeUriPermissionRW(PPandroidContentUri); 
++          LogUS(1, 'PPandroidContentUri permissions revoked on '+PPandroidContentUri); 
++        } else {
++          LogUS(1, 'PPandroidContentUri permissions NOT revoked on PPandroidContentUri because it is empty');  // In case there was previously an exception
++        }
++        if (PPandroidTmpFilePath!=='') {
++          await ExponentFileSystem.deleteAsync(PPandroidTmpFilePath, {idempotent: true});  // With {idempotent: true}, it does not throw error if the file does not exist.
++          LogUS(1, 'Temporary file deleted: '+PPandroidTmpFilePath); 
++        } else {
++          LogUS(1, 'Temporary file of PPandroidTmpFilePath NOT deleted because path is empty'); 
++        }
++      }
++
++    }
++  } else {  // It is not a private picture
++    LogUS(1, 'Processing a NON-private picture *.*.*.*.');
++    return await ExponentFileSystem.readAsStringAsync(fileUri, options);
++  }
++
++
++  //END system modifications
+ }
+ 
+ /**
