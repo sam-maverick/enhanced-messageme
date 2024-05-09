@@ -81,6 +81,13 @@ echo "==========================================================================
     echo "We include package.json (by default it is excluded), and we exclude the build dir"
     echo "Check: https://github.com/ds300/patch-package#readme"
     rm -r ./patches/*
+    npx patch-package png-metadata --exclude "^dummy\$" --include "^lib/png-metadata\\.js\$"
+    RESULT=$?
+    if [ $RESULT != 0 ]; then
+        echo "Aborting on $RESULT, command failed:"
+        echo "npx patch-package ..."
+        exit $RESULT
+    fi
     npx patch-package expo-file-system --exclude "^dummy\$" --include "^tsconfig\\.json\$|^package\\.json\$|^src/"
     RESULT=$?
     if [ $RESULT != 0 ]; then
