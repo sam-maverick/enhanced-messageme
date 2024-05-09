@@ -27,7 +27,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro",
-    "version": "2.2.420",
+    "version": "2.2.421",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
