@@ -64,7 +64,14 @@ if [ "$3" = "savepatches" ]; then
     echo "Updating patch files with the latest changes"
     echo "Check: https://github.com/ds300/patch-package#readme"
     rm -r ./patches/*
-     npx patch-package expo-app-integrity --exclude "^dummy\$" --include "^android/build\\.gradle\$|^ios/"
+    npx patch-package react-native-file-provider --exclude "^dummy\$" --include "^android/build\\.gradle\$|^android/src"
+    RESULT=$?
+    if [ $RESULT != 0 ]; then
+        echo "Aborting on $RESULT, command failed:"
+        echo "npx patch-package ..."
+        exit $RESULT
+    fi
+    npx patch-package expo-app-integrity --exclude "^dummy\$" --include "^android/build\\.gradle\$|^ios/"
     RESULT=$?
     if [ $RESULT != 0 ]; then
         echo "Aborting on $RESULT, command failed:"

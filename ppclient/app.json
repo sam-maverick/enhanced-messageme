@@ -63,7 +63,7 @@
         "android.permission.READ_MEDIA_IMAGES"
       ],
       "package": "pt.lasige.ppclient",
-      "versionCode": 273
+      "versionCode": 274
     },
     "web": {
       "favicon": "./assets/favicon.png"
