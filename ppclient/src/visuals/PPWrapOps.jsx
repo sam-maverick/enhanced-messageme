@@ -99,9 +99,12 @@ export const PPWrapOpsComponent = (props) => {
                         (nextAppState === 'inactive' || nextAppState === 'background')
                     ) {
                   LogMe(1, 'App state changed from active to inactive|background');
-                  await ClearWorkingData({mode: 'full', androidContentUri: androidContentUriGlobal});
-                  setScreenToShow('jobcompleted');
+                  LogMe(1, 'Calling ClearWorkingData() for a partial clean on app state change');
+                  setTimerExpired(true);
+                  await ClearWorkingData({mode: 'partial', androidContentUri: androidContentUriGlobal});
                 }
+                // NOTE: Using inactive->active event is problematic because it makes the jobcompleted screen appear while it is still processing a private picture
+                /*
                 if (
                         appState.current.match(/inactive|background/) &&
                         nextAppState === 'active'
@@ -110,6 +113,7 @@ export const PPWrapOpsComponent = (props) => {
                   await ClearWorkingData({mode: 'full', androidContentUri: androidContentUriGlobal});
                   setScreenToShow('jobcompleted');
                 }
+                */
             });
                             
             // This can't be executed in ComponentRefresh!! It throws an error about updating component while rendering component
@@ -352,7 +356,7 @@ export const PPWrapOpsComponent = (props) => {
         if (urlParams?.operationName === 'wrap') {
             try {
                 LogMe(1, '--------- DO STUFF: wrap ------------');
-                setOperationTitle('Wraping you private picture...');
+                setOperationTitle('Wraping your private picture...');
                 setScreenToShow('wrapop');
                 // 
                 //
@@ -505,7 +509,7 @@ export const PPWrapOpsComponent = (props) => {
                 timeoutID = setTimeout(
                     async() => {
                         setTimerExpired(true);
-                        LogMe(1, 'calling ClearWorkingData() for a partial clean on setTimeout() timer expired');
+                        LogMe(1, 'Calling ClearWorkingData() for a partial clean on setTimeout() timer expired');
                         await ClearWorkingData({mode: 'partial', androidContentUri: urlParams?.fileUri});
                     }, 
                     10000
@@ -622,7 +626,7 @@ export const PPWrapOpsComponent = (props) => {
                 <View style={styles.centercenterflex1}>
     
                 <View style={styles.leftleft}>
-                    <Text style={styles.large}>Timer has expired</Text>
+                    <Text style={styles.large}>Picture has expired</Text>
                 </View>                
 
                 <View style={styles.leftleft}>
