@@ -237,9 +237,9 @@ export function IsValidImageExtensionAndContentType (myextension) {
 export async function LoadBaseImageAssetFileB64() {
   // Asset class requires `npx expo install expo-asset'
   // Do not change localUri symbol here
-  const [{ localUri }] = await Asset.loadAsync(require('../assets/custom/base_image_for_wrapping.png'));  // the 'require' syntax does not accept variables
-  LogMe(1,'GetPngBaseImageForWrapping(): localUri======'+JSON.stringify(localUri));
-  const contents = await FileSystem.readAsStringAsync(localUri, {encoding: 'base64'});
+  const myAsset = await Asset.loadAsync(require('../assets/custom/base_image_for_wrapping.png'));  // the 'require' syntax does not accept variables
+  LogMe(1,'GetPngBaseImageForWrapping(): myAsset======'+JSON.stringify(myAsset));
+  const contents = await FileSystem.readAsStringAsync(myAsset[0].localUri, {encoding: 'base64'});
   LogMe(2,'GetPngBaseImageForWrapping(): contents======'+JSON.stringify(contents));
   return contents;
 }

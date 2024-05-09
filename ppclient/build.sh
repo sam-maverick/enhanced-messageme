@@ -142,8 +142,11 @@ adb shell am force-stop $appname
 
 
 echo "Dummy commit"
-git add .
-git commit -m "Dummy commit"
+if [ -d ".git" ]; then
+  # Take action if $DIR exists. #
+    git add .
+    git commit -m "Dummy commit"
+fi
 
 
 echo "Incrementing version: $2"
@@ -152,8 +155,11 @@ npm version $2 --no-git-tag-version
 
 
 echo "Dummy commit"
-git add .
-git commit -m "Dummy commit"
+if [ -d ".git" ]; then
+  # Take action if $DIR exists. #
+    git add .
+    git commit -m "Dummy commit"
+fi
 
 
 echo "Prebuild cleanup"
