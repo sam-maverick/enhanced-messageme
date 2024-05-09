@@ -1,8 +1,8 @@
 diff --git a/node_modules/react-native-lightbox-v2/dist/Lightbox.js b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-index 68a2f83..f75d481 100644
+index 68a2f83..240a80d 100644
 --- a/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 +++ b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-@@ -2,6 +2,95 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
+@@ -2,6 +2,100 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
  import { Animated, TouchableHighlight, View, } from "react-native";
  import LightboxOverlay from "./LightboxOverlay";
  import { useNextTick } from "./hooks";
@@ -64,9 +64,14 @@ index 68a2f83..f75d481 100644
 +      if (URLofEvent.hostname === PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME) {
 +        if (URLofEvent.searchParams.get('authToken') === PPreplyAuthenticationString) {
 +          // Authentication successful
-+          if (URLofEvent.searchParams.get('result') !== 'success') {
++          if (URLofEvent.searchParams.get('result') === 'report') {
++            PPselectorResult = new Error('You requested to report the following picture:\n'+
++            URLofEvent.searchParams.get('RefImageUri')+'\n'+
++            'However, this function is not yet implemented.');
++          } else if (URLofEvent.searchParams.get('result') !== 'success') {
 +            PPselectorResult = new Error('There has been an error unwrapping the private picture: '+URLofEvent.searchParams.get('message'));
 +          } else {
++            // Success
 +            // This will go to the finally clause and then return
 +          }
 +        } else {
@@ -74,7 +79,7 @@ index 68a2f83..f75d481 100644
 +        }  
 +      } else {
 +        //PPselectorResult = new Error('We received an invalid host value for an incoming deep link request: '+URLofEvent.host);
-+        LogUS(1, 'This deeplink request does not correspond to us: '+URLofEvent.host);
++        LogUS(1, 'This deeplink request does not correspond to us: '+URLofEvent.hostname);
 +        return;
 +      }
 +
@@ -98,7 +103,7 @@ index 68a2f83..f75d481 100644
  const noop = () => { };
  const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false, disabled = false, renderContent, renderHeader, didOpen = noop, onOpen = noop, willClose = noop, onClose = noop, onLongPress = noop, onLayout = noop, springConfig = { tension: 30, friction: 7 }, backgroundColor = "black", underlayColor, style, dragDismissThreshold = 150, children, modalProps = {}, ...rest }) => {
      const layoutOpacity = useRef(new Animated.Value(1));
-@@ -31,8 +120,187 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
+@@ -31,8 +125,190 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
              callback({ width, height, x: px, y: py });
          });
      };
@@ -151,6 +156,7 @@ index 68a2f83..f75d481 100644
 +                    PPreplyAuthenticationString = UpdUtils.GenerateRandomString(PARAM_PP__LENGTH_AUTH);
 +                    URLofPPselectionService.searchParams.append('authToken', PPreplyAuthenticationString);
 +                    URLofPPselectionService.searchParams.append('operationName', 'unwrap');
++                    URLofPPselectionService.searchParams.append('imageUriReference', children.props.source.uri);
 +                    
 +                    // We assume that the extension coincides with the ISO content-type            
 +                    let fileExt = children.props.source.uri.split('.').pop();
@@ -275,12 +281,14 @@ index 68a2f83..f75d481 100644
 +                } catch (err) {
 +                    LogUS(1, 'Error when cleaning up after picture display: '+err.stack); 
 +                } finally {
++                    LogUS(1, 'Returning from Lightbox.js hook on a private picture'+undefined); 
 +                    return;
 +                }
 +        
 +            }
 +        } else {  // It is not a private picture
 +            // continue
++            LogUS(1, 'Returning from Lightbox.js hook on a non-private picture'+undefined); 
 +        }
 +    
 +        //END system modifications

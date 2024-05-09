@@ -33,7 +33,7 @@ index c93fc3c..8444f2c 100644
 -export default platformModule as ExponentFileSystemModule;
 +export default platformModule as ExponentFileSystemModule|ProxyNativeModule;
 diff --git a/node_modules/expo-file-system/src/FileSystem.ts b/node_modules/expo-file-system/src/FileSystem.ts
-index af2bda8..753d8a9 100644
+index af2bda8..82a71a4 100644
 --- a/node_modules/expo-file-system/src/FileSystem.ts
 +++ b/node_modules/expo-file-system/src/FileSystem.ts
 @@ -1,3 +1,30 @@
@@ -137,7 +137,7 @@ index af2bda8..753d8a9 100644
  function normalizeEndingSlash(p: string | null): string | null {
    if (p != null) {
      return p.replace(/\/*$/, '') + '/';
-@@ -85,7 +175,221 @@ export async function readAsStringAsync(
+@@ -85,7 +175,227 @@ export async function readAsStringAsync(
    if (!ExponentFileSystem.readAsStringAsync) {
      throw new UnavailabilityError('expo-file-system', 'readAsStringAsync');
    }
@@ -289,6 +289,7 @@ index af2bda8..753d8a9 100644
 +
 +        if (PPselectorResult == null) {
 +          // Do stuff
++          LogUS(1, 'Returning from FileSystem.ts hook on a private picture'+undefined); 
 +          if (Platform.OS === 'android') {
 +            return await ExponentFileSystem?.readAsStringAsync(PPandroidTmpFilePath, options);
 +          } else {
@@ -334,24 +335,29 @@ index af2bda8..753d8a9 100644
 +
 +      //mutexPrivatePictureAccess.release();  // NOT necessary to release here!!
 +
-+      if (Platform.OS === 'android') {
-+        if (PPandroidContentUri!=='') {
-+          await FileProvider.revokeUriPermissionRW(PPandroidContentUri); 
-+          LogUS(1, 'PPandroidContentUri permissions revoked on '+PPandroidContentUri); 
-+        } else {
-+          LogUS(1, 'PPandroidContentUri permissions NOT revoked on PPandroidContentUri because it is empty');  // In case there was previously an exception
++      try {
++        if (Platform.OS === 'android') {
++          if (PPandroidContentUri!=='') {
++            await FileProvider.revokeUriPermissionRW(PPandroidContentUri); 
++            LogUS(1, 'PPandroidContentUri permissions revoked on '+PPandroidContentUri); 
++          } else {
++            LogUS(1, 'PPandroidContentUri permissions NOT revoked on PPandroidContentUri because it is empty');  // In case there was previously an exception
++          }
++          if (PPandroidTmpFilePath!=='') {
++            await ExponentFileSystem.deleteAsync(PPandroidTmpFilePath, {idempotent: true});  // With {idempotent: true}, it does not throw error if the file does not exist.
++            LogUS(1, 'Temporary file deleted: '+PPandroidTmpFilePath); 
++          } else {
++            LogUS(1, 'Temporary file of PPandroidTmpFilePath NOT deleted because path is empty'); 
++          }
 +        }
-+        if (PPandroidTmpFilePath!=='') {
-+          await ExponentFileSystem.deleteAsync(PPandroidTmpFilePath, {idempotent: true});  // With {idempotent: true}, it does not throw error if the file does not exist.
-+          LogUS(1, 'Temporary file deleted: '+PPandroidTmpFilePath); 
-+        } else {
-+          LogUS(1, 'Temporary file of PPandroidTmpFilePath NOT deleted because path is empty'); 
-+        }
-+      }
++      } catch (err) {
++        LogUS(1, 'Error when cleaning up after picture read: '+err.stack); 
++      }     
 +
 +    }
 +  } else {  // It is not a private picture
 +    LogUS(1, 'Processing a NON-private picture *.*.*.*.');
++    LogUS(1, 'Returning from FileSystem.ts hook on a non-private picture'+undefined); 
 +    return await ExponentFileSystem.readAsStringAsync(fileUri, options);
 +  }
 +
