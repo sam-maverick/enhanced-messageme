@@ -60,7 +60,7 @@
         "android.permission.READ_MEDIA_IMAGES"
       ],
       "package": "pt.lasige.ppimagemarker",
-      "versionCode": 276
+      "versionCode": 277
     },
     "web": {
       "favicon": "./assets/favicon.png"
