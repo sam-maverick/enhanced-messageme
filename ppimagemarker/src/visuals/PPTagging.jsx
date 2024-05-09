@@ -1,7 +1,7 @@
 //import { StatusBar } from 'expo-status-bar';
 import React, {useState, useCallback, useEffect, useRef} from 'react';
 import { StyleSheet, Button, Text, TextInput, View, Alert, ScrollView, Platform, Image } from 'react-native';
-import * as Device from 'expo-device';
+
 import * as FileSystem from 'expo-file-system';
 import uuid from 'react-native-uuid';
 

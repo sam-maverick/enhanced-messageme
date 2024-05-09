@@ -69,27 +69,6 @@ if [ "$3" = "savepatches" ]; then
         echo "npx patch-package ..."
         exit $RESULT
     fi
-    npx patch-package expo-app-integrity --exclude "^dummy\$" --include "^android/|^ios/"
-    RESULT=$?
-    if [ $RESULT != 0 ]; then
-        echo "Aborting on $RESULT, command failed:"
-        echo "npx patch-package ..."
-        exit $RESULT
-    fi
-    npx patch-package expo-device --exclude "^dummy\$" --include "^android/build\\.gradle\$"
-    RESULT=$?
-    if [ $RESULT != 0 ]; then
-        echo "Aborting on $RESULT, command failed:"
-        echo "npx patch-package ..."
-        exit $RESULT
-    fi
-    npx patch-package expo-secure-store --exclude "^dummy\$" --include "^android/build\\.gradle\$"
-    RESULT=$?
-    if [ $RESULT != 0 ]; then
-        echo "Aborting on $RESULT, command failed:"
-        echo "npx patch-package ..."
-        exit $RESULT
-    fi
 fi
 if [ "$3" != "savepatches" ]; then
 echo
