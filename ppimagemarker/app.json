@@ -24,7 +24,7 @@
     "name": "ppimagemarker",
     "slug": "ppimagemarker",
     "scheme": "ppimagemarker",
-    "version": "2.2.399",
+    "version": "2.2.400",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
