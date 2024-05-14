@@ -2,6 +2,8 @@ import {  } from '../parameters.js';
 
 import * as FileSystem from 'expo-file-system';
 
+import Crypto from 'react-native-quick-crypto';
+
 var png = require('png-metadata');
 
 
@@ -61,6 +63,11 @@ export async function WrapPicture (plainPicture, fileExt) {
     LogMe(1, 'wrapPicture() called');
 
     // TBC: Wrap cryptographically
+
+
+    
+
+
 
     let ppPlainPictureObjectStr = JSON.stringify({'data': plainPicture, 'contentType': [fileExt]});
 
