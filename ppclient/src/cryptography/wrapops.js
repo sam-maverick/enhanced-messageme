@@ -69,7 +69,13 @@ export async function WrapPicture (plainPicture, fileExt) {
     // load from file
     //var sb64 = await FileSystem.readAsStringAsync(require('../../assets/custom/base_image_for_wrapping.png'), {encoding: 'base64'});
     //var sb64 = await FileSystem.readAsStringAsync('asset:/assets/custom/base_image_for_wrapping.png', {encoding: 'base64'});
-    var s = EncodeFromB64ToBinary(await LoadBaseImageAssetFileB64());
+    var s = EncodeFromB64ToBinary(require('../../bundled_files/json/base_image_for_wrapping.png.json').data);
+
+    // WARNING .-
+    // Referencinf Assets in Image components works fine in all cases.
+    // Reading Asset files works just fine with the bare workflow on metro, but it doesn't work with the production build of APK/AAB.
+    // Therefore, EncodeFromB64ToBinary() does not work
+    //var s = EncodeFromB64ToBinary(await LoadBaseImageAssetFileB64());
 
     // split
     var list = png.splitChunk(s);

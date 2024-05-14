@@ -2,7 +2,10 @@
   "expo": {
     "plugins": [
       [
-        "./plugins/androidmanifestfileproviderdefinitions.js"
+        "./plugins/android-manifest-fileprovider-definitions.js"
+      ],
+      [
+        "./plugins/jvm-memory.js"
       ],
       [
         "expo-image-picker",
@@ -32,7 +35,7 @@
     "name": "enhmessageme",
     "slug": "enhmessageme",
     "scheme": "enhmsm",
-    "version": "2.65.343",
+    "version": "260",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -68,7 +71,7 @@
         "CAMERA_ROLL"
       ],
       "package": "pt.lasige.enhmessageme",
-      "versionCode": 196
+      "versionCode": 198
     },
     "web": {
       "favicon": "./assets/favicon.png"

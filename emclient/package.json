@@ -1,9 +1,9 @@
 {
   "name": "emclient",
-  "version": "2.48.336",
+  "version": "2.48.375",
   "main": "./src/App.js",
   "scripts": {
-    "postinstall": "./update-system.sh",
+    "postinstall": "node ./update-system.js",
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",

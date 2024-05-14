@@ -2,6 +2,9 @@
   "expo": {
     "plugins": [
       [
+        "./plugins/jvm-memory.js"
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your contacts in private chats."
@@ -24,7 +27,7 @@
     "name": "ppimagemarker",
     "slug": "ppimagemarker",
     "scheme": "ppimagemarker",
-    "version": "2.2.400",
+    "version": "2.2.4001111",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -60,7 +63,7 @@
         "android.permission.READ_MEDIA_IMAGES"
       ],
       "package": "pt.lasige.ppimagemarker",
-      "versionCode": 277
+      "versionCode": 279
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -237,10 +237,27 @@ export function IsValidImageExtensionAndContentType (myextension) {
 export async function LoadBaseImageAssetFileB64() {
   // Asset class requires `npx expo install expo-asset'
   // Do not change localUri symbol here
-  const myAsset = await Asset.loadAsync(require('../assets/custom/base_image_for_wrapping.png'));  // the 'require' syntax does not accept variables
-  LogMe(1,'GetPngBaseImageForWrapping(): myAsset======'+JSON.stringify(myAsset));
-  const contents = await FileSystem.readAsStringAsync(myAsset[0].localUri, {encoding: 'base64'});
-  LogMe(2,'GetPngBaseImageForWrapping(): contents======'+JSON.stringify(contents));
+  //const contents1 = await FileSystem.readAsStringAsync('./myGeneralLibrary.jsx', {encoding: 'base64'});
+  //LogMe(1,'GetPngBaseImageForWrapping(): Done');
+
+  // WARNING .-
+  // Referencinf Assets in Image components works fine in all cases.
+  // Reading Asset files works just fine with the bare workflow on metro, but it doesn't work with the production build of APK/AAB.
+  // Therefore, the code below does not work
+
+  /*
+  const myAsset = Asset.fromModule(require('../assets/custom/base_image_for_wrapping.png'));  // the 'require' syntax does not accept variables
+
+  LogMe(1,'GetPngBaseImageForWrapping(): myAsset, before downloadAsync ======'+JSON.stringify(myAsset));
+  if (!myAsset.localUri) {
+    LogMe(1,'GetPngBaseImageForWrapping(): performing downloadAsync() on myAsset');
+    await myAsset.downloadAsync();
+  }
+  LogMe(1,'GetPngBaseImageForWrapping(): myAsset, after downloadAsync ======'+JSON.stringify(myAsset));
+
+  const contents = await FileSystem.readAsStringAsync(myAsset.localUri, {encoding: 'base64'});
+  LogMe(2,'GetPngBaseImageForWrapping(): contents ======'+JSON.stringify(contents));
   return contents;
+  */
 }
 
