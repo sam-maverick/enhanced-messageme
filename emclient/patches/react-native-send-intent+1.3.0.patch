@@ -20,7 +20,7 @@ index fcbbcad..5f251ea 100644
 +        /*
 +        Ooops:
 +        https://developer.android.com/training/package-visibility
-+        getLaunchIntentForPackage() may return null, and returns null in our scenario of pt.lasige.enhmessageme
++        getLaunchIntentForPackage() may return null, and returns null in our scenario of pt.lasige.safex.enhmessageme
 +        */
 +        //Log.d("react-native-send-intent", "packageName: "+packageName);
 +        //Log.d("react-native-send-intent", "openApp Intent: "+this.reactContext.getPackageManager().getLaunchIntentForPackage(packageName));

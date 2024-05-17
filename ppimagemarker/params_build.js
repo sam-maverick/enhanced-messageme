@@ -1,5 +1,5 @@
 
-appname = 'pt.lasige.ppimagemarker';
+appname = 'pt.lasige.safex.ppimagemarker';
 artifactname = 'ppimagemarker';
 mainactivity = 'MainActivity';
 

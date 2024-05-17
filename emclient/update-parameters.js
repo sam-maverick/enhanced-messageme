@@ -37,7 +37,7 @@ export const PARAM_PP__SERVICE_APPNAME = 'ppclient';
 /** 
  * PP app ID on the App Store (iOS), in string format
  */
-export const PARAM_PP__SERVICE_IOSAPPID = '6480115081';
+export const PARAM_PP__SERVICE_IOSAPPID = '6502830043';
 
 /** 
  * App Store's locale (iOS) where to find the PP app
@@ -47,7 +47,7 @@ export const PARAM_PP__SERVICE_IOSAPPSTORELOCALE = 'us';
 /** 
  * PP app package identifier on the Play Store (Android)
  */
-export const PARAM_PP__SERVICE_PLAYSTOREID = 'pt.lasige.ppclient';
+export const PARAM_PP__SERVICE_PLAYSTOREID = 'pt.lasige.safex.ppclient';
 
 /**
  * Protocol/Scheme of this app, to handle deep links
@@ -81,11 +81,11 @@ export const PARAM_PP__APP_TMP_FOLDER_NAME = 'ppSharedImages';
 /**
  * Android name given to the messaging app
  */
-export const PARAM_PP__APP_ANDROID_NAME = 'pt.lasige.enhmessageme';
+export const PARAM_PP__APP_ANDROID_NAME = 'pt.lasige.safex.enhmessageme';
 
 /**
  * Android name given to the PP client app
  */
-export const PARAM_PP__PPCLIENT_ANDROID_NAME = 'pt.lasige.ppclient';
+export const PARAM_PP__PPCLIENT_ANDROID_NAME = 'pt.lasige.safex.ppclient';
 
 

@@ -49,7 +49,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "pt.lasige.enhmessageme",
+      "bundleIdentifier": "pt.lasige.safex.enhmessageme",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "pripro"
@@ -70,8 +70,8 @@
         "WRITE_EXTERNAL_STORAGE",
         "CAMERA_ROLL"
       ],
-      "package": "pt.lasige.enhmessageme",
-      "versionCode": 198
+      "package": "pt.lasige.safex.enhmessageme",
+      "versionCode": 200
     },
     "web": {
       "favicon": "./assets/favicon.png"

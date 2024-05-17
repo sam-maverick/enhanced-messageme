@@ -95,26 +95,34 @@ export async function WriteMyFileStream (path, mode, append, data) {
 
 
 
-
-
-export function EncodeFromB64ToBinary (str) {
+export function EncodeFromB64ToBuffer (str) {
   LogMe(1,'EncodeFromB64ToBinary() called');
-  return Buffer.from(str, 'base64').toString('binary');
+  return Buffer.from(str, 'base64');  // Returns a Buffer
+}
+
+export function EncodeFromBufferToB64 (buff) {
+  LogMe(1,'EncodeFromBinaryToB64() called');
+  return buff.toString('base64');  // Returns a String
+}
+
+export function EncodeFromB64ToBinary (str) {  // Affected by caveat: https://nodejs.org/api/crypto.html#using-strings-as-inputs-to-cryptographic-apis
+  LogMe(1,'EncodeFromB64ToBinary() called');
+  return Buffer.from(str, 'base64').toString('binary');  // Returns a String
 }
 
 export function EncodeFromBinaryToB64 (str) {
   LogMe(1,'EncodeFromBinaryToB64() called');
-  return Buffer.from(str, 'binary').toString('base64');
+  return Buffer.from(str, 'binary').toString('base64');  // Returns a String
 }
 
 export function EncodeFromB64ToUTF8 (str) {
   LogMe(1,'EncodeFromB64ToUTF8() called');
-  return Buffer.from(str, 'base64').toString('utf8');
+  return Buffer.from(str, 'base64').toString('utf8');  // Returns a String
 }
 
 export function EncodeFromUTF8ToB64 (str) {
   LogMe(1,'EncodeFromUTF8ToB64() called');
-  return Buffer.from(str, 'utf8').toString('base64');
+  return Buffer.from(str, 'utf8').toString('base64');  // Returns a String
 }
 
 
@@ -241,7 +249,7 @@ export async function LoadBaseImageAssetFileB64() {
   //LogMe(1,'GetPngBaseImageForWrapping(): Done');
 
   // WARNING .-
-  // Referencinf Assets in Image components works fine in all cases.
+  // Referencing Assets in Image components works fine in all cases.
   // Reading Asset files works just fine with the bare workflow on metro, but it doesn't work with the production build of APK/AAB.
   // Therefore, the code below does not work
 

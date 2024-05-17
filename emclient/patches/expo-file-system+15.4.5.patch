@@ -259,7 +259,7 @@ index af2bda8..b477f87 100644
 +        /*
 +        // In Android, the AppLink.maybeOpenURL() command below is equivalent to:
 +        let wasOpened = await SendIntentAndroid.openAppWithData(
-+          'pt.lasige.ppclient',
++          'pt.lasige.safex.ppclient',
 +          URLofPPselectionService.toString(),
 +          //PPandroidContentUri,
 +          null,

@@ -30,7 +30,14 @@ echo('==========================================================================
 echo();
 
 
-// Check parameters
+
+// Check parameters and compatibilities
+
+if (process.argv[2] === 'bare' && artifactname === 'ppimagemarker') {
+  echo('ERROR: The bare build is not supported with ppimagemarker. Functional anomalies have been detected with the expo-image-multiple-picker: It never finishes loading pictures. Use the APK/AAB build instead.');
+  exit(1);
+}
+
 if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'bare') {
   echo('The first parameter is the build type, and must be either \'apk\', \'aab\', or \'bare\'.');
   exit(1);
@@ -61,11 +68,11 @@ if (artifactname === 'ppclient') {
 if (artifactname === 'ppclient') {
   // In case we made changes to the app-integrity-android-standard module (remember to upstream changes within app-integrity-android-standard, first)
   echo('Updating app-integrity-android-standard module to the latest version');
-  myExec('npm update app-integrity-android-standard');
+  myExec('yarn add app-integrity-android-standard');
   env.RESULT = error();
   if (env.RESULT.toString() !== 'null') {
     echo('Aborting on ' + env.RESULT + ', command failed:');
-    echo('npm update ...');
+    echo('yarn add ...');
     exit(1);
   }
 }
@@ -103,7 +110,8 @@ myExec(`adb shell am force-stop ${appname}`);
 
 
 echo('Incrementing version: ' + process.argv[3]);
-myExec(`npm version ${process.argv[3]} --no-git-tag-version`);
+myExec(`yarn config set version-git-tag false`);
+myExec(`yarn version --${process.argv[3]}`);
 //myExec(`node ./increment_version_app_json.js ${process.argv[3]}`);
 require('./increment_version_app_json.js')(process.argv[3]);
 

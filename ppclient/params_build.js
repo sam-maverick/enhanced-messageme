@@ -1,5 +1,5 @@
 
-appname = 'pt.lasige.ppclient';
+appname = 'pt.lasige.safex.ppclient';
 artifactname = 'ppclient';
 mainactivity = 'MainActivity';
 

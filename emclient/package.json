@@ -1,6 +1,6 @@
 {
   "name": "emclient",
-  "version": "2.48.379",
+  "version": "2.48.383",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "node ./update-system.js",

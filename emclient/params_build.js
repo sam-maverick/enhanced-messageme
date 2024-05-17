@@ -1,5 +1,5 @@
 
-appname = 'pt.lasige.emclient';
+appname = 'pt.lasige.safex.enhmessageme';
 artifactname = 'emclient';
 mainactivity = 'MainActivity';
 

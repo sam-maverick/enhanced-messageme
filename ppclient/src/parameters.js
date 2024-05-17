@@ -4,7 +4,6 @@
 
 import * as Device from 'expo-device';
 
-
 /**
  * Quality of the image (resampling)
  * // from 0 to 1, float. 0=lowest resolution, 1=highest resolution
@@ -30,7 +29,7 @@ export const PARAM_IMAGES_DIRNAME = 'chatHistoryPictures';  // You shouldn't nee
 // NOTE: Setting this to anything other than 0 may significantly impact performance
 // NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
 // https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
-export const PARAM_LOGGING_LEVEL = 1;  // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 2;  // Change accordingly to your preference
 
 export const PARAM_GOOGLE_CLOUD_PROJECT_NUMBER = 48509944813;
 
@@ -56,7 +55,7 @@ export const PARAM_PP__IMAGEMARKER_APPNAME = 'ppimagemarker';
 /** 
  * ppimagemarker app ID on the App Store (iOS), in string format
 */
-export const PARAM_PP__IMAGEMARKER_IOSAPPID = '6499275744';
+export const PARAM_PP__IMAGEMARKER_IOSAPPID = '6502830634';
 
 /** 
  * App Store's locale (iOS) where to find the ppimagemarker app
@@ -66,7 +65,7 @@ export const PARAM_PP__IMAGEMARKER_IOSAPPSTORELOCALE = 'us';
 /** 
  * ppimagemarker app package identifier on the Play Store (Android)
 */
-export const PARAM_PP__IMAGEMARKER_PLAYSTOREID = 'pt.lasige.ppimagemarker';
+export const PARAM_PP__IMAGEMARKER_PLAYSTOREID = 'pt.lasige.safex.ppimagemarker';
  
 /**
  * Deep link to ppimagemarker's main activity
@@ -78,3 +77,16 @@ export const PARAM_PP__IMAGEMARKER_URL = 'ppimagemarker://pptagging';
  * Maximum processing time. Applies both to wrapping and unwrapping operations.
  */
 export const PARAM_PP__PROCESSING_TIMEOUT_MS = 3 * 60 * 1000;
+ 
+export const PARAM_PP__CRYPTO = {
+    'null_crypto': false,  // Set to true to do null-encryption for testing purposes. Do not set to true in production!!
+    'stage1': {
+        'encryption_algorithm': 'aes-256-cbc',
+        //Since the key is not a human password but random bits, we do not need to pbkdfify. If pbkdf needs to be enabled, check the source code of wrapops.js
+        //'pbkdf_algorithm': 'sha512',
+        //'pbkdf_iterations': 100000,
+    },
+    'stage2': {
+        'encryption_algorithm': 'rsa',  // Only 'rsa' is supported
+    },
+};

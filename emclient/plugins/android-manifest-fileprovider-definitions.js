@@ -31,7 +31,7 @@ const withAndroidManifestFileProviderConfigurations = config => {
     const providertagcontents = {
         $: {
             'android:name': 'com.artirigo.fileprovider.MyFileProvider',
-            'android:authorities': 'pt.lasige.enhmessageme',
+            'android:authorities': 'pt.lasige.safex.enhmessageme',
             'android:grantUriPermissions': 'true',
             'android:exported': 'false',
         },

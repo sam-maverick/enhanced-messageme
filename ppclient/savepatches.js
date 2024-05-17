@@ -16,3 +16,4 @@ exec('npx patch-package expo-image-multiple-picker --exclude "^dummy\\$" --inclu
 exec('npx patch-package react-native-blob-util --exclude "^dummy\\$" --include "^android/src/|^class/"');
 exec('npx patch-package expo-device --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$"');
 exec('npx patch-package expo-secure-store --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$"');
+exec('npx patch-package png-metadata --exclude "^dummy\\$" --include "^lib/png-metadata\\\\.js\\$"');

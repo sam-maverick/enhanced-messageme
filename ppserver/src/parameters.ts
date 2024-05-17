@@ -48,7 +48,7 @@ export const ANDROID_CHECK_MODE = 'server';
 /**
  * See https://developer.apple.com/account > Apps > <your_app>
  */
-export const IOS_BUNDLE_ID = 'pt.lasige.messageme';
+export const IOS_BUNDLE_ID = 'pt.lasige.safex.enhmessageme';
 
 /**
  * See https://developer.apple.com/account#MembershipDetailsCard
