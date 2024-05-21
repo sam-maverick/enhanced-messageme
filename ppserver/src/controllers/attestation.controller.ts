@@ -11,6 +11,8 @@ import { LogMe, GenerateRandomString, isAnInteger } from '../serverLibrary';
 import { CheckPlayIntegrity } from '../attestationapi/androidintegrityapi';
 import { CheckAppAttestation, CheckAppAssertion } from '../attestationapi/iosintegrityapi';
 
+import { decryptKey } from '../cryptography/cryptoFunctions';
+
 
 if (PARAM_TEST_MODE) {
     // We skip LogMe to make sure that the message is displayed
@@ -93,15 +95,6 @@ export class AttestationController {
   @Post('/submitAttestationTokenToServer')
   async submitAttestationTokenToServer(@Req() req) {
 
-    // DANGER ZONE
-    /*
-    return {
-        isSuccessful: true,
-        resultMessage: 'Attestation successful',
-      };
-    */
-   // END OF DANGER ZONE
-
     LogMe(1, 'Controller: attestations/submitAttestationTokenToServer');
 
     LogMe(2, 'Request contents:');
@@ -110,14 +103,9 @@ export class AttestationController {
 
     /**
      * Per-request global parameters:
-     * req.body.environment
-     * req.body.cookie
-     * req.body.platformVersion
-     * req.body.platformType
-     * 
-     * These parameters go in an array, as every request contains 1 or 2 subrequests
-     * req.body.requestType
-     * req.body.token
+     * req.body.{environment|cookie|platformVersion|platformType|encryptedKeyB64}
+     * Parameters that go in an array, as every request contains 1 or 2 subrequests:
+     * req.body.{requestType|token}
      */
 
     // Perform all checks
@@ -233,7 +221,7 @@ export class AttestationController {
                 );   
             }
     
-            LogMe(2, 'Result of the operation: '+JSON.stringify(resultOperation));
+            LogMe(2, 'Result of the operation #'+i+': '+JSON.stringify(resultOperation));
     
             // Check attestation
             if (resultOperation.status !== 'success') {
@@ -279,7 +267,7 @@ export class AttestationController {
                     );
                 }
     
-                LogMe(2, 'Result of the operation: '+JSON.stringify(resultOperation));
+                LogMe(2, 'Result of the operation #'+i+': '+JSON.stringify(resultOperation));
     
                 // Check attestation
                 if (resultOperation.status !== 'success') {
@@ -341,7 +329,7 @@ export class AttestationController {
                     );
                 }
     
-                LogMe(2, 'Result of the operation: '+JSON.stringify(resultOperation));
+                LogMe(2, 'Result of the operation #'+i+': '+JSON.stringify(resultOperation));
     
                 // Check assertion
                 if (resultOperation.status !== 'success') {
@@ -393,18 +381,15 @@ export class AttestationController {
 
     if(req.body.environment === 'PPWrapOps') {
 
-
-        // TBC
         // Success
         return {
             isSuccessful: true,
             resultMessage: 'Successful',
+            decryptedKey: await decryptKey(req.body.encryptedKeyB64),
         };        
-        
-        
 
     } else {
-        // Inform about success.
+        // Just inform about success
         return {
             isSuccessful: true,
             resultMessage: 'Successful',

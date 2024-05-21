@@ -3,12 +3,22 @@ import { PARAM_CHARSET_TOKENS, PARAM_LOGGING_LEVEL } from './parameters';
 import * as crypto from "crypto";
 
 
-export function LogMe(level, message) {
+export function LogMe(level: number, message: string) {
     if (level <= PARAM_LOGGING_LEVEL) {
         console.log(message);
     }
 }
 
+
+export function EncodeFromB64ToBuffer (str: string) {
+    LogMe(1,'EncodeFromB64ToBuffer() called');
+    return Buffer.from(str, 'base64');  // Returns a Buffer
+}
+  
+export function EncodeFromBufferToB64 (buff: Buffer) {
+    LogMe(1,'EncodeFromBufferToB64() called');
+    return buff.toString('base64');  // Returns a String
+}
 
 
 export function GetRandomIntInclusive(min: number, max:number) {

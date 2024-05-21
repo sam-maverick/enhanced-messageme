@@ -11,7 +11,7 @@ const POST_HEADERS = {
 
 
 
-export async function ApiSubmitAttestationTokenToServer(environment, cookie, platformType, platformVersion, requestType, token) {
+export async function ApiSubmitAttestationTokenToServer(environment, cookie, platformType, platformVersion, requestType, token, encryptedKeyB64) {
 
     LogMe(1, 'API: ApiSubmitAttestationTokenToServer');
 
@@ -26,6 +26,7 @@ export async function ApiSubmitAttestationTokenToServer(environment, cookie, pla
                 requestType: requestType, 
                 token: token,
             }],
+            encryptedKeyB64: encryptedKeyB64,
         }),
     })
     .then((res) => res.json())
@@ -35,7 +36,7 @@ export async function ApiSubmitAttestationTokenToServer(environment, cookie, pla
 
 
 
-export async function ApiSubmitTwoAttestationTokensToServer(environment, cookie, platformType, platformVersion, requestType1, token1, requestType2, token2) {
+export async function ApiSubmitTwoAttestationTokensToServer(environment, cookie, platformType, platformVersion, requestType1, token1, requestType2, token2, encryptedKeyB64) {
 
     LogMe(1, 'API: ApiSubmitAttestationTokenToServer');
 
@@ -53,6 +54,7 @@ export async function ApiSubmitTwoAttestationTokensToServer(environment, cookie,
                 requestType: requestType2, 
                 token: token2,
             }],
+            encryptedKeyB64: encryptedKeyB64,
         }),
     })
     .then((res) => res.json())

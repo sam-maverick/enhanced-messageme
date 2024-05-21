@@ -1,8 +1,12 @@
+
+//     DANGER ZONE !!!!!!!
+
 /**
- * DANGER ZONE !!!!!!!
  * When set to true, the server will accept all attestations/assertions requests as valid
  */
 export const PARAM_TEST_MODE = true;
+
+//     END OF DANGER ZONE
 
 
 export const PARAM_API_PORT = 3020;

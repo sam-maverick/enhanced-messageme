@@ -2,6 +2,10 @@
 const crypto = require('crypto'); 
 const fs = require("fs"); 
   
+if (!fs.existsSync('./secrets/')){
+    fs.mkdirSync('./secrets/');
+}
+  
 const keyPair = crypto.generateKeyPairSync(
     'rsa', {
         modulusLength: 3072,

@@ -95,12 +95,12 @@ export async function WriteMyFileStream (path, mode, append, data) {
 
 
 export function EncodeFromB64ToBuffer (str) {
-  LogMe(1,'EncodeFromB64ToBinary() called');
+  LogMe(1,'EncodeFromB64ToBuffer() called');
   return Buffer.from(str, 'base64');  // Returns a Buffer
 }
 
 export function EncodeFromBufferToB64 (buff) {
-  LogMe(1,'EncodeFromBinaryToB64() called');
+  LogMe(1,'EncodeFromBbufferToB64() called');
   return buff.toString('base64');  // Returns a String
 }
 

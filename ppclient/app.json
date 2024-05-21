@@ -35,7 +35,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro",
-    "version": "2.3.17",
+    "version": "2.3.18",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -71,7 +71,7 @@
         "android.permission.READ_MEDIA_IMAGES"
       ],
       "package": "pt.lasige.safex.ppclient",
-      "versionCode": 310
+      "versionCode": 311
     },
     "web": {
       "favicon": "./assets/favicon.png"
