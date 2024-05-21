@@ -31,15 +31,27 @@ import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer, ApiTestNetwor
 
 import * as AppIntegrity from '../integrity/integrityapis.js';
  
-import { DoWarmup, CheckIntegrity, DoKeygen } from './PPIntegrity.jsx';
+import { DoWarmup, CheckIntegrity, DoKeygen } from '../integrity/integrityapis.js';
+
+import { useNavigation } from '@react-navigation/native';
+
+
+
+var currentProps = undefined;
 
 
 
 export const PPEnrollmentComponent = (props) => {
 
+    LogMe(1, 'props of PPEnrollment: '+JSON.stringify(props));
+    currentProps = props;
+    const navigation = useNavigation();
+
     const [initStatus, setInitStatus] = useState({ key: 'init' });
     const [propsState, setPropsState] = useState(props.route.params);
-
+    const [propsStateSync, setPropsStateSync] = useState({ key: props.route.params });
+    LogMe(1, 'propsState of PPEnrollment: '+JSON.stringify(propsState));
+ 
     // Internal state, only initialized when 
     const [internalSyncState, setInternalState] = useState({ attempted: false, completed: false });
     const [internalDummyState, setInternalDummyState] = useState();  // Used to force refresh
@@ -63,25 +75,28 @@ export const PPEnrollmentComponent = (props) => {
     var callbackOnFinishFunction;
     if (props.callbackOnFinish!=undefined)  {
         callbackOnFinishFunction = props.callbackOnFinish;
-        LogMe(2, 'callbackOnFinishFunction is: configured');
+        LogMe(1, 'callbackOnFinishFunction is: configured');
     } else {
         callbackOnFinishFunction = function () {};
-        LogMe(2, 'callbackOnFinishFunction is: void');
+        LogMe(1, 'callbackOnFinishFunction is: void');
     }
 
     async function SetAttempted(newState) {
       
         //NO:internalSyncState.attempted = newState;
 
-        let cloneOfProps = {AccountData: propsState.AccountData};  // Force pass-by-value
+        let cloneOfProps = {AccountData: propsStateSync.key.AccountData};  // Force pass-by-value
         cloneOfProps.AccountData.enrollmentAttempted = newState;
         try {
-            await storage.save({
+            const storagenewdata = {
                 key: 'accountData', // Note: Do not use underscore("_") in key!
                 data: cloneOfProps.AccountData,
-            });
+            };
+            await storage.save(storagenewdata);
+            LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));
 
             setPropsState(cloneOfProps);
+            propsStateSync.key = cloneOfProps;
 
             setLastResult('fail');
 
@@ -100,17 +115,20 @@ export const PPEnrollmentComponent = (props) => {
         //NO_internalSyncState.attempted = true;
         //NO:internalSyncState.completed = true;
 
-        let cloneOfProps = {AccountData: propsState.AccountData};  // Force pass-by-value
+        let cloneOfProps = {AccountData: propsStateSync.key.AccountData};  // Force pass-by-value
         // Cookies are already saved by CheckIntegrity()
         cloneOfProps.AccountData.enrollmentAttempted = newState;  
         cloneOfProps.AccountData.enrollmentCompleted = newState;  
         try {
-            await storage.save({
+            const storagenewdata = {
                 key: 'accountData', // Note: Do not use underscore("_") in key!
                 data: cloneOfProps.AccountData,
-            });
+            };
+            await storage.save(storagenewdata);
+            LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));
 
             setPropsState(cloneOfProps);
+            propsStateSync.key = cloneOfProps;
 
             setSavingStatus('Done');  // Successful
 
@@ -147,7 +165,7 @@ export const PPEnrollmentComponent = (props) => {
 
         internalSyncState.attempted = false;
 
-        setInternalDummyState('dummy data');  // Force refreprops.requestedUrlParamssh now
+        setInternalDummyState('dummy data');  // Force refresh now
 
         AttemptEnrollment();
     }
@@ -155,7 +173,7 @@ export const PPEnrollmentComponent = (props) => {
 
     async function AttemptEnrollment() {
         LogMe(1, 'AttemptEnrollment()');
-        LogMe(1, 'props: '+JSON.stringify(props));
+        LogMe(1, 'props.route.params: '+JSON.stringify(props.route.params));
 
         try {
 
@@ -186,14 +204,18 @@ export const PPEnrollmentComponent = (props) => {
                 
                     if (resultWarmup) {
                         LogMe(1, 'Warmup was successful');
-                        CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsState, function (newProps) { setPropsState(newProps); }, setAndroidAttestationStandardStatus, function () {}, 'standard', 'PPEcookie')
+                        CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAndroidAttestationStandardStatus, function () {}, 'standard', 'PPEcookie')
                         .then( async (resultStandard) => {
+
+                            LogMe(1, 'after standard att. propsStateSync.key='+JSON.stringify(propsStateSync.key));
 
                             if (resultStandard) {
                                 LogMe(1, 'Standard attestation was successful');
-                                CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsState, function (newProps) { setPropsState(newProps); }, setAndroidAttestationClassicStatus, function () {}, 'classic', 'PPEcookie')
+                                CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAndroidAttestationClassicStatus, function () {}, 'classic', 'PPEcookie')
                                 .then( async (resultClassic) => {
     
+                                    LogMe(1, 'after classic att. propsStateSync.key='+JSON.stringify(propsStateSync.key));
+
                                     if (resultClassic) {
                                         LogMe(1, 'Classic attestation was successful');
 
@@ -251,12 +273,12 @@ export const PPEnrollmentComponent = (props) => {
                     
                         if (resultKeygen) {
                             LogMe(1, 'Warmup was successful');
-                            CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsState, function (newProps) { setPropsState(newProps); }, setIosAttestationStatus, function () {}, 'attestation', 'PPEcookie')
+                            CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setIosAttestationStatus, function () {}, 'attestation', 'PPEcookie')
                             .then( async (resultAttestation) => {
     
                                 if (resultAttestation) {
                                     LogMe(1, 'Attestation was successful');
-                                    CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsState, function (newProps) { setPropsState(newProps); }, setIosAssertionStatus, function () {}, 'assertion', 'PPEcookie')
+                                    CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setIosAssertionStatus, function () {}, 'assertion', 'PPEcookie')
                                     .then( async (resultAssertion) => {
         
                                         if (resultAssertion) {
@@ -321,6 +343,7 @@ export const PPEnrollmentComponent = (props) => {
     }
 
 
+
     useEffect( () => {  // This is executed when the component is reloaded
         async function didMount() { // Do not change the name of this function
 
@@ -331,7 +354,17 @@ export const PPEnrollmentComponent = (props) => {
             // Warning: Despite not being formally an asynchronous function, setState is performed asynchronously
             // except if we access the state directly without its 'set' function and the value is a {} object:
 
-            LogMe(2, JSON.stringify(propsState));
+            const unsubscribe = navigation.addListener('focus', async () => {
+                // The screen is focused
+                // Call any action
+                LogMe(1, 'PPEnrollment: SCREEN FOCUS');
+                setPropsState(currentProps.route.params);
+                propsStateSync.key = currentProps.route.params;
+                LogMe(1, 'props of PPEnrollment on Screen Focus event: '+JSON.stringify(currentProps));
+            });                    
+
+            LogMe(2, 'propsState='+JSON.stringify(propsState));
+            LogMe(2, 'propsStateSync.key='+JSON.stringify(propsStateSync.key));
             internalSyncState.attempted = propsState.AccountData.enrollmentAttempted;
             internalSyncState.completed = propsState.AccountData.enrollmentCompleted;
             setInternalDummyState('dummy data');
@@ -373,7 +406,7 @@ export const PPEnrollmentComponent = (props) => {
             appStoreLocale : PARAM_PP__IMAGEMARKER_IOSAPPSTORELOCALE,
             playStoreId : PARAM_PP__IMAGEMARKER_PLAYSTOREID,
             },
-            async function(){ await AsyncAlert('You will be prompted to install the ppimagemarker app. Once installed, open the app and select the pictures you want to protect.'); }
+            async function(){ await AsyncAlert('You will be prompted to install the ppimagemarker app. Once installed, open the app and select the pictures you want to protect.', 'WARNING'); }
         );  // We need to pass a callback function to show the Alert, because Alerts are not shown when the app is in the background.
             // See: https://stackoverflow.com/questions/74662876/popup-alert-dialog-in-react-native-android-app-while-app-is-not-in-foreground
           

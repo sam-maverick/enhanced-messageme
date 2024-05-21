@@ -17,7 +17,6 @@ import { styles, LoadingComponent } from './myVisualsLibrary.jsx';
 
 
 
-
 export const PPInitComponent = ({ route, navigation }) => {
 
 
@@ -40,18 +39,17 @@ export const PPInitComponent = ({ route, navigation }) => {
             }
 
             try {
-
-                let retStorage = await storage.load({
+                const storagenewdata = {
                     syncInBackground: false,        
                     key: 'accountData',
-                });
+                };
+                let retStorage = await storage.load(storagenewdata);
+                LogMe(1,'Loaded from storage: '+JSON.stringify(retStorage));
                 
                 // Previously stored values
                 accountData.key = { ...retStorage };
                 UpdateLogMeUsername(retStorage.username);
-
-                LogMe(2, 'accountData found in local storage: '+JSON.stringify(retStorage));
-        
+      
             } catch(error) {
   
                 LogMe(2, 'Setting defaults for in-memory accountData');
@@ -63,7 +61,7 @@ export const PPInitComponent = ({ route, navigation }) => {
                   'PPEcookie': '',  
                   'enrollmentAttempted': false,  
                   'enrollmentCompleted': false,  
-                  'taggedPictures': [],  
+                  //'taggedPictures': [],  
                 };
   
                 // any exception including data not found goes to catch()

@@ -18,21 +18,44 @@ import storage from '../storage/storageApi.js';
 
 import { ApiTestNetworkConnection } from '../network/networkApi.js';
 
+import { useNavigation } from '@react-navigation/native';
 
 
 
+var currentProps = undefined;
 
 
-export const PPSettingsComponent = ({ route, navigation }) => {
+export const PPSettingsComponent = (props) => {
+
+    LogMe(1, 'props of PPSettings: '+JSON.stringify(props));
+    currentProps = props;
+    const navigation = useNavigation();
 
     const [initStatus, setInitStatus] = useState({ key: 'init' });
+    const [propsState, setPropsState] = useState(props.route.params);
+    const [propsStateSync, setPropsStateSync] = useState({key: props.route.params});
+    LogMe(1, 'propsState of PPSettings: '+JSON.stringify(propsState));
+
     const [networkStatus, setNetworkStatus] = useState('(press button)');
-    const [propsState, setPropsState] = useState(route.params);
+    const [storageDataShow, SetStorageDataShow] = useState();
 
     useEffect( () => {  // This is executed when the component is reloaded
         async function didMount() { // Do not change the name of this function
             // Do stuff
-            LogMe(1, 'useEffect of PPSettings invocation');           
+            LogMe(1, 'useEffect of PPSettings invocation');    
+            const unsubscribe = navigation.addListener('focus', () => {
+                // The screen is focused
+                // Call any action
+                LogMe(1, 'PPSettings: SCREEN FOCUS');
+                setPropsState(currentProps.route.params);
+                propsStateSync.key = currentProps.route.params;
+                LogMe(1, 'props of PPSettings on Screen Focus event: '+JSON.stringify(currentProps));
+            });                    
+            try {
+                SetStorageDataShow(JSON.stringify(propsStateSync.key));
+            } catch(error) {
+                SetStorageDataShow('Error / Empty');
+            }       
         }
         didMount();  // If we want useEffect to be asynchronous, we have to define didMount as async and call it right after
         return async function didUnmount() { // Do not change the name of this function
@@ -44,6 +67,7 @@ export const PPSettingsComponent = ({ route, navigation }) => {
 
     async function ComponentRefresh() {  // Invoked every time this screen is loaded
         LogMe(1, 'Refreshing PPSettings Component');
+
         if (initStatus.key === 'init') {
             LogMe(1, 'Initialising PPSettings Component');
             initStatus.key = 'updated'; //update without rendering
@@ -58,7 +82,7 @@ export const PPSettingsComponent = ({ route, navigation }) => {
         try {
             //setCurrentScreenInMainComponent('PPReload');                    
             //setCurrentScreenInMainComponent('Register');  
-            navigation.navigate('PPReload');
+            props.navigation.navigate('PPReload');
             await EraseLocalData();
             if (__DEV__) {
                 DevSettings.reload(); // Only in DEV
@@ -124,10 +148,12 @@ export const PPSettingsComponent = ({ route, navigation }) => {
         cloneOfProps.AccountData.username = newusername;
 
         try {
-            await storage.save({
+            const storagenewdata = {
                 key: 'accountData', // Note: Do not use underscore("_") in key!
                 data: cloneOfProps.AccountData,
-            });
+            };
+            await storage.save(storagenewdata);
+            LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));
         } catch(error) { 
             ErrorAlert(error.message, error);  // Storage error
         }
@@ -167,6 +193,15 @@ export const PPSettingsComponent = ({ route, navigation }) => {
                 </View>
                 <View style={styles.centerleftflex1}>
                     <ScrollView style={styles.scrollView}>{/* ScrollView already expands, so we set their children not to expand, otherwise the buttons expand */}
+
+                        <View style={styles.leftleft}>
+                            <Text style={{fontWeight: "bold"}}>Storage data: </Text>
+                        </View>
+                        <View style={styles.leftleft}>
+                            <Text>{ storageDataShow }</Text>
+                        </View>
+
+                        <Text />
 
                         <View style={styles.leftleft}>
                             <Text style={{fontWeight: "bold"}}>Username is: </Text>

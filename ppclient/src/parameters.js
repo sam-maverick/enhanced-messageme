@@ -29,7 +29,7 @@ export const PARAM_IMAGES_DIRNAME = 'chatHistoryPictures';  // You shouldn't nee
 // NOTE: Setting this to anything other than 0 may significantly impact performance
 // NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
 // https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
-export const PARAM_LOGGING_LEVEL = 2;  // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 1;  // Change accordingly to your preference
 
 export const PARAM_GOOGLE_CLOUD_PROJECT_NUMBER = 48509944813;
 
@@ -87,6 +87,9 @@ export const PARAM_PP__CRYPTO = {
         //'pbkdf_iterations': 100000,
     },
     'stage2': {
+        'encryption_algorithm': 'aes-256-cbc',
+    },
+    'stage3': {
         'encryption_algorithm': 'rsa',  // Only 'rsa' is supported
     },
 };

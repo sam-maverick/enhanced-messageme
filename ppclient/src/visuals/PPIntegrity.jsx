@@ -18,204 +18,24 @@ import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_IOS_KEY_IDENTIFIER } from '../
 
 import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer } from '../network/networkApi.js';
 
+import { useNavigation } from '@react-navigation/native';
 
-import * as AppIntegrity from '../integrity/integrityapis.js';
-
-
-
-
-/**
- * Executes attestation warmup. Only applies to Android's standard requests
- * @param {function} setAttestationStatusFunction Callback function to set informational status as string
- * @param {function} setAttestationTestInProgressFunction Callback function to set progress status as boolean; true means 'in progress'
- * @return Promise
- */
-export async function DoWarmup(setWarmupStatusFunction, setWarmupInProgressFunction) {
-    //console.log('param:'+PARAM_GOOGLE_CLOUD_PROJECT_NUMBER);
-    LogMe(1, 'Starting warmup');
-    setWarmupInProgressFunction(true);
-    setWarmupStatusFunction('Executing...');
-
-    return AppIntegrity.AndroidStandardWarmup(PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString())
-    .then( async () => {
-        setWarmupStatusFunction('Successful');
-        setWarmupInProgressFunction(false);
-        LogMe(1, 'Warmup OK');
-        return Promise.resolve(true);
-    })
-    .catch((error) => {
-        ErrorAlert("Error from AppIntegrity API.\n"+JSON.stringify(error), undefined);  // API error
-        setWarmupStatusFunction('ERROR');        
-        setWarmupInProgressFunction(false);
-        LogMe(1, 'Warmup KO');
-        return Promise.resolve(false);
-    });
-
-}
+import { DoKeygen, DoWarmup, CheckIntegrity } from '../integrity/integrityapis.js';
 
 
 
+var currentProps = undefined;
 
-/**
- * Checks App Attest attestation/assertion in iOS, or Play Integrity (standard/classic) in Android
- * @param {string} RequestType For iOS, set to 'attestation' or 'assertion'. For Android, set to 'classic' or 'standard'.
- * @param {function} setAttestationStatusFunction Callback function to set informational status ('Executing...', 'ERROR', 'FAILED', 'Success') as string
- * @param {function} setAttestationTestInProgressFunction Callback function to set progress status as boolean; true means 'in progress'
- * @return Promise
- */
-export async function CheckIntegrity(environment, keyIdentifier, someProps, saveMyProps, setAttestationStatusFunction, setAttestationTestInProgressFunction, RequestType, CookieName) {
-    //console.log('param:'+PARAM_GOOGLE_CLOUD_PROJECT_NUMBER);
-    setAttestationTestInProgressFunction(true);
-    setAttestationStatusFunction('Executing...');
+export const PPIntegrityComponent = (props) => {
 
-    LogMe(1, 'Requesting token from server');
-    let apiresgetnonce = undefined;        
-
-    // GET NONCE
-
-    try {
-        apiresgetnonce = await ApiGetNonceFromServer(someProps.AccountData[CookieName], Platform.OS, RequestType);
-    } catch(error) {
-        ErrorAlert('Error when requesting nonce to the PP server.', error);  // Network error
-        setAttestationStatusFunction('ERROR');
-        setAttestationTestInProgressFunction(false);
-        return Promise.resolve(false);
-    }
-
-    if (!apiresgetnonce.isSuccessful) {
-        ErrorAlert('Error on server side when requesting token: '+apiresgetnonce.resultMessage, undefined);  // Server-side application error
-        setAttestationStatusFunction('ERROR'); 
-        setAttestationTestInProgressFunction(false);
-        return Promise.resolve(false);                   
-    }
-
-    LogMe(1, 'Received nonce from server');
-    LogMe(2, 'Nonce is: '+apiresgetnonce.nonce);
-
-    // SAVE COOKIE
-
-    let cloneAccountData = { ...someProps.AccountData};
-    cloneAccountData[CookieName] = apiresgetnonce.cookie;
-    // We store cookie only if attestation was successful
-    // In practice, the cookie is only useful in iOS assertions
-    try {
-        await storage.save({
-            key: 'accountData', // Note: Do not use underscore("_") in key!
-            data: cloneAccountData,
-        });
-
-        saveMyProps({AccountData: cloneAccountData});
-        
-    } catch(error) { 
-        ErrorAlert(error.message, error);  // Storage error
-        setAttestationStatusFunction('ERROR');        
-        setAttestationTestInProgressFunction(false);
-        LogMe(1, 'Attestation unsuccessful due to storage issue.');
-        return Promise.resolve(false);
-    }                        
-
-
-    // GET TOKEN FROM ATTESTATION API
-
-    let resultingpromise = undefined;
-    try {
-        // Don't do "resultingpromise = await AppIntegrity(..." here because the "then" already handles the "await"
-        if (Platform.OS === 'android' && RequestType === 'classic') {
-            resultingpromise = AppIntegrity.AndroidClassicRequest(apiresgetnonce.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER);
-        } else if (Platform.OS === 'android' && RequestType === 'standard') {
-            resultingpromise = AppIntegrity.AndroidStandardRequest(apiresgetnonce.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());
-        } else if (Platform.OS === 'ios' && RequestType === 'attestation') {
-            resultingpromise = AppIntegrity.iosAppAttestRequest(keyIdentifier, apiresgetnonce.nonce);
-        } else if (Platform.OS === 'ios' && RequestType === 'assertion') {
-            resultingpromise = AppIntegrity.iosAppAssertRequest(keyIdentifier, apiresgetnonce.nonce);
-        } else {
-            ErrorAlert('Error: RequestType must be either \'classic\' or \'standard\' for \'android\' platforms, or \'attestation\' or \'assertion\' for \'ios\' platforms. We found '+RequestType+'.', undefined);
-            setAttestationStatusFunction('ERROR');       
-            setAttestationTestInProgressFunction(false);
-            return Promise.resolve(false);
-        }
-        return resultingpromise
-        .then(async (attestationTokenObject) => {
-            LogMe(1, 'Received attestation token from library API layer');
-            LogMe(2, 'Token is: '+JSON.stringify(attestationTokenObject));
-            //console.log(JSON.stringify(attestationTokenObject));
-            return ApiSubmitAttestationTokenToServer(environment, attestationTokenObject, apiresgetnonce.cookie, Platform.OS, Platform.Version, RequestType)
-            .then(async (apiressubmitobject) => {
-
-                if ( ! apiressubmitobject.isSuccessful) {
-                    ErrorAlert(apiressubmitobject.resultMessage);  // Server-side message
-                    setAttestationStatusFunction('FAILED');
-                    setAttestationTestInProgressFunction(false);
-                    return Promise.resolve(false);
-                } else {
-                    // Successful
-                    setAttestationStatusFunction(apiressubmitobject.resultMessage);
-                    setAttestationTestInProgressFunction(false);
-                    return Promise.resolve(true);
-                }
-
-            })
-            .catch((error) => {
-                ErrorAlert('Error when submitting attestation object to the PP server.', error);  // Network error
-                setAttestationStatusFunction('ERROR');       
-                setAttestationTestInProgressFunction(false);
-                return Promise.resolve(false);
-            });    
-        })
-        .catch((error) => {
-            ErrorAlert("Error from AppIntegrity API.\n"+JSON.stringify(error), undefined);  // API error
-            setAttestationStatusFunction('ERROR');        
-            setAttestationTestInProgressFunction(false);
-            return Promise.resolve(false);
-        });
-    } catch (error) {
-        ErrorAlert("Exception from AppIntegrity API.\n"+JSON.stringify(error), undefined);  // API error
-        setAttestationStatusFunction('ERROR');        
-        setAttestationTestInProgressFunction(false);
-        return Promise.resolve(false);
-    }
-
-}
-
-
-/**
- * Generates and stores a new keypair. Only applies to iOS
- * @param {function} setKeygenStatusFunction Callback function to set informational status as string
- * @param {function} setKeygenInProgressFunction Callback function to set progress status as boolean; true means 'in progress'
- * @return Promise
- */
-export async function DoKeygen(setKeygenStatusFunction, setKeygenInProgressFunction, keypairName) {
-    LogMe(1, 'Starting key-pair generation');
-    setKeygenInProgressFunction(true);
-    setKeygenStatusFunction('Executing...');
-
-    return AppIntegrity.iosKeygen(keypairName)
-    .then( async () => {
-
-        setKeygenStatusFunction('Successful');
-        setKeygenInProgressFunction(false);
-        LogMe(1, 'Key-pair generation OK');
-        return Promise.resolve(true);
-
-    })
-    .catch((error) => {
-        ErrorAlert("Error from AppIntegrity API.\n"+JSON.stringify(error), undefined);  // API error
-        setKeygenStatusFunction('ERROR');        
-        setKeygenInProgressFunction(false);
-        LogMe(1, 'Key-pair generation KO');
-        return Promise.resolve(false);
-    });
-
-}
-
-
-
-export const PPIntegrityComponent = ({ route, navigation }) => {
+    LogMe(1, 'props of PPIntegrity: '+JSON.stringify(props));
+    currentProps = props;
+    const navigation = useNavigation();
 
     const [initStatus, setInitStatus] = useState({ key: 'init' });
-    const [propsState, setPropsState] = useState(route.params);
-    console.log('PPIntegrity/propsState'+JSON.stringify(propsState));
-    console.log('PPIntegrity/route.params'+JSON.stringify(route.params));
+    const [propsState, setPropsState] = useState(props.route.params);
+    const [propsStateSync, setPropsStateSync] = useState({ key: props.route.params });
+    LogMe(1, 'propsState of PPIntegrity: '+JSON.stringify(propsState));
 
     // Android (classic attestations) and iOS
     const [attestationStatus, setAttestationStatus] = useState('(press button)');
@@ -237,7 +57,15 @@ export const PPIntegrityComponent = ({ route, navigation }) => {
     useEffect( () => {  // This is executed when the component is reloaded
         async function didMount() { // Do not change the name of this function
             // Do stuff
-            LogMe(1, 'useEffect of PPIntegrity invocation');           
+            LogMe(1, 'useEffect of PPIntegrity invocation');   
+            const unsubscribe = navigation.addListener('focus', () => {
+                // The screen is focused
+                // Call any action
+                LogMe(1, 'PPIntegrity: SCREEN FOCUS');
+                setPropsState(currentProps.route.params);
+                propsStateSync.key = currentProps.route.params;
+                LogMe(1, 'props of PPIntegrity on Screen Focus event: '+JSON.stringify(currentProps));
+            });                    
         }
         didMount();  // If we want useEffect to be asynchronous, we have to define didMount as async and call it right after
         return async function didUnmount() { // Do not change the name of this function
@@ -310,7 +138,7 @@ export const PPIntegrityComponent = ({ route, navigation }) => {
                     <Text />
 
                     <View style={styles.leftleft}>
-                        <Button disabled={attestationTestInProgressStandard} title='Check integrity (standard request)' onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsState, function (newProps) { setPropsState(newProps); }, setAttestationStatusStandard, setAttestationTestInProgressStandard, 'standard', 'PPIcookie')} />
+                        <Button disabled={attestationTestInProgressStandard} title='Check integrity (standard request)' onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatusStandard, setAttestationTestInProgressStandard, 'standard', 'PPIcookie')} />
                     </View>
 
                     <View style={styles.leftleft}>
@@ -337,9 +165,9 @@ export const PPIntegrityComponent = ({ route, navigation }) => {
                         {
                             Platform.OS === 'android'
                             ?
-                            <Button disabled={attestationTestInProgress} title="Check integrity (classic request)" onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsState, function (newProps) { setPropsState(newProps); }, setAttestationStatus, setAttestationTestInProgress, 'classic', 'PPIcookie')} />
+                            <Button disabled={attestationTestInProgress} title="Check integrity (classic request)" onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatus, setAttestationTestInProgress, 'classic', 'PPIcookie')} />
                             :
-                            <Button disabled={attestationTestInProgress} title="Do attestation" onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsState, function (newProps) { setPropsState(newProps); }, setAttestationStatus, setAttestationTestInProgress, 'attestation', 'PPIcookie')} />
+                            <Button disabled={attestationTestInProgress} title="Do attestation" onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatus, setAttestationTestInProgress, 'attestation', 'PPIcookie')} />
                         }
                     </View>
 
@@ -420,7 +248,7 @@ export const PPIntegrityComponent = ({ route, navigation }) => {
                     <Text />
 
                     <View style={styles.leftleft}>
-                        <Button disabled={assertionInProgress} title='Do assertion' onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsState, function (newProps) { setPropsState(newProps); }, setAssertionStatus, setAssertionInProgress, 'assertion', 'PPIcookie')} />
+                        <Button disabled={assertionInProgress} title='Do assertion' onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAssertionStatus, setAssertionInProgress, 'assertion', 'PPIcookie')} />
                     </View>
                     <View style={styles.leftleft}>
                         <Text>Assertion result is: </Text><Text style={{fontWeight: "bold"}}>{ assertionStatus }</Text>

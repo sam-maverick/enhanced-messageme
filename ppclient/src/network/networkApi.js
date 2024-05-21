@@ -11,13 +11,49 @@ const POST_HEADERS = {
 
 
 
-export async function ApiSubmitAttestationTokenToServer(environment, token, cookie, platformType, platformVersion, requestType) {
+export async function ApiSubmitAttestationTokenToServer(environment, cookie, platformType, platformVersion, requestType, token) {
 
     LogMe(1, 'API: ApiSubmitAttestationTokenToServer');
 
     return fetch(`${PARAM_SERVER_API_URL}/attestations/submitAttestationTokenToServer`, {
         ...POST_HEADERS,
-        body: JSON.stringify({cookie, token, platformVersion, platformType, requestType, environment}),
+        body: JSON.stringify({
+            cookie: cookie, 
+            environment: environment, 
+            platformVersion: platformVersion, 
+            platformType: platformType, 
+            subrequests: [{
+                requestType: requestType, 
+                token: token,
+            }],
+        }),
+    })
+    .then((res) => res.json())
+    .then((res) => res)
+
+}
+
+
+
+export async function ApiSubmitTwoAttestationTokensToServer(environment, cookie, platformType, platformVersion, requestType1, token1, requestType2, token2) {
+
+    LogMe(1, 'API: ApiSubmitAttestationTokenToServer');
+
+    return fetch(`${PARAM_SERVER_API_URL}/attestations/submitAttestationTokenToServer`, {
+        ...POST_HEADERS,
+        body: JSON.stringify({
+            cookie: cookie, 
+            environment: environment, 
+            platformVersion: platformVersion, 
+            platformType: platformType, 
+            subrequests: [{
+                requestType: requestType1, 
+                token: token1,
+            },{
+                requestType: requestType2, 
+                token: token2,
+            }],
+        }),
     })
     .then((res) => res.json())
     .then((res) => res)

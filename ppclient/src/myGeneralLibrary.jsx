@@ -8,11 +8,10 @@ import * as FileSystem from 'expo-file-system';
 
 import { Asset } from 'expo-asset';
 
-import { PARAM_IMAGES_DIRNAME, PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER } from './parameters.js';
+import { PARAM_IMAGES_DIRNAME, PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO } from './parameters.js';
+
 
 import storage from './storage/storageApi.js';
-
-import * as AppIntegrity from './integrity/integrityapis.js';
 
 const Buffer = require("buffer").Buffer;
 
@@ -141,9 +140,9 @@ export function LogMe(level, message) {
     }
 }
 
-export const AsyncAlert = async (message) => new Promise((resolve) => {
+export const AsyncAlert = async (message, title) => new Promise((resolve) => {
     Alert.alert(
-      'Error',
+      title,
       message,
       [
         {
@@ -163,7 +162,7 @@ export async function ErrorAlertAsync(message, errorObject) {
     let finalmessage = message;
     if (errorObject!=undefined) { finalmessage = message + '\n' + errorObject.message }
 
-    await AsyncAlert(message);
+    await AsyncAlert(message, 'Error');
 }
 
 export function ErrorAlert(message, errorObject) {
@@ -208,11 +207,10 @@ export async function InitialisationActions() {
     catch(error) { 
     }
 
-    /*
-    if (Platform.OS === 'android') {
-        await AppIntegrity.AndroidStandardWarmup(PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());  // This might throw an exception
-    }
-    */
+    if (PARAM_PP__CRYPTO.null_crypto) {
+      LogMe(1, 'Show warning about null_crypto');
+      await AsyncAlert('PARAM_PP__CRYPTO.null_crypto is enabled. This means that the private pictures will not be encrypted!', 'WARNING');
+    }      
     
 }
 

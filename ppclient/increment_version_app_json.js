@@ -34,7 +34,9 @@ module.exports = function (level) {
       replaceInFile(
           './app.json', 
           /    "version": "([0-9]+).([0-9]+).([0-9]+)",/g,
-          "    \"version\": \"$1.$2." + ("$3"+1) + "\","
+          function (match, v1, v2, v3) {
+            return "    \"version\": \"" + v1 + "." + v2 + "." + (Number(v3)+1) + "\","
+          }
       );
       //sed -r 's/\s\s\s\s"version": "([0-9]+).([0-9]+).([0-9]+)",/echo -n "    \\"version\\": \\"\1.\2.$((\3+1))\\","/ge' app.json > app.json.tmp
   }
@@ -44,7 +46,9 @@ module.exports = function (level) {
       replaceInFile(
           './app.json', 
           /    "version": "([0-9]+).([0-9]+).([0-9]+)",/g,
-          "    \"version\": \"$1." + ("$2"+1) + ".$3\","
+          function (match, v1, v2, v3) {
+            return "    \"version\": \"" + v1 + "." + (Number(v2)+1) + "." + v3 + "\","
+          }
       );
       //sed -r 's/\s\s\s\s"version": "([0-9]+).([0-9]+).([0-9]+)",/echo -n "    \\"version\\": \\"\1.$((\2+1)).\3\\","/ge' app.json > app.json.tmp
   }
@@ -54,7 +58,9 @@ module.exports = function (level) {
       replaceInFile(
           './app.json', 
           /    "version": "([0-9]+).([0-9]+).([0-9]+)",/g,
-          "    \"version\": \"" + ("$1"+1) + ".$2.$3\","
+          function (match, v1, v2, v3) {
+            return "    \"version\": \"" + (Number(v1)+1) + "." + v2 + "." + v3 + "\","
+          }
       );
       //sed -r 's/\s\s\s\s"version": "([0-9]+).([0-9]+).([0-9]+)",/echo -n "    \\"version\\": \\"$((\1+1)).\2.\3\\","/ge' app.json > app.json.tmp
   }  

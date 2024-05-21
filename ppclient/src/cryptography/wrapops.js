@@ -1,6 +1,4 @@
-import {  } from '../parameters.js';
-
-import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 
 import Crypto from 'react-native-quick-crypto';
 
@@ -13,32 +11,155 @@ import {
     EncodeFromBinaryToB64, 
     EncodeFromB64ToUTF8,
     EncodeFromUTF8ToB64,
-    EraseLocalData, 
     ErrorAlert, 
     ErrorAlertAsync, 
     AsyncAlert, 
     LogMe, 
-    UpdateLogMeUsername, 
-    InitialisationActions,
-    ReadMyFileStream,
-    WriteMyFileStream,
-    IsValidImageExtensionAndContentType,
-    LoadBaseImageAssetFileB64,
-    FromBufferToU8A,
-    FromU8AToBuffer,
  } from '../myGeneralLibrary.jsx';
 
- import {
+import {
   PARAM_PP__CRYPTO,
- } from '../parameters.js';
+  PARAM_IOS_KEY_IDENTIFIER,
+  PARAM_GOOGLE_CLOUD_PROJECT_NUMBER,
+} from '../parameters.js';
+
+import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer, ApiSubmitTwoAttestationTokensToServer } from '../network/networkApi.js';
+
+import * as AppIntegrity from '../integrity/integrityapis.js';
 
 
+
+
+// We assume that Platform.OS has already been checked to be compatible
+export async function RequestToDecryptKey(userAccountData) {
+  LogMe(1, 'RequestToDecryptKey() called');
+  LogMe(1, 'Requesting token(s) from server');
+
+  // GET NONCE(S)
+
+  let apiresgetnonce1 = undefined;        
+  let apiresgetnonce2 = undefined;        
+  try {
+    if (Platform.OS === 'android') {
+      // Note: Android warmup is done from within PPWrapOps.ComponentRefresh()
+      apiresgetnonce1 = await ApiGetNonceFromServer(userAccountData.PPEcookie, 'android', 'classic');
+      apiresgetnonce2 = await ApiGetNonceFromServer(userAccountData.PPEcookie, 'android', 'standard');
+    } else {  // ios
+        apiresgetnonce1 = await ApiGetNonceFromServer(userAccountData.PPEcookie, 'ios', 'assertion');
+    }
+  } catch(error) {
+      const msg = 'Error when requesting nonce to the PP server. ';
+      LogMe(1, msg + error.stack);  // Network error
+      return Promise.reject({message: msg + error.message});
+  }
+
+  LogMe(1, 'Checking for server-side application errors');
+  // Check for server-side application errors
+  if (Platform.OS === 'android') {
+    if ( ! apiresgetnonce1.isSuccessful) {
+      const msg = 'Application error when requesting android-classic nonce to the PP server. ';
+      LogMe(1, msg + apiresgetnonce1.resultMessage);
+      return Promise.reject({message: msg + apiresgetnonce1.resultMessage});
+    }
+    if ( ! apiresgetnonce2.isSuccessful) {
+      const msg = 'Application error when requesting android-standard nonce to the PP server. ';
+      LogMe(1, msg + apiresgetnonce2.resultMessage);
+      return Promise.reject({message: msg + apiresgetnonce2.resultMessage});
+    }
+  } else {  // ios
+    if ( ! apiresgetnonce1.isSuccessful) {
+      const msg = 'Application error when requesting ios-assertion nonce to the PP server. ';
+      LogMe(1,  + apiresgetnonce1.resultMessage);
+      return Promise.reject({message: msg + apiresgetnonce1.resultMessage});
+    }
+  }
+
+  LogMe(1, 'Creating attestation token object(s)');
+                   
+  // GET TOKEN(S) FROM ATTESTATION API
+
+  let attestationobject1 = undefined;
+  let attestationobject2 = undefined;
+
+  if (Platform.OS === 'android') {
+    try {
+      attestationobject1 = await AppIntegrity.AndroidClassicRequest(apiresgetnonce1.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER);
+    } catch(error) {
+      return Promise.reject({message: 'Coult not prepare Android Classic attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
+    }
+    try {
+      attestationobject2 = await AppIntegrity.AndroidStandardRequest(apiresgetnonce2.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());
+    } catch(error) {
+      return Promise.reject({message: 'Coult not prepare Android Standard attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
+    }  
+  } else {  // ios
+    // We skip attestation because we can assume it has been done, as the device needs to achieve enrollment to reach this point
+    try {
+      attestationobject1 = await AppIntegrity.iosAppAssertRequest(PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, apiresgetnonce1.nonce);
+    } catch(error) {
+      return Promise.reject({message: 'Coult not prepare iOS assertion object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
+    }          
+  }
+
+  // SUBMIT TOKEN(S) TO OUR PP SERVER
+
+  LogMe(1, 'Submitting token(s) to PP server');
+  LogMe(1,'cookie:'+userAccountData.PPEcookie);
+
+  let apiressubmitobject = undefined;
+
+  try {
+    if (Platform.OS === 'android') {
+      apiressubmitobject = await ApiSubmitTwoAttestationTokensToServer(
+        'PPWrapOps', 
+        userAccountData.PPEcookie, 
+        Platform.OS, 
+        Platform.Version, 
+        'classic', 
+        attestationobject1,
+        'standard',
+        attestationobject2
+      );
+    } else {  // ios
+      apiressubmitobject = await ApiSubmitAttestationTokenToServer(
+        'PPWrapOps', 
+        userAccountData.PPEcookie, 
+        Platform.OS, 
+        Platform.Version, 
+        'assertion', 
+        attestationobject1
+      );
+    }
+  } catch(error) {  // Network error
+    const msg = 'Error when submitting attestation token to the PP server. ';
+    LogMe(1, msg + error.stack);
+    return Promise.reject({message: msg+error.message});
+  }          
+
+  // CHECK RESULT GIVEN BY THE PP SERVER
+
+  LogMe(1, 'Checking response from PP server');
+
+  if ( ! apiressubmitobject.isSuccessful) {
+    ErrorAlert(apiressubmitobject.resultMessage);  // Server-side message
+    const msg = 'Attestation has failed. ' + apiressubmitobject.resultMessage;
+    LogMe(1, msg);
+    return Promise.reject({message: msg});
+  } else {
+      // Successful
+      // Do stuff.............................................
+      await AsyncAlert('Attestation successful', 'INFO');
+      return Promise.resolve(true);
+  }
+
+}
 
 
 
 // wrappedPicture is an enveloppe containing a private picture, in base64 formatted String
 // It returns an object
-export async function UnwrapPicture (wrappedPictureObject) {
+// In case of error/failure, it throws an Error. It is up to the calling code to catch it.
+export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
   LogMe(1, 'UnwrapPicture() called');
 
   // Unwrap (steganographically)
@@ -46,6 +167,7 @@ export async function UnwrapPicture (wrappedPictureObject) {
   let ppPpChunkFound = false;
   let ppPpChunkContents = {};
 
+  LogMe(1, 'UnwrapPicture(): Unpackaging metadata');
   let s = EncodeFromB64ToBinary(wrappedPictureObject);
 
   LogMe(1, 'Parsing PNG metadata');
@@ -66,6 +188,15 @@ export async function UnwrapPicture (wrappedPictureObject) {
 
     // Unwrap cryptographically
 
+    // We assume that the device is already enrolled (it must be checked and it is checked by PPWrapOps.jsx)
+    // In any case, in practice, server response will give a FAIL if not enrolled
+
+
+    
+    const response = await RequestToDecryptKey(myAccountData);
+
+
+
     /// BEGIN
 
     let returnObject = {};
@@ -76,7 +207,8 @@ export async function UnwrapPicture (wrappedPictureObject) {
         data: ppPpChunkContents.data,
       };
     } else {
-
+      // STAGE3
+      LogMe(1, 'UnwrapPicture(): STAGE3');
       provider_privkey = '-----BEGIN PRIVATE KEY-----\n\
 MIIG/QIBADANBgkqhkiG9w0BAQEFAASCBucwggbjAgEAAoIBgQC9uZbma4rcbjqo\n\
 1iCy7A4180PuyDnX2pVHTSqm6O9sgEbAuuMc5wsSuulTkmcq1gyDXHhP/tETud+O\n\
@@ -117,11 +249,25 @@ dGUfZ9dDOTDAtlkeOcnjjf5eqluu8kDTE3HikVOSox8ff5tkyK9MEP6cWNjT7KRp\n\
 hCFY3h1HR0vm3shwbRR+Hbeez+S8c72m7Su6oKGlxhogGXwzgjdo0Inv1AeuggAN\n\
 UiXwCV7iGsm8mWNFR0OkLyY=\n\
 -----END PRIVATE KEY-----';
-      const stage1_key = Crypto.privateDecrypt(
+      const stage2_key = Crypto.privateDecrypt(
         provider_privkey, 
-        EncodeFromB64ToBuffer(ppPpChunkContents.stage2.encrypted_stage1_key_b64)
+        EncodeFromB64ToBuffer(ppPpChunkContents.stage3.encrypted_stage2_key_b64)
       );
 
+      //STAGE2
+      LogMe(1, 'UnwrapPicture(): STAGE2');
+      const cipher2 = Crypto.createDecipheriv(
+        ppPpChunkContents.stage2.encryption_algorithm, 
+        stage2_key, 
+        EncodeFromB64ToBuffer(ppPpChunkContents.stage2.iv_b64)
+      );
+      await cipher2.write(EncodeFromB64ToBuffer(ppPpChunkContents.stage1.ciphertext));
+      await cipher2.end();
+      const decrypted_stage1 = JSON.parse(await cipher2.read());
+      // Here we get the privacy parameters
+
+      //STAGE1
+      LogMe(1, 'UnwrapPicture(): STAGE1');
       /*
       // Since the key is not a human password but random bits, we do not need to pbkdfify
       const pbkdf_algorithm = EncodeFromB64ToBinary(ppPpChunkContents.stage1.pbkdf_algorithm).toString();
@@ -130,23 +276,24 @@ UiXwCV7iGsm8mWNFR0OkLyY=\n\
       const salt = ...
       const key = Crypto.pbkdf2Sync(password, salt, pbkdf_iterations, 32, pbkdf_algorithm);
       */
-      const cipher = Crypto.createDecipheriv(
-        ppPpChunkContents.stage1.encryption_algorithm, 
-        stage1_key, 
-        EncodeFromB64ToBuffer(ppPpChunkContents.stage1.iv_b64)
+      const cipher1 = Crypto.createDecipheriv(
+        decrypted_stage1.encryption_algorithm, 
+        EncodeFromB64ToBuffer(decrypted_stage1.key_b64), 
+        EncodeFromB64ToBuffer(decrypted_stage1.iv_b64)
       );
-      await cipher.write(EncodeFromB64ToBuffer(ppPpChunkContents.ciphertext));
-      await cipher.end();
-      const decrypted = await cipher.read();
+      await cipher1.write(EncodeFromB64ToBuffer(ppPpChunkContents.ciphertext));
+      await cipher1.end();
+      const decrypted_picture = await cipher1.read();
 
+      // Return the results
       returnObject = {
         'contentType': ppPpChunkContents.contentType,
-        'data': decrypted,
+        'data': decrypted_picture,
       };
     }
 
     /// END
-
+    LogMe(1, 'UnwrapPicture(): Finished');
     return returnObject;
   }
 }
@@ -159,7 +306,7 @@ UiXwCV7iGsm8mWNFR0OkLyY=\n\
 // plainPicture is a picture content in base64 formatted String
 // It returns a base64 formatted String
 export async function WrapPicture (plainPicture, fileExt) {
-    LogMe(1, 'wrapPicture() called');
+    LogMe(1, 'WrapPicture() called');
 
     // Wrap cryptographically
 
@@ -174,6 +321,8 @@ export async function WrapPicture (plainPicture, fileExt) {
         'contentType': fileExt,
       });  
     } else {
+      // STAGE1
+      LogMe(1, 'WrapPicture(): STAGE1');
       /*
       // Since the key is not a human password but random bits, we do not need to pbkdfify
       const pbkdf_algorithm = PARAM_PP__CRYPTO.stage1.pbkdf_algorithm;
@@ -184,40 +333,52 @@ export async function WrapPicture (plainPicture, fileExt) {
       */
       const stage1_key = Crypto.randomBytes(32);
       const stage1_iv = Crypto.randomBytes(16);
-      const cipher = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage1.encryption_algorithm, stage1_key, stage1_iv);
-      await cipher.write(plainPicture);
-      await cipher.end();
-      const ciphertext = await cipher.read();
+      const cipher1 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage1.encryption_algorithm, stage1_key, stage1_iv);
+      await cipher1.write(plainPicture);
+      await cipher1.end();
+      const ciphertext_picture = await cipher1.read();
 
-      const provider_pubkey = '-----BEGIN PUBLIC KEY-----\n\
-MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAvbmW5muK3G46qNYgsuwO\n\
-NfND7sg519qVR00qpujvbIBGwLrjHOcLErrpU5JnKtYMg1x4T/7RE7nfjr9ObXPL\n\
-cyKRfXI0Md7viuFWTv393OogE+f+rxFREM8a7cOCGVBk5+N/gP0yiUpaQ2y9zayl\n\
-q1nt7aUMFkZL1f9+2ktFT6LN8dA/CmA8uEyKTG7MFoTSbrl9TmRzgrewOll/pf34\n\
-B/V49IegftA+8DSeO2xX8W3WHecMc9SINqcbP/JwvTwejX0+ZObacIs2RnPct3FG\n\
-C0XQej3RioVWaG6kyswubbTKeSZ91xUucaIAzCtO464xJNfywS0Sfu0dxJ0aTID7\n\
-cJAg8SM+ap2SCAaoS23nGOwrdCfIJj1JVZMv0KCGM9owJcQDA1YD+Y6fdf/lRB9D\n\
-DAHTSFWeDkNBl1ENKiCeP5U2/svcgdGmLZPAuiiseEQIR698L4mCcDXDdbhhDX6y\n\
-VtgjmV85rMKkI4YnmpSZuMo7wcqsfPBUJKW0Q7w+ZMYJAgMBAAE=\n\
------END PUBLIC KEY-----\n';
+      // STAGE2
+      LogMe(1, 'WrapPicture(): STAGE2');
+      const stage2_key = Crypto.randomBytes(32);
+      const stage2_iv = Crypto.randomBytes(16);
+      const cipher2 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
+      await cipher2.write(JSON.stringify({
+        encryption_algorithm: PARAM_PP__CRYPTO.stage1.encryption_algorithm,
+        iv_b64: EncodeFromBufferToB64(stage1_iv),
+        key_b64: EncodeFromBufferToB64(stage1_key),
+      }));  // stage1 data
+      await cipher2.end();
+      const ciphertext_stage1 = await cipher2.read();
 
-      const encrypted_stage1_key = Crypto.publicEncrypt(
+      // STAGE3
+      LogMe(1, 'WrapPicture(): STAGE3');
+      const provider_pubkey = EncodeFromB64ToBinary(require('../../bundled_files/json/rsa-pubkey-wrapping-ppclient.pem.json').data);
+
+      const encrypted_stage2_key = Crypto.publicEncrypt(
         Buffer.from(provider_pubkey), 
-        stage1_key
+        stage2_key
       );
 
+      // Pack contents
+
+      LogMe(1, 'WrapPicture(): Creating metadata object');
       ppPlainPictureObjectStr = JSON.stringify({
         null_crypto: false,
         stage1: {
-          encryption_algorithm: PARAM_PP__CRYPTO.stage1.encryption_algorithm,
-          iv_b64: EncodeFromBufferToB64(stage1_iv),
-        }, 
+          ciphertext: EncodeFromBufferToB64(ciphertext_stage1),
+        },
         stage2: {
-          provider: 'someprovider',
           encryption_algorithm: PARAM_PP__CRYPTO.stage2.encryption_algorithm,
-          encrypted_stage1_key_b64: EncodeFromBufferToB64(encrypted_stage1_key),
+          iv_b64: EncodeFromBufferToB64(stage2_iv),
+          // privacy parameters will go here
         }, 
-        ciphertext: EncodeFromBufferToB64(ciphertext), 
+        stage3: {
+          provider: 'someprovider',
+          encryption_algorithm: PARAM_PP__CRYPTO.stage3.encryption_algorithm,
+          encrypted_stage2_key_b64: EncodeFromBufferToB64(encrypted_stage2_key),
+        }, 
+        ciphertext: EncodeFromBufferToB64(ciphertext_picture), 
         contentType: fileExt,
       });  
     }
@@ -233,7 +394,8 @@ VtgjmV85rMKkI4YnmpSZuMo7wcqsfPBUJKW0Q7w+ZMYJAgMBAAE=\n\
     //var sb64 = await FileSystem.readAsStringAsync(require('../../assets/custom/base_image_for_wrapping.png'), {encoding: 'base64'});
     //var s = EncodeFromB64ToBinary(await LoadBaseImageAssetFileB64());
 
-    var s = EncodeFromB64ToBinary(require('../../bundled_files/json/base_image_for_wrapping.png.json').data);
+    LogMe(1, 'WrapPicture(): Packaging metadata');
+    const s = EncodeFromB64ToBinary(require('../../bundled_files/json/base_image_for_wrapping.png.json').data);
 
     // split
     var list = png.splitChunk(s);
@@ -254,6 +416,7 @@ VtgjmV85rMKkI4YnmpSZuMo7wcqsfPBUJKW0Q7w+ZMYJAgMBAAE=\n\
     var newpng = png.joinChunk(list);
     // save to file
     //fs.writeFileSync(outfile, newpng, 'binary');
+    LogMe(1, 'WrapPicture(): Finished');
     return EncodeFromBinaryToB64(newpng);
     
 }

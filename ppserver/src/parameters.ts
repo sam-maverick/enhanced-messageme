@@ -1,3 +1,10 @@
+/**
+ * DANGER ZONE !!!!!!!
+ * When set to true, the server will accept all attestations/assertions requests as valid
+ */
+export const PARAM_TEST_MODE = true;
+
+
 export const PARAM_API_PORT = 3020;
 
 export const PARAM_WEBSOCKET_PORT = 3021;
@@ -53,10 +60,10 @@ export const IOS_BUNDLE_ID = 'pt.lasige.safex.enhmessageme';
 /**
  * See https://developer.apple.com/account#MembershipDetailsCard
  */
-export const IOS_TEAM_ID = 'L549K3FQ5X';
+export const IOS_TEAM_ID = 'L549K3FQ5X';  // Does not change when creating new app if published under the same developer account&team 
 
 /**
- * The value is not really important. What is important is to remember it and that it is the same as the one configures server side
+ * The value is not really important. What is important is to remember it and that it is the same as the one configured server side
  */
 export const PARAM_IOS_KEY_IDENTIFIER = {
    PPIntegrity: 'iosKeypairPPIntegrity', 

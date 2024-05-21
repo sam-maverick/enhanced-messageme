@@ -5,12 +5,29 @@ import { v4 as uuidv4 } from 'uuid';
 import { AppService } from '../app.service';
 import DevicesModel from '../middleware/database/schemas/Device';
 import { PARAM_LENGTH_TOKENS, MINIMUM_ANDROID_API_LEVEL, ANDROID_CHECK_MODE, 
-    PARAM_IOS_KEY_IDENTIFIER, IOS_SUPPORTED_VERSIONS, IOS_IS_DEVELOPMENT_ENVIRONMENT, MAX_TOTAL_DELAY_MS } from '../parameters';
+    PARAM_IOS_KEY_IDENTIFIER, IOS_SUPPORTED_VERSIONS, IOS_IS_DEVELOPMENT_ENVIRONMENT, MAX_TOTAL_DELAY_MS, PARAM_TEST_MODE } from '../parameters';
 import { LogMe, GenerateRandomString, isAnInteger } from '../serverLibrary';
 
 import { CheckPlayIntegrity } from '../attestationapi/androidintegrityapi';
 import { CheckAppAttestation, CheckAppAssertion } from '../attestationapi/iosintegrityapi';
 
+
+if (PARAM_TEST_MODE) {
+    // We skip LogMe to make sure that the message is displayed
+    console.log();
+    console.log('\x1b[31m%s\x1b[0m', '!!!!!!  WARNING  ----  WARNING  ---- WARNING  !!!!!!');    
+    console.log();
+    console.log();
+    console.log('\x1b[31m%s\x1b[0m', '!!!!!!  WARNING  ----  WARNING  ---- WARNING  !!!!!!');    
+    console.log();
+    console.log();
+    console.log('\x1b[31m%s\x1b[0m', '!!!!!!  WARNING  ----  WARNING  ---- WARNING  !!!!!!');    
+    console.log();
+    console.log('\x1b[31m%s\x1b[0m', 'PARAM_TEST_MODE has been set to true. This means that this PP server will accept all attestation requests without verifying them.');
+    console.log();
+    console.log('\x1b[31m%s\x1b[0m', 'Use this option only in test/dev/integration environments. Do not use in production!!');
+    console.log();
+}
 
 
 function CheckIosVersion(platformVersion: string) {
@@ -83,23 +100,37 @@ export class AttestationController {
         resultMessage: 'Attestation successful',
       };
     */
+   // END OF DANGER ZONE
 
     LogMe(1, 'Controller: attestations/submitAttestationTokenToServer');
 
     LogMe(2, 'Request contents:');
-    LogMe(2, '  cookie: '+req.body.cookie);
-    LogMe(2, '  platformVersion: '+req.body.platformVersion);
-    LogMe(2, '  platformType: '+req.body.platformType);
-    LogMe(2, '  requestType: '+req.body.requestType);  // Only relevant if platform is android
-    LogMe(2, '  token: '+req.body.token);
-    LogMe(2, '  environment: '+req.body.environment);
+    LogMe(2, JSON.stringify(req.body));
+    // NOTE: req.body.requestType is relevant only when platform is android
+
+    /**
+     * Per-request global parameters:
+     * req.body.environment
+     * req.body.cookie
+     * req.body.platformVersion
+     * req.body.platformType
+     * 
+     * These parameters go in an array, as every request contains 1 or 2 subrequests
+     * req.body.requestType
+     * req.body.token
+     */
 
     // Perform all checks
 
     const deviceObject = await DevicesModel.findOne({'cookie': req.body?.cookie});
 
     // Check environment parameter
-    if( ! (req.body?.environment === 'PPIntegrity' || req.body?.environment === 'PPEnrollment')) {
+    if( ! (req.body?.environment === 'PPIntegrity' || req.body?.environment === 'PPEnrollment' || req.body?.environment === 'PPWrapOps')) {
+        /**
+         * PPIntegrity: On-demand integrity tests. No pre-requirements
+         * PPEnrollment: Enrollment of devices to the PP platform. All devices must enroll prior to using PPWrapOps
+         * PPWrapOps: Integrity verification to get a credential. This is to decrypt private pictures.
+         */
         return {isSuccessful: false, resultMessage: 'Environment must be PPIntegrity or PPEnrollment.'};
     }
 
@@ -108,175 +139,277 @@ export class AttestationController {
         return {isSuccessful: false, resultMessage: 'Cookie not found.'};
     }
 
-    const resultVerifyRequest = checkRequestPlatformAndType(req.body.platformType, req.body.requestType);
-    if ( ! resultVerifyRequest.result) {
-        return {isSuccessful: false, resultMessage: resultVerifyRequest.message};
+    // Check that there is a platformVersion field
+    if ( ! req.body?.platformVersion) {
+        return {isSuccessful: false, resultMessage: 'Each request must contain a platformVersion field.'};
     }
 
-    // Cross-consistency check, and existence of nonce check
-    if ( deviceObject.nonces[req.body.platformType+'_'+req.body.requestType].nonce === '' ) {
-        return {isSuccessful: false, resultMessage: 'platformType or requestType inconsistency. You are submitting a token for which a nonce was not generated.'};
+    // Check that there is a platformType field
+    if ( ! req.body?.platformType) {
+        return {isSuccessful: false, resultMessage: 'Each request must contain a platformType field.'};
+    }
+    
+    // Check that there is a subrequests field
+    if ( ! req.body?.subrequests) {
+        return {isSuccessful: false, resultMessage: 'Each request must contain a subrequests field.'};
+    }
+    // And check that that field is an array
+    if ( ! Array.isArray(req.body?.subrequests)) {
+        return {isSuccessful: false, resultMessage: 'The subrequests field must be an array. You provided: ' + typeof(req.body?.subrequests) + '.'};
+    }
+    // And that there are either 1 or 2 elements in the array
+    if (req.body.subrequests.length < 1 || req.body.subrequests.length > 2) {
+        return {isSuccessful: false, resultMessage: 'Each request must contain either 1 or 2 subrequests. You provided ' + req.body.subrequests.length + '.'};
     }
 
-    // Single-consumption check for the nonce
-    if ( deviceObject.nonces[req.body.platformType+'_'+req.body.requestType].consumed === true ) {
-        return {isSuccessful: false, resultMessage: 'This nonce has already been consumed.'};
-    }
-
-
-    // ANDROID ----------------------------------------------------------------------------------------------
-
-    if (req.body.platformType === 'android') {
-
-        let myAndroidCheckMode = ANDROID_CHECK_MODE;
-        if (req.body.requestType === 'standard') {
-            myAndroidCheckMode = 'google';  // In standard requests, only 'google' mode is supported by Google. Local on-server verification of tokens is not supported in the official API.
-        }
-
-        let resultOperation = await CheckPlayIntegrity(
-            req.body.token, 
-            deviceObject.nonces[req.body.platformType+'_'+req.body.requestType].nonce, 
-            myAndroidCheckMode, 
-            req.body.requestType);
-
-        LogMe(2, 'Result of the operation: '+JSON.stringify(resultOperation));
-
-        // Check attestation
-        if (resultOperation.status !== 'success') {
-            return {isSuccessful: false, resultMessage: resultOperation.message};
-        }
-
-        if (resultOperation.status === 'success') {
-            // Check things after attestation. These things are not attested directly but indirectly.
-            // Check version
-            if( ! req.body.platformVersion) {  // Field present?
-                return {isSuccessful: false, resultMessage: "Missing platformVersion field in the request object."};
-            } else if( ! ((typeof req.body.platformVersion) === 'number')) {  // Is of number type?
-                return {isSuccessful: false, resultMessage: "Wrong type for platformVersion. We expected number. We found "+(typeof req.body.platformVersion)+"."};
-            } else if (req.body.platformVersion < MINIMUM_ANDROID_API_LEVEL) {
-                return {isSuccessful: false, resultMessage: "OS version is unsupported. Expected >= " + MINIMUM_ANDROID_API_LEVEL + ". Found " + req.body.platformVersion + "."};
+    //Specific checks for PPWrapOps
+    if(req.body.environment === 'PPWrapOps') {
+        if (req.body.platformType === 'android') {
+        // Check that there are 2 subrequests and that they are diverse (we already checked that they correspond to either classic or standard attestation, so if they are diverse, they are one of each)
+            if (req.body.subrequests.length != 2) {
+                return {isSuccessful: false, resultMessage: 'PPWrapOps failed. For android, you need to submit a request that contains two subrequests.'};
             }
-            // Check maximum delay
-            if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.requestType]) {
-                return {isSuccessful: false, resultMessage: "Request too old. Took too long from generating the nonce on our server to checking it on our server."};
+            if (req.body.subrequests[0].requestType == req.body.subrequests[1].requestType) {
+                return {isSuccessful: false, resultMessage: 'PPWrapOps failed. Each of the subrequests must have a different requestType (one standard, and one classic).'};
             }
-            // Note: We do not attest device type (tablet, phone, ...)
+        } else if (req.body.platformType === 'ios') {
+            if (req.body.subrequests.length != 1) {
+                return {isSuccessful: false, resultMessage: 'PPWrapOps failed. For ios, a request can only contain a subrequest.'};
+            }
+            if (req.body.subrequests[0].requestType != 'assertion') {
+                return {isSuccessful: false, resultMessage: 'PPWrapOps failed. For ios, the subrequest must be of assertion type.'};
+            }
+        }  // No need for an else because platformType will be checked below
+    }
+
+
+    // CHECK EACH OF THE SUBREQUESTS
+
+    let i = 0;
+
+    while (i < req.body.subrequests.length) {
+
+        const issueidmsg = req.body.subrequests.length>1 ? 'There was an isue with subrequest #'+i+' ['+String(req.body?.subrequests[i]?.requestType)+']: ' : '';
+
+        const resultVerifyRequest = checkRequestPlatformAndType(String(req.body.platformType), String(req.body?.subrequests[i]?.requestType));
+        if ( ! resultVerifyRequest.result) {
+            return {isSuccessful: false, resultMessage: issueidmsg+resultVerifyRequest.message};
         }
-
-
-
-    // iOS ----------------------------------------------------------------------------------------------
-
-    } else if (req.body.platformType === 'ios') {
-
-        if (req.body.requestType === 'attestation') {
-
-            let resultOperation = await CheckAppAttestation(
-                req.body.token, 
-                deviceObject.nonces[req.body.platformType+'_'+req.body.requestType].nonce, 
-                PARAM_IOS_KEY_IDENTIFIER[req.body.environment]);
-
+    
+        // Check that a token is provided
+        if ( ! req.body?.subrequests[i]?.token) {
+            return {isSuccessful: false, resultMessage: issueidmsg+'No token was provided.'};
+        }
+    
+        // Cross-consistency check, and existence of nonce check
+        if ( deviceObject.nonces[req.body.platformType+'_'+req.body.subrequests[i].requestType].nonce === '' ) {
+            return {isSuccessful: false, resultMessage: issueidmsg+'platformType or requestType inconsistency. You are submitting a token for which a nonce was not generated.'};
+        }
+    
+        // Single-consumption check for the nonce
+        if ( deviceObject.nonces[req.body.platformType+'_'+req.body.subrequests[i].requestType].consumed === true ) {
+            return {isSuccessful: false, resultMessage: issueidmsg+'This nonce has already been consumed.'};
+        }
+    
+    
+        // ANDROID ----------------------------------------------------------------------------------------------
+    
+        if (req.body.platformType === 'android') {
+    
+            let myAndroidCheckMode = ANDROID_CHECK_MODE;
+            if (req.body.subrequests[i].requestType === 'standard') {
+                myAndroidCheckMode = 'google';  // In standard requests, only 'google' mode is supported by Google. Local on-server verification of tokens is not supported in the official API.
+            }
+    
+            let resultOperation = undefined;            
+            if (PARAM_TEST_MODE) {
+                resultOperation = {status: 'success', message: 'Successful'};
+            } else {
+                resultOperation = await CheckPlayIntegrity(
+                    req.body.subrequests[i].token, 
+                    deviceObject.nonces[req.body.platformType+'_'+req.body.subrequests[i].requestType].nonce, 
+                    myAndroidCheckMode, 
+                    req.body.subrequests[i].requestType
+                );   
+            }
+    
             LogMe(2, 'Result of the operation: '+JSON.stringify(resultOperation));
-
+    
             // Check attestation
             if (resultOperation.status !== 'success') {
-                return {isSuccessful: false, resultMessage: resultOperation.message};
+                return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message};
             }
-
-            // Check things after attestation. These things are not attested directly but indirectly.
-
-            // Check version
-            let versionCheckResult = CheckIosVersion(req.body?.platformVersion);
-            if (versionCheckResult.status !== 'success') {
-                return {isSuccessful: false, resultMessage: versionCheckResult.message};
-            }
-
-            // Check maximum delay
-            if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.requestType]) {
-                return {isSuccessful: false, resultMessage: "Request too old. Took too long from generating the nonce on our server to checking it on our server."};
-            }
-
-            // Note: We do not attest device type (iPad, iPhone, Mac, ...)
-            // Looks like Macs are not supported anyway. See: https://developer.apple.com/forums/thread/682488
-
-            // Save publicKey and receipt for this device (sample code).
-            const updateResult = await DevicesModel.updateOne(
-                {cookie: req.body.cookie},
-                {
-                    iosPublicKeyPEM: resultOperation.publicKeyPem, 
-                    iosReceipt: resultOperation.receipt, 
-                    iosSignCount: 0,
+    
+            if (resultOperation.status === 'success') {
+                // Check things after attestation. These things are not attested directly but indirectly.
+                // Check version
+                if( ! ((typeof req.body.platformVersion) === 'number')) {  // Is of number type?
+                    return {isSuccessful: false, resultMessage: issueidmsg+"Wrong type for platformVersion. We expected number. We found "+(typeof req.body.platformVersion)+"."};
+                } else if (req.body.platformVersion < MINIMUM_ANDROID_API_LEVEL) {
+                    return {isSuccessful: false, resultMessage: issueidmsg+"OS version is unsupported. Expected >= " + MINIMUM_ANDROID_API_LEVEL + ". Found " + req.body.platformVersion + "."};
                 }
-            );
-
-            if ( ! updateResult) {
-                return {isSuccessful: false, resultMessage: "DB error when updating your request."};
+                // Check maximum delay
+                if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.subrequests[i].requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.subrequests[i].requestType]) {
+                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."};
+                }
+                // Note: We do not attest device type (tablet, phone, ...)
             }
-
-
-
-        } else if (req.body.requestType === 'assertion') {
-
-            if ( ! deviceObject?.iosPublicKeyPEM || deviceObject.iosPublicKeyPEM=='') {
-                // The user previously got a nonce but did not provide an attestation
-                return {isSuccessful: false, resultMessage: "Yo need to submit a successful attestation before requesting an assertion."};
+    
+    
+    
+        // iOS ----------------------------------------------------------------------------------------------
+    
+        } else if (req.body.platformType === 'ios') {
+    
+            if (req.body.subrequests[i].requestType === 'attestation') {
+    
+                let resultOperation = undefined;            
+                if (PARAM_TEST_MODE) {
+                    resultOperation = {
+                        status: 'success', 
+                        message: 'Attestation warmup successful.',
+                        publicKeyPem: 'nothing',
+                        receipt: 'noting',
+                    };
+                } else {    
+                    resultOperation = await CheckAppAttestation(
+                        req.body.subrequests[i].token, 
+                        deviceObject.nonces[req.body.platformType+'_'+req.body.subrequests[i].requestType].nonce, 
+                        PARAM_IOS_KEY_IDENTIFIER[req.body.environment]
+                    );
+                }
+    
+                LogMe(2, 'Result of the operation: '+JSON.stringify(resultOperation));
+    
+                // Check attestation
+                if (resultOperation.status !== 'success') {
+                    return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message};
+                }
+    
+                // Check things after attestation. These things are not attested directly but indirectly.
+    
+                // Check version
+                let versionCheckResult = CheckIosVersion(req.body.platformVersion);
+                if (versionCheckResult.status !== 'success') {
+                    return {isSuccessful: false, resultMessage: issueidmsg+versionCheckResult.message};
+                }
+    
+                // Check maximum delay
+                if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.subrequests[i].requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.subrequests[i].requestType]) {
+                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."};
+                }
+    
+                // Note: We do not attest device type (iPad, iPhone, Mac, ...)
+                // Looks like Macs are not supported anyway. See: https://developer.apple.com/forums/thread/682488
+    
+                // Save publicKey and receipt for this device (sample code).
+                const updateResult = await DevicesModel.updateOne(
+                    {cookie: req.body.cookie},
+                    {
+                        iosPublicKeyPEM: resultOperation.publicKeyPem, 
+                        iosReceipt: resultOperation.receipt, 
+                        iosSignCount: 0,
+                    }
+                );
+    
+                if ( ! updateResult) {
+                    return {isSuccessful: false, resultMessage: issueidmsg+"DB error when updating your request."};
+                }
+    
+    
+    
+            } else if (req.body.subrequests[i].requestType === 'assertion') {
+    
+                if ( ! deviceObject?.iosPublicKeyPEM || deviceObject.iosPublicKeyPEM=='') {
+                    // The user previously got a nonce but did not provide an attestation
+                    return {isSuccessful: false, resultMessage: issueidmsg+"You need to submit a successful attestation before requesting an assertion."};
+                }
+    
+                let resultOperation = undefined;
+                if (PARAM_TEST_MODE) {
+                    resultOperation = {
+                        status: 'success', 
+                        message: 'Assertion successful.', 
+                        iosSignCount: 999999999,
+                    };
+                } else {    
+                    resultOperation = await CheckAppAssertion(
+                        req.body.subrequests[i].token, 
+                        deviceObject.nonces[req.body.platformType+'_'+req.body.subrequests[i].requestType].nonce, 
+                        deviceObject.iosPublicKeyPEM,
+                        deviceObject.iosSignCount
+                    );
+                }
+    
+                LogMe(2, 'Result of the operation: '+JSON.stringify(resultOperation));
+    
+                // Check assertion
+                if (resultOperation.status !== 'success') {
+                    return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message};
+                }
+    
+                // Check things after assertion. These things are not attested directly but indirectly.
+    
+                // Check version
+                let versionCheckResult = CheckIosVersion(req.body.platformVersion);
+                if (versionCheckResult.status !== 'success') {
+                    return {isSuccessful: false, resultMessage: issueidmsg+versionCheckResult.message};
+                }
+                // Check maximum delay
+                if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.subrequests[i].requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.subrequests[i].requestType]) {
+                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."};
+                }
+    
+                // Note: We do not attest device type (iPad, iPhone, Mac, ...)
+                // Looks like Macs are not supported anyway. See: https://developer.apple.com/forums/thread/682488
+    
+                // Save publicKey and receipt for this device (sample code).
+                const updateResult = await DevicesModel.updateOne(
+                    {cookie: req.body.cookie},
+                    {iosSignCount: resultOperation.iosSignCount}
+                );
+    
+                if ( ! updateResult) {
+                    return {isSuccessful: false, resultMessage: issueidmsg+"DB error when updating your request."};
+                } 
             }
-
-            let resultOperation = await CheckAppAssertion(
-                req.body.token, 
-                deviceObject.nonces[req.body.platformType+'_'+req.body.requestType].nonce, 
-                deviceObject.iosPublicKeyPEM,
-                deviceObject.iosSignCount);
-
-            LogMe(2, 'Result of the operation: '+JSON.stringify(resultOperation));
-
-            // Check assertion
-            if (resultOperation.status !== 'success') {
-                return {isSuccessful: false, resultMessage: resultOperation.message};
-            }
-
-            // Check things after assertion. These things are not attested directly but indirectly.
-
-            // Check version
-            let versionCheckResult = CheckIosVersion(req.body?.platformVersion);
-            if (versionCheckResult.status !== 'success') {
-                return {isSuccessful: false, resultMessage: versionCheckResult.message};
-            }
-            // Check maximum delay
-            if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.requestType]) {
-                return {isSuccessful: false, resultMessage: "Request too old. Took too long from generating the nonce on our server to checking it on our server."};
-            }
-
-            // Note: We do not attest device type (iPad, iPhone, Mac, ...)
-            // Looks like Macs are not supported anyway. See: https://developer.apple.com/forums/thread/682488
-
-            // Save publicKey and receipt for this device (sample code).
-            const updateResult = await DevicesModel.updateOne(
-                {cookie: req.body.cookie},
-                {iosSignCount: resultOperation.iosSignCount}
-            );
-
-            if ( ! updateResult) {
-                return {isSuccessful: false, resultMessage: "DB error when updating your request."};
-            } 
+    
+        }
+    
+        // Mark nonce as consumed
+        const updateResult = await DevicesModel.updateOne(
+            {cookie: req.body.cookie},
+            [{ $addFields: { nonces: { [req.body.platformType+'_'+req.body.subrequests[i].requestType]: {consumed: true} } } }]
+        );
+        if ( ! updateResult) {
+            return {isSuccessful: false, resultMessage: 'DB error when updating the consumption status of the nonce.'};
         }
 
+        i++;  // Check next subrequest
     }
+    
+    // All subrequests were successful
+    // Build the response accordingly to the environment
 
-    // Mark nonce as consumed
-    const updateResult = await DevicesModel.updateOne(
-        {cookie: req.body.cookie},
-        [{ $addFields: { nonces: { [req.body.platformType+'_'+req.body.requestType]: {consumed: true} } } }]
-    );
-    if ( ! updateResult) {
-        return {isSuccessful: false, resultMessage: 'DB error when updating the consumption status of the nonce.'};
+    if(req.body.environment === 'PPWrapOps') {
+
+
+        // TBC
+        // Success
+        return {
+            isSuccessful: true,
+            resultMessage: 'Successful',
+        };        
+        
+        
+
+    } else {
+        // Inform about success.
+        return {
+            isSuccessful: true,
+            resultMessage: 'Successful',
+        };        
     }
-
-    // Success
-    return {
-        isSuccessful: true,
-        resultMessage: 'Successful',
-    };
 
   }
 

@@ -19,7 +19,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { useNavigation } from '@react-navigation/native';
 
-
+import { PARAM_PP__CRYPTO } from './parameters.js';
 
 import { TabsComponent } from './visuals/Tabs.jsx';
 import { PPInitComponent } from "./visuals/PPInit.jsx";
@@ -30,8 +30,8 @@ import { PPIntegrityComponent } from "./visuals/PPIntegrity.jsx";
 import { PPEnrollmentComponent } from "./visuals/PPEnrollment.jsx";
 import { PPNotFoundComponent } from "./visuals/PPNotFound.jsx";
 
-import { EraseLocalData, ErrorAlert, InitialisationActions, LogMe, UpdateLogMeUsername } from './myGeneralLibrary.jsx';
-import storage from './storage/storageApi.js';
+import { EraseLocalData, ErrorAlert, InitialisationActions, LogMe, UpdateLogMeUsername, AsyncAlert } from './myGeneralLibrary.jsx';
+import { storage } from './storage/storageApi.js';
 import { styles, LoadingComponent } from './visuals/myVisualsLibrary.jsx';
 
 import 'react-native-url-polyfill/auto';  // https://www.davidangulo.xyz/posts/use-url-class-in-react-native/
@@ -87,7 +87,6 @@ export default function App() {
       async function didMount() { // Do not change the name of this function
           // Do stuff
           LogMe(1, 'useEffect of PPApp invocation');         
-
         }
       didMount();  // If we want useEffect to be asynchronous, we have to define didMount as async and call it right after
       return async function didUnmount() { // Do not change the name of this function

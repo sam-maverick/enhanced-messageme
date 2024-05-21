@@ -46,6 +46,7 @@ import {
 import storage from '../storage/storageApi.js';
 import { PPEnrollmentComponent } from './PPEnrollment.jsx';
 import { PPFinishedComponent } from './PPFinished.jsx';
+import { DoWarmup } from '../integrity/integrityapis.js';
 
 import { PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS } from '../parameters.js';
 
@@ -90,7 +91,7 @@ export const PPWrapOpsComponent = (props) => {
         async function didMount() { // Do not change the name of this function
             // Do stuff
             LogMe(1, 'useEffect of PPWrapOps invocation');  
-
+  
             disallowScreenshot(true);
 
             const subscription = AppState.addEventListener('change', async (nextAppState) => {
@@ -114,8 +115,8 @@ export const PPWrapOpsComponent = (props) => {
                   setScreenToShow('jobcompleted');
                 }
                 */
-            });
-                            
+            });              
+
             // This can't be executed in ComponentRefresh!! It throws an error about updating component while rendering component
             // We could still use this to show a "go back" link (left arrow on top left)
             /*
@@ -162,6 +163,11 @@ export const PPWrapOpsComponent = (props) => {
         LogMe(2, 'props: '+JSON.stringify(props));
         if (initStatus.key === 'init') {
             LogMe(1, 'Initialising PPWrapOps Component');
+            if (Platform.OS === 'android') {
+                LogMe(1, 'Doing Android warmup from PPWrapOps Component');
+                await DoWarmup(function () {}, function () {})
+                LogMe(1, 'Done doing Android warmup from PPWrapOps Component');
+            }            
             initStatus.key = 'updated'; //update without rendering
             //initStatus({ key:'updated'}); //update with rendering
             // This will reach only on the first time the scren is loaded    
@@ -257,17 +263,16 @@ export const PPWrapOpsComponent = (props) => {
         // GET USER PROFILE DATA 
 
         try {
-
-            let retStorage = await storage.load({
+            const storagenewdata = {
                 syncInBackground: false,        
                 key: 'accountData',
-            });
+            };
+            let retStorage = await storage.load(storagenewdata);
+            LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));
             
             // Previously stored values
             accountData.key = { ...retStorage };
             UpdateLogMeUsername(retStorage.username);
-
-            LogMe(2, 'accountData found in local storage: '+JSON.stringify(retStorage));
     
         } catch(error) {
 
@@ -479,7 +484,7 @@ export const PPWrapOpsComponent = (props) => {
                     ;  // reverse URL-safe formatting for base64
                 }
 
-                let unwrappedDataObject = await UnwrapPicture(wrappedPrivatePictureContents);
+                let unwrappedDataObject = await UnwrapPicture(wrappedPrivatePictureContents, accountData.key);
 
                 setPrivatePictureContents({uri: 'data:image/'+unwrappedDataObject.contentType+';base64,'+unwrappedDataObject.data});
 
@@ -520,6 +525,7 @@ export const PPWrapOpsComponent = (props) => {
 
             } catch (err) {
                 let errormsg = 'Ooops. An unexpected error has occurred while unwrapping the image: `' + err.message + '`. ';
+                LogMe(1, errormsg);
                 callbackURL.searchParams.append('result', 'fail');    
                 callbackURL.searchParams.append('message', err.message);  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions
                 await ErrorAlertAsync(errormsg+' Press Ok to come back to your messaging app.', err);
@@ -537,7 +543,7 @@ export const PPWrapOpsComponent = (props) => {
     }
     
 
-    function onEnrollmentAttempt (hasItBeenSuccessful, originalUrlParams) {
+    const onEnrollmentAttempt = (hasItBeenSuccessful, originalUrlParams) => {
         LogMe(1, 'onEnrollmentAttempt()');
         if (hasItBeenSuccessful) {
             LogMe(1, 'onEnrollmentAttempt(): Enrollment successful; returing to ProcessUrlRequest()');
@@ -546,6 +552,8 @@ export const PPWrapOpsComponent = (props) => {
             } catch (err) {
                 ErrorAlert('Error when processing request', err);
             }
+        } else {
+            LogMe(1, 'onEnrollmentAttempt(): Enrollment unsuccessful');
         }
     }
 
