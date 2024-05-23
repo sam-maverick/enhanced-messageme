@@ -28,13 +28,10 @@ index 7e9c5a1..b310846 100644
 \ No newline at end of file
 diff --git a/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/MyFileProvider.java b/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/MyFileProvider.java
 new file mode 100644
-index 0000000..1096a73
+index 0000000..a251197
 --- /dev/null
 +++ b/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/MyFileProvider.java
-@@ -0,0 +1,778 @@
-+package com.artirigo.fileprovider;
-+
-+
+@@ -0,0 +1,780 @@
 +/*
 + * Copyright (C) 2013 The Android Open Source Project
 + *
@@ -51,7 +48,11 @@ index 0000000..1096a73
 + * limitations under the License.
 + */
 +
-+import androidx.core.content.ContextCompat; // added
++// Look for (#) to see the changes made to the original file
++
++package com.artirigo.fileprovider;  // (#) added
++
++import androidx.core.content.ContextCompat;  // (#) added
 +import static org.xmlpull.v1.XmlPullParser.END_DOCUMENT;
 +import static org.xmlpull.v1.XmlPullParser.START_TAG;
 +import android.content.ContentProvider;
@@ -405,6 +406,7 @@ index 0000000..1096a73
 +        super.attachInfo(context, info);
 +        // Sanity check our security
 +        if (info.exported) {
++            // (#) The following line has been commented to allow for exported=true
 +            //throw new SecurityException("Provider must not be exported");
 +        }
 +        if (!info.grantUriPermissions) {
