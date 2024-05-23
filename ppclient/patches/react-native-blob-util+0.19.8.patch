@@ -1,8 +1,18 @@
 diff --git a/node_modules/react-native-blob-util/android/src/main/java/com/ReactNativeBlobUtil/ReactNativeBlobUtilStream.java b/node_modules/react-native-blob-util/android/src/main/java/com/ReactNativeBlobUtil/ReactNativeBlobUtilStream.java
-index ef1e357..fcbdebe 100644
+index ef1e357..8810237 100644
 --- a/node_modules/react-native-blob-util/android/src/main/java/com/ReactNativeBlobUtil/ReactNativeBlobUtilStream.java
 +++ b/node_modules/react-native-blob-util/android/src/main/java/com/ReactNativeBlobUtil/ReactNativeBlobUtilStream.java
-@@ -148,11 +148,21 @@ public class ReactNativeBlobUtilStream {
+@@ -133,7 +133,8 @@ public class ReactNativeBlobUtilStream {
+                     streamId,
+                     "error",
+                     "EUNSPECIFIED",
+-                    "Failed to convert data to " + encoding + " encoded string. This might be because this encoding cannot be used for this data."
++                    //"Failed to convert data to " + encoding + " encoded string. This might be because this encoding cannot be used for this data."
++                    err.getMessage()
+             );
+             err.printStackTrace();
+         }
+@@ -148,11 +149,21 @@ public class ReactNativeBlobUtilStream {
       * @param callback Callback
       */
      void writeStream(String path, String encoding, boolean append, Callback callback) {
@@ -25,7 +35,7 @@ index ef1e357..fcbdebe 100644
                  if (dir != null && !dir.exists()) {
                      if (!dir.mkdirs()) {
                          callback.invoke("ENOTDIR", "Failed to create parent directory of '" + path + "'");
-@@ -168,7 +178,18 @@ public class ReactNativeBlobUtilStream {
+@@ -168,7 +179,18 @@ public class ReactNativeBlobUtilStream {
                  return;
              }
  

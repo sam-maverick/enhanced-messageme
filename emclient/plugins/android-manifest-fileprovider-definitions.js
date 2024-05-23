@@ -36,7 +36,14 @@ const withAndroidManifestFileProviderConfigurations = config => {
             'android:name': 'com.artirigo.fileprovider.MyFileProvider',
             'android:authorities': 'pt.lasige.safex.enhmessageme.MyFileProvider',
             'android:grantUriPermissions': 'true',
-            'android:exported': 'false',
+            'android:permission': 'pt.lasige.safex.permission.PRIVACY_PROVIDER',  // The PP client app will need this permission to access the content provided by MyFileProvider. The calling code from the messaging app (system update) will also need to set grantUriPermission()
+            'android:exported': 'true',  // Setting this to 'true' causes a 'Provider must not be exported' SecurityException when using android.content.FileProvider
+            /**
+            * According to https://developer.android.com/guide/topics/manifest/provider-element.html#exported, 
+            * you can set android:exported=false and still share files with the ContentProvider, but then you need to configure and use custom permissions:
+            * https://developer.android.com/guide/topics/manifest/provider-element#prmsn
+            * As a workaround, we have created our own MyFileProvider class extending ContentProvider, which allows the exported=true flag.
+            */
         },
         'meta-data': {
             $: {
@@ -44,9 +51,20 @@ const withAndroidManifestFileProviderConfigurations = config => {
                 'android:resource': '@xml/filepaths',
             }
         }
-    }
+    };
 
     application['provider'] = providertagcontents;
+    
+    const custompermissiontagcontents = {
+        $: {
+            //'android:description': "Privacy Provider client apps will need this permission to operate. This gives the app access to private pictures.",
+            'android:name': "pt.lasige.safex.permission.PRIVACY_PROVIDER",
+            'android:label': "Privacy Provider",
+            'android:protectionLevel': "dangerous",
+        }
+    };
+    
+    manifest['permission'] = custompermissiontagcontents;
 
 
     // create file_paths.xml

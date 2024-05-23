@@ -35,7 +35,7 @@
     "name": "enhmessageme",
     "slug": "enhmessageme",
     "scheme": "enhmsm",
-    "version": "2.3.66",
+    "version": "2.3.98",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

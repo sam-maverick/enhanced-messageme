@@ -6,14 +6,14 @@ import * as Linking from 'expo-linking';
 // NOTE: URL parameters are only available in EAS build. In the bare workflow, an internal Expo Go URL is used, which misses the actual original parameters.
 
 //import * as FileSystem from 'expo-file-system';
-//var RNFS = require('react-native-fs');
+var RNFS = require('react-native-fs');
 
 //import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft';
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons/faTriangleExclamation';
 
-import FileProvider from 'react-native-file-provider';
+//import FileProvider from 'react-native-file-provider';
 
 import { disallowScreenshot, keepAwake } from 'react-native-screen-capture';
 
@@ -50,7 +50,6 @@ import { PPFinishedComponent } from './PPFinished.jsx';
 import { PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS } from '../parameters.js';
 
 import { WrapPicture, UnwrapPicture } from '../cryptography/wrapops.js';
-
 
 var mutexPPclientAccess = withTimeout(new Mutex(), PARAM_PP__PROCESSING_TIMEOUT_MS);
 var timeoutID = 0;
@@ -212,8 +211,8 @@ export const PPWrapOpsComponent = (props) => {
             setRequestedUrlParams({});
             setPrivatePictureContents(placeholderimage);
             if (Platform.OS === 'android' && options.androidContentUri) {
-                LogMe(1, 'ClearWorkingData(): Clearing Android FileProvider permissions');
-                await FileProvider.revokeUriPermissionR(options.androidContentUri);  // Apparently, we can do this from the recipient app
+                ////LogMe(1, 'ClearWorkingData(): Clearing Android FileProvider permissions');
+                ////await FileProvider.revokeUriPermissionR(options.androidContentUri);  // Apparently, we can do this from the recipient app
             }          
             androidContentUriGlobal = undefined;  
         }
@@ -383,7 +382,7 @@ export const PPWrapOpsComponent = (props) => {
                     ////LogMe(1, await FileProvider.getListOfInstalledApps());
 
                     plainPrivatePictureContents = await ReadMyFileStream(urlParams.fileUri, 'base64');
-    
+                                        
                     LogMe(1, 'Read');
                 } else {
                     plainPrivatePictureContents = urlParams.fileContents
