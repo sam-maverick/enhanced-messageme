@@ -1,3 +1,4 @@
+
 const { XML, createRunOncePlugin, withAndroidManifest } = require('@expo/config-plugins');
 const { mkdirSync } = require("fs");
 
@@ -5,6 +6,8 @@ const withAndroidManifestFileProviderConfigurations = config => {
   return withAndroidManifest(config, async (config) => {
 
     // modify manifest
+    
+    console.warn('withAndroidManifestFileProviderConfigurations started');
 
     const manifest = config.modResults.manifest;
 
@@ -31,14 +34,14 @@ const withAndroidManifestFileProviderConfigurations = config => {
     const providertagcontents = {
         $: {
             'android:name': 'com.artirigo.fileprovider.MyFileProvider',
-            'android:authorities': 'pt.lasige.safex.enhmessageme',
+            'android:authorities': 'pt.lasige.safex.enhmessageme.MyFileProvider',
             'android:grantUriPermissions': 'true',
             'android:exported': 'false',
         },
         'meta-data': {
             $: {
                 'android:name': 'android.support.FILE_PROVIDER_PATHS',
-                'android:resource': '@xml/file_paths',
+                'android:resource': '@xml/filepaths',
             }
         }
     }
@@ -64,7 +67,7 @@ const withAndroidManifestFileProviderConfigurations = config => {
     }
 
     mkdirSync(dir, { recursive: true });
-    await XML.writeXMLAsync({ path: `${dir}/file_paths.xml`, xml: filepathscontents });
+    await XML.writeXMLAsync({ path: `${dir}/filepaths.xml`, xml: filepathscontents });
 
 
     // return result

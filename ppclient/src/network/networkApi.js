@@ -66,6 +66,7 @@ export async function ApiSubmitTwoAttestationTokensToServer(environment, cookie,
 export async function ApiGetNonceFromServer(cookie, platformType, requestType) {
 
     LogMe(1, 'API: ApiGetNonceFromServer');
+    LogMe(1, 'API: ApiGetNonceFromServer, cookie='+cookie);
 
     return fetch(`${PARAM_SERVER_API_URL}/attestations/getNonceFromServer`, {
         ...POST_HEADERS,

@@ -35,7 +35,7 @@
     "name": "enhmessageme",
     "slug": "enhmessageme",
     "scheme": "enhmsm",
-    "version": "2.3.1",
+    "version": "2.3.66",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -71,7 +71,7 @@
         "CAMERA_ROLL"
       ],
       "package": "pt.lasige.safex.enhmessageme",
-      "versionCode": 200
+      "versionCode": 205
     },
     "web": {
       "favicon": "./assets/favicon.png"

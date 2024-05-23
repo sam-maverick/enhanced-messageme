@@ -420,8 +420,10 @@ export class AttestationController {
         LogMe(1, 'Nonce: '+myNonce);
 
         if ( ! existingDeviceObject) {  // Device unseen before
+            LogMe(1, 'Controller: attestations/getNonceFromServer Device unseen before');
 
             const myCookie = GenerateRandomString(PARAM_LENGTH_TOKENS);
+            LogMe(1, 'Controller: attestations/getNonceFromServer New cookie='+myCookie);
     
             let newDeviceDocument = {
                 nonces: {
@@ -475,6 +477,9 @@ export class AttestationController {
             }
     
         } else {  // Device seen before
+            LogMe(1, 'Controller: attestations/getNonceFromServer Device seen before, welcome back');
+            LogMe(1, 'Controller: attestations/getNonceFromServer cookie: '+req.body.cookie);
+            LogMe(1, 'Controller: attestations/getNonceFromServer requestType: '+req.body.requestType);
 
             const updateResult = await DevicesModel.updateOne(
                 {cookie: req.body.cookie},

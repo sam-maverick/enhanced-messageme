@@ -42,7 +42,11 @@ export async function RequestToDecryptKey(myPPEcookie, encryptedKeyB64) {
   let apiresgetnonce2 = undefined;        
   try {
     if (Platform.OS === 'android') {
-      // Note: Android warmup is done from within PPWrapOps.ComponentRefresh()
+
+      LogMe(1, 'Doing Android warmup');
+      await AppIntegrity.DoWarmup(function () {}, function () {});
+      LogMe(1, 'Done doing Android warmup');
+      
       apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
       apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
     } else {  // ios
@@ -203,7 +207,7 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       };
     } else {
       // STAGE3
-      LogMe(1, 'UnwrapPicture(): STAGE3');
+      LogMe(1, 'UnwrapPicture(): STAGE3');           
 
       const stage2_key_B64 = await RequestToDecryptKey(myAccountData.PPEcookie, ppPpChunkContents.stage3.encrypted_stage2_key_b64);
 

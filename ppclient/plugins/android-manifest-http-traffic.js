@@ -1,9 +1,11 @@
 const { createRunOncePlugin, withAndroidManifest } = require('@expo/config-plugins');
 
-const withAndroidManifestHavingBetterSecuritySettings = config => {
+const withAndroidManifestHttpConfigurations = config => {
   return withAndroidManifest(config, config => {
     const androidManifest = config.modResults.manifest;
     const mainApplication = androidManifest.application[0];
+
+    console.warn('withAndroidManifestHttpConfigurations started');
 
     androidManifest.$ = {
       ...androidManifest.$,
@@ -17,8 +19,8 @@ const withAndroidManifestHavingBetterSecuritySettings = config => {
 };
 
 module.exports = createRunOncePlugin(
-  withAndroidManifestHavingBetterSecuritySettings,
-  'withAndroidManifestHavingBetterSecuritySettings',
+  withAndroidManifestHttpConfigurations,
+  'withAndroidManifestHttpConfigurations',
   '1.0.0'
 );
 

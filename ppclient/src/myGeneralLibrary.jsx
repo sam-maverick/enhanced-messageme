@@ -223,8 +223,8 @@ export async function  EraseLocalData() {
         await FileSystem.deleteAsync(FileSystem.documentDirectory + PARAM_IMAGES_DIRNAME, {idempotent: true})  // Because idempotent is set to true, it does not throw error if directory does not exist
         // Also delete key-value pairs from storage
         //await AsyncStorage.clear();
-        storage.clearMap();
-        storage.clearAll();  // Undocumented function but necessary, otherwise old data reappears
+        await storage.clearMap();
+        await storage.clearAll();  // Undocumented function but necessary, otherwise old data reappears
         await InitialisationActions();
     }
     catch(error) {

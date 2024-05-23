@@ -81,7 +81,7 @@ export const PARAM_PP__APP_TMP_FOLDER_NAME = 'ppSharedImages';
 /**
  * Android name given to the messaging app
  */
-export const PARAM_PP__APP_ANDROID_NAME = 'pt.lasige.safex.enhmessageme';
+export const PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY = 'pt.lasige.safex.enhmessageme.MyFileProvider';
 
 /**
  * Android name given to the PP client app

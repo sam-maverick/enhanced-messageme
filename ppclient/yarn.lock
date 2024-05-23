@@ -3985,23 +3985,6 @@ expo-font@~11.4.0:
   dependencies:
     fontfaceobserver "^2.1.0"
 
-expo-image-loader@~4.3.0:
-  version "4.3.0"
-  resolved "https://registry.npmjs.org/expo-image-loader/-/expo-image-loader-4.3.0.tgz"
-  integrity sha512-2kqJIO+oYM8J3GbvTUHLqTSpt1dLpOn/X0eB4U4RTuzz/faj8l/TyQELsMBLlGAkweNUuG9LqznbaBz+WuSFEw==
-
-expo-image-multiple-picker@^4.8.3:
-  version "4.8.3"
-  resolved "https://registry.npmjs.org/expo-image-multiple-picker/-/expo-image-multiple-picker-4.8.3.tgz"
-  integrity sha512-jRe5aa6uwrzKeuY7MjbDQLzTz3uamyWCc5SmK5px82UDguTSjRbdBxvW29hVIQnjth736jwznnc74+cu8WHOAg==
-
-expo-image-picker@~14.3.2:
-  version "14.3.2"
-  resolved "https://registry.npmjs.org/expo-image-picker/-/expo-image-picker-14.3.2.tgz"
-  integrity sha512-xr/YeQMIYheXecWP033F2SPwpBlBR5xVCx7YSfSCTH8Y9pw7Z886agqKGbS9QBVGlzJ5qecJktZ6ASSzeslDVg==
-  dependencies:
-    expo-image-loader "~4.3.0"
-
 expo-keep-awake@~12.3.0:
   version "12.3.0"
   resolved "https://registry.npmjs.org/expo-keep-awake/-/expo-keep-awake-12.3.0.tgz"

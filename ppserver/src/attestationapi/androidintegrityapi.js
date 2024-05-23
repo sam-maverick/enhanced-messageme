@@ -2,17 +2,6 @@ import { LogMe } from '../serverLibrary';
 import { PARAM_LOGGING_LEVEL } from '../parameters';
 
 
-// local imports
-//import { decryptPlayIntegrity, verifyPlayIntegrity } from "./spic-library-custom/src/playIntegrity";
-//import { decryptPlayIntegrity, verifyPlayIntegrity } from "server-side-app-integrity-check";
-//const appintegritymodule = await import('server-side-app-integrity-check');
-//import("server-side-app-integrity-check");
-
-
-
-
-
-
 /**
  * Android check Endpoint.
  * 'token' is the token the client received from the PlayIntegrity Server in the previous step
@@ -47,7 +36,7 @@ export async function CheckPlayIntegrity(token, nonce_truth, checkMode, requestT
             if (PARAM_LOGGING_LEVEL>=2) {
                 return {status: "error", message: e.message};
             } else {
-                return {status: "error", message: 'An exception has occurred when processing the token. Check server logs.'};
+                return {status: "error", message: 'An exception has occurred when processing the token. Contact support for them to check server logs.'};
             }
         }
 

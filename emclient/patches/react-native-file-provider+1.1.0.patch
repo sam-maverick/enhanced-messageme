@@ -28,17 +28,22 @@ index 7e9c5a1..b310846 100644
 \ No newline at end of file
 diff --git a/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/MyFileProvider.java b/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/MyFileProvider.java
 new file mode 100644
-index 0000000..73778e4
+index 0000000..f69a14b
 --- /dev/null
 +++ b/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/MyFileProvider.java
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,13 @@
 +package com.artirigo.fileprovider;
 +
 +//import android.support.v4.content.FileProvider;
 +import androidx.core.content.FileProvider;
++import android.util.Log;
++//import com.artirigo.fileprovider.R;
 +
 +public class MyFileProvider extends FileProvider {
-+
++    public MyFileProvider() {
++        super();
++        //super(com.artirigo.fileprovider.R.xml.filepaths);
++    }
 +}
 \ No newline at end of file
 diff --git a/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/RNFileProviderModule.java b/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/RNFileProviderModule.java

@@ -65,19 +65,6 @@ if (artifactname === 'ppclient') {
   require('./compile_assets.js');
 }
 
-if (artifactname === 'ppclient') {
-  // In case we made changes to the app-integrity-android-standard module (remember to upstream changes within app-integrity-android-standard, first)
-  echo('Updating app-integrity-android-standard module to the latest version');
-  myExec('yarn add app-integrity-android-standard');
-  env.RESULT = error();
-  if (env.RESULT.toString() !== 'null') {
-    echo('Aborting on ' + env.RESULT + ', command failed:');
-    echo('yarn add ...');
-    exit(1);
-  }
-}
-
-
 // Clear previous builds
 if (process.argv[2] === 'aab') {
   rm('-f', './*.aab');
@@ -104,6 +91,17 @@ if (process.argv[4] !== 'savepatches') {
   echo();
 }
 
+if (artifactname === 'ppclient') {
+  // In case we made changes to the app-integrity-android-standard module (remember to upstream changes within app-integrity-android-standard, first)
+  echo('Updating app-integrity-android-standard module to the latest version');
+  myExec('yarn add app-integrity-android-standard');
+  env.RESULT = error();
+  if (env.RESULT.toString() !== 'null') {
+    echo('Aborting on ' + env.RESULT + ', command failed:');
+    echo('yarn add ...');
+    exit(1);
+  }
+}
 
 echo('Stopping any current app execution on the phone');
 myExec(`adb shell am force-stop ${appname}`);

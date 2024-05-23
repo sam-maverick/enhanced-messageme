@@ -46,7 +46,6 @@ import {
 import storage from '../storage/storageApi.js';
 import { PPEnrollmentComponent } from './PPEnrollment.jsx';
 import { PPFinishedComponent } from './PPFinished.jsx';
-import { DoWarmup } from '../integrity/integrityapis.js';
 
 import { PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS } from '../parameters.js';
 
@@ -163,11 +162,6 @@ export const PPWrapOpsComponent = (props) => {
         LogMe(2, 'props: '+JSON.stringify(props));
         if (initStatus.key === 'init') {
             LogMe(1, 'Initialising PPWrapOps Component');
-            if (Platform.OS === 'android') {
-                LogMe(1, 'Doing Android warmup from PPWrapOps Component');
-                await DoWarmup(function () {}, function () {})
-                LogMe(1, 'Done doing Android warmup from PPWrapOps Component');
-            }            
             initStatus.key = 'updated'; //update without rendering
             //initStatus({ key:'updated'}); //update with rendering
             // This will reach only on the first time the scren is loaded    
@@ -268,7 +262,7 @@ export const PPWrapOpsComponent = (props) => {
                 key: 'accountData',
             };
             let retStorage = await storage.load(storagenewdata);
-            LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));
+            LogMe(1,'Loaded from storage: '+JSON.stringify(retStorage));
             
             // Previously stored values
             accountData.key = { ...retStorage };
@@ -361,7 +355,7 @@ export const PPWrapOpsComponent = (props) => {
         if (urlParams?.operationName === 'wrap') {
             try {
                 LogMe(1, '--------- DO STUFF: wrap ------------');
-                setOperationTitle('Wraping your private picture...');
+                setOperationTitle('Wrapping your private picture...');
                 setScreenToShow('wrapop');
                 // 
                 //
@@ -383,6 +377,11 @@ export const PPWrapOpsComponent = (props) => {
                     //plainPrivatePictureContents = await RNFS.readFile(urlParams.fileUri, 'base64');
                     //plainPrivatePictureContents = await FileSystem.readAsStringAsync(urlParams.fileUri, {encoding: 'base64'}); // Read image contents
     
+                    // This is to check visibility of the messaging app
+                    // If the messaging app does not appear here, Android will likely throw an error complaining about FileProvider not found
+                    // Keep the line below commented in production!!
+                    ////LogMe(1, await FileProvider.getListOfInstalledApps());
+
                     plainPrivatePictureContents = await ReadMyFileStream(urlParams.fileUri, 'base64');
     
                     LogMe(1, 'Read');
