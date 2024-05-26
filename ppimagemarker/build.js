@@ -32,11 +32,11 @@ echo();
 
 
 // Check parameters and compatibilities
-
+/*
 if (process.argv[2] === 'bare' && artifactname === 'ppimagemarker') {
   echo('ERROR: The bare build is not supported with ppimagemarker. Functional anomalies have been detected with the expo-image-multiple-picker: It never finishes loading pictures. Use the APK/AAB build instead.');
   exit(1);
-}
+}*/
 
 if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'bare') {
   echo('The first parameter is the build type, and must be either \'apk\', \'aab\', or \'bare\'.');

@@ -20,6 +20,17 @@ export function EncodeFromBufferToB64 (buff: Buffer) {
     return buff.toString('base64');  // Returns a String
 }
 
+export function EncodeFromB64ToBinary (str: string) {  // Affected by caveat: https://nodejs.org/api/crypto.html#using-strings-as-inputs-to-cryptographic-apis
+    LogMe(1,'EncodeFromB64ToBinary() called');
+    return Buffer.from(str, 'base64').toString('binary');  // Returns a String
+}
+  
+export function EncodeFromBinaryToB64 (str: string) {
+    LogMe(1,'EncodeFromBinaryToB64() called');
+    return Buffer.from(str, 'binary').toString('base64');  // Returns a String
+}
+  
+
 
 export function GetRandomIntInclusive(min: number, max:number) {
     const randomBuffer = new Uint32Array(1);

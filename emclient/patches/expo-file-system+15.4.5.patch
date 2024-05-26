@@ -33,7 +33,7 @@ index c93fc3c..8444f2c 100644
 -export default platformModule as ExponentFileSystemModule;
 +export default platformModule as ExponentFileSystemModule|ProxyNativeModule;
 diff --git a/node_modules/expo-file-system/src/FileSystem.ts b/node_modules/expo-file-system/src/FileSystem.ts
-index af2bda8..0219aa8 100644
+index af2bda8..e7208f6 100644
 --- a/node_modules/expo-file-system/src/FileSystem.ts
 +++ b/node_modules/expo-file-system/src/FileSystem.ts
 @@ -1,3 +1,30 @@
@@ -137,7 +137,7 @@ index af2bda8..0219aa8 100644
  function normalizeEndingSlash(p: string | null): string | null {
    if (p != null) {
      return p.replace(/\/*$/, '') + '/';
-@@ -85,7 +175,229 @@ export async function readAsStringAsync(
+@@ -85,7 +175,231 @@ export async function readAsStringAsync(
    if (!ExponentFileSystem.readAsStringAsync) {
      throw new UnavailabilityError('expo-file-system', 'readAsStringAsync');
    }
@@ -152,6 +152,15 @@ index af2bda8..0219aa8 100644
 +  // Checking if picture is marked as 'Private picture' or not
 +  let isPrivatePicture = false;
 +  let fileContentsOriginal;
++  let metadata = {
++    pictureType: '',
++    privacyPolicies: {
++      ViewOnce: '',
++      Expiration: '',
++      KeepOpenTimer: '',
++    }
++  }; // Just for Type consistency
++
 +  try {
 +  
 +    let fileExt = fileUri?.split('.')?.pop()?.toLowerCase();
@@ -174,9 +183,14 @@ index af2bda8..0219aa8 100644
 +
 +    if (exifObj?.Exif) {
 +      LogUS(1,'Checking if picture is marked as private: ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);
-+      if (exifObj['Exif'][piexif.ExifIFD.UserComment] == 'Private picture') {
-+        LogUS(1,'Checking if picture is marked as private: ExifIFD.UserComment is \'Private picture\'');
-+        isPrivatePicture = true;
++      try {
++        metadata = JSON.parse(exifObj['Exif'][piexif.ExifIFD.UserComment]);
++        if (metadata?.pictureType === 'private') {
++          LogUS(1,'The picture is private!');
++          isPrivatePicture = true;
++        }  
++      } catch (exc) {
++        LogUS(1, 'Error parsing JPEG metadata. Possible another program is using the same field for other purposes. This error will be ignored. Message: '+exc.message);
 +      }
 +    }
 +  } catch(exc) {
@@ -184,7 +198,7 @@ index af2bda8..0219aa8 100644
 +  }
 +
 +
-+  if (isPrivatePicture) {  // check if the file is a private picture, and if so package it calling ppclient's deep link
++  if (isPrivatePicture) {  // package it calling ppclient's deep link
 +    LogUS(1, 'Processing a private picture *.*.*.*.');
 +    try {
 +      return await tryAcquire(mutexPrivatePictureAccess).runExclusive(async() => {  // tryAcquire => non-blocking; if mutex is busy it throws error
@@ -198,6 +212,7 @@ index af2bda8..0219aa8 100644
 +        URLofPPselectionService.searchParams.append('callbackURL', PARAM_PP__APP_URL_SCHEME+'://'+PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME+'/');
 +        PPreplyAuthenticationString = UpdUtils.GenerateRandomString(PARAM_PP__LENGTH_AUTH);
 +        URLofPPselectionService.searchParams.append('authToken', PPreplyAuthenticationString);
++        URLofPPselectionService.searchParams.append('privacyPolicies', UpdUtils.SafeUrlEncodeForB64(UpdUtils.EncodeFromBinaryToB64(JSON.stringify(metadata.privacyPolicies))));
 +        URLofPPselectionService.searchParams.append('operationName', 'wrap');
 +        // We assume that the extension coincides with the ISO content-type            
 +        let fileExt = fileUri.split('.').pop();
@@ -245,12 +260,7 @@ index af2bda8..0219aa8 100644
 +
 +          // iOS ---------------------------------------------------------------------------
 +
-+          URLofPPselectionService.searchParams.append('fileContents', fileContentsOriginal
-+          .replaceAll('+','-')
-+          .replaceAll('/','_')
-+          .replaceAll('=','.')
-+          ); // PerformURL-safe formatting for base64
-+          //https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
++          URLofPPselectionService.searchParams.append('fileContents', UpdUtils.SafeUrlEncodeForB64(fileContentsOriginal));
 +
 +        } else {
 +
@@ -296,17 +306,9 @@ index af2bda8..0219aa8 100644
 +            return await ExponentFileSystem?.readAsStringAsync(PPandroidTmpFilePath, options);
 +          } else {
 +            if (options.encoding == 'base64') {
-+              return PPiosFileContents
-+              .replaceAll('-','+')
-+              .replaceAll('_','/')
-+              .replaceAll('.','=')
-+              ;  // reverse URL-safe formatting for base64
++              return UpdUtils.SafeUrlDecodeForB64(PPiosFileContents);
 +            } else {
-+              return UpdUtils.EncodeFromB64ToUTF8(PPiosFileContents
-+              .replaceAll('-','+')
-+              .replaceAll('_','/')
-+              .replaceAll('.','=')
-+              );  // reverse URL-safe formatting for base64
++              return UpdUtils.SafeUrlDecodeForB64(UpdUtils.EncodeFromB64ToUTF8(PPiosFileContents));
 +            } 
 +          }
 +        } else {

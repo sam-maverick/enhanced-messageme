@@ -6,12 +6,12 @@ import { AppService } from '../app.service';
 import DevicesModel from '../middleware/database/schemas/Device';
 import { PARAM_LENGTH_TOKENS, MINIMUM_ANDROID_API_LEVEL, ANDROID_CHECK_MODE, 
     PARAM_IOS_KEY_IDENTIFIER, IOS_SUPPORTED_VERSIONS, IOS_IS_DEVELOPMENT_ENVIRONMENT, MAX_TOTAL_DELAY_MS, PARAM_TEST_MODE } from '../parameters';
-import { LogMe, GenerateRandomString, isAnInteger } from '../serverLibrary';
+import { LogMe, GenerateRandomString, isAnInteger, EncodeFromB64ToBuffer, EncodeFromBufferToB64, EncodeFromB64ToBinary, EncodeFromBinaryToB64 } from '../serverLibrary';
 
 import { CheckPlayIntegrity } from '../attestationapi/androidintegrityapi';
 import { CheckAppAttestation, CheckAppAssertion } from '../attestationapi/iosintegrityapi';
 
-import { decryptKey } from '../cryptography/cryptoFunctions';
+import { DecryptThings } from '../cryptography/cryptoFunctions';
 
 
 if (PARAM_TEST_MODE) {
@@ -380,22 +380,32 @@ export class AttestationController {
     // Build the response accordingly to the environment
 
     if(req.body.environment === 'PPWrapOps') {
+        try {
+            const fullDataObject = await DecryptThings(req.body.requestDataObject);
 
-        // Success
-        return {
-            isSuccessful: true,
-            resultMessage: 'Successful',
-            decryptedKey: await decryptKey(req.body.encryptedKeyB64),
-        };        
+            // Enforce privacy policies here  .... TBC
+            //
 
+            // Success
+            return {
+                isSuccessful: true,
+                resultMessage: 'Successful',
+                replyDataObject: {
+                    stage1: fullDataObject.stage1,
+                    privacyPolicies: fullDataObject.to_server_data.privacyPolicies,                
+                },
+            };
+        } catch (err) {
+            LogMe(1, 'Error when processing or decrypting '+err.message);
+            return {isSuccessful: false, resultMessage: 'Error when processing or decrypting data related to the protected picture. For security reasons, we can\'t provide details here. Contact the PP server administrators for more info.'};
+        }       
     } else {
         // Just inform about success
         return {
             isSuccessful: true,
             resultMessage: 'Successful',
-        };        
-    }
-
+        };
+    }    
   }
 
 

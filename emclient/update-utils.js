@@ -10,6 +10,23 @@ function LogUS(level, message) {
   }
 }
 
+export function SafeUrlEncodeForB64 (s) {  // s is supposed to be in base64 format
+  //https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
+  return s
+  .replaceAll('+','-')
+  .replaceAll('/','_')
+  .replaceAll('=','.')
+  ;
+}
+
+export function SafeUrlDecodeForB64 (s) {  //
+  return s
+  .replaceAll('-','+')
+  .replaceAll('_','/')
+  .replaceAll('.','=')
+  ;  // reverse URL-safe formatting for base64
+}
+
 export function IsValidImageExtensionAndContentType (myextension) {
     // We assume that there is an equivalence between image extension and image content-type
     if (myextension === null || myextension === undefined) {

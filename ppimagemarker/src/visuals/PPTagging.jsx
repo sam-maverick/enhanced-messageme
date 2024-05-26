@@ -1,10 +1,11 @@
 //import { StatusBar } from 'expo-status-bar';
-import React, {useState, useCallback, useEffect, useRef} from 'react';
+import React, {useState, useCallback, useEffect, useRef, useMemo} from 'react';
 import { StyleSheet, Button, Text, TextInput, View, Alert, ScrollView, Platform, Image } from 'react-native';
 
 import * as FileSystem from 'expo-file-system';
 import uuid from 'react-native-uuid';
 
+import RadioGroup from 'react-native-radio-buttons-group';
 import { ImagePicker, Album, Asset } from 'expo-image-multiple-picker';
 import * as ExpoImagePicker from 'expo-image-picker';
 import * as piexif from 'piexifjs';
@@ -44,11 +45,7 @@ export const PPTaggingComponent = (props) => {
     const [processingMessage, setProcessingMessage] = useState();
     const [propsState, setPropsState] = useState(props.route.params);
 
-    LogMe(1, 'Initial propsState.AccountData.taggedPictures: '+JSON.stringify(propsState.AccountData.taggedPictures));
-
-    // Internal state, only initialized when 
-    const [internalSyncState, setInternalState] = useState({ attempted: false, completed: false });
-    const [internalDummyState, setInternalDummyState] = useState();  // Used to force refresh
+    LogMe(1, 'Initial propsState.AccountData: '+JSON.stringify(propsState.AccountData));
 
     // Image picker
     const [open, setOpen] = useState(true);
@@ -57,104 +54,123 @@ export const PPTaggingComponent = (props) => {
     //const [assets, setAssets] = useState<Asset[]>([]);
     const [assets, setAssets] = useState();
 
-    async function processPictureChange (imageInCameraRoll, checked) {
-        LogMe(1,'processPictureChange() with imageInCameraRoll='+JSON.stringify(imageInCameraRoll)+' and checked='+checked);
+    // Privacy policies
+    const [selectionViewOnce, setSelectionViewOnce] = useState();
+    const [selectionExpiration, setSelectionExpiration] = useState();
+    const [selectionKeepOpenTimer, setSelectionKeepOpenTimer] = useState();
+    const [selectionInfoMessage, setSelectionInfoMessage] = useState();
 
-        if (imageInCameraRoll.albumId == privateAlbumID.key) {
-            setProcessingMessage('');
-            setIsProcessing(true);
-            await AsyncAlert('Pictures in the '+PARAM_PRIVATE_PICTURES_ALBUM_NAME+' album cannot be marked because they are already marked.');
-            setAssets([]);
-            setIsProcessing(false);
-        } else {
-            if (checked) {
-                setProcessingMessage('Processing image. Please wait.');
-                setIsProcessing(true);
-                let ImagePathTmp = '';
-                try {
-         
-                    // LIMITATION: We can't delete files in shared storage, with the regular permissions
-                    // In Android, to delete files in shared storage we need to use special APIs
-                    
-                    let fileExt = imageInCameraRoll.uri.split('.').pop().toLowerCase();
-                    if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
-                    if (!IsValidImageExtensionAndContentType(fileExt)) {
-                        ErrorAlert('Image URI extension is not valid: '+fileExt);  
-                        return;                 
-                    } 
-                    if (fileExt!='jpeg' &&  fileExt!='tiff') {
-                        // Unsupported
-                        ErrorAlert('Image extension '+fileExt+' is not supported. Only jpg/jpeg and tiff images are supported.');
-                        return;
-                    }
-                    // Get exif data as object. jpegData must be a string that starts with "data:image/jpeg;base64,"(DataURL), "\xff\xd8", or "Exif".
-                    LogMe(1,'processPictureChange(): readAsStringAsync');
-                    let fileContentsOriginal = await FileSystem.readAsStringAsync(imageInCameraRoll.uri, {encoding: 'base64'});
-                    let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
-                    LogMe(2,'processPictureChange(): dataUri: ----'+dataUri);
-                    LogMe(1,'processPictureChange(): piexif.load');
-                    let exifObj = piexif.load(dataUri);
-                    LogMe(2,'exifObj original: '+JSON.stringify(exifObj));
-        
-                    let newValue = 'Private picture';
-                    if (exifObj?.Exif) {
-                        LogMe(1,'processPictureChange(): Exif exists in metadata');
-                        exifObj['Exif'][piexif.ExifIFD.UserComment] = newValue;
-                    } else {
-                        LogMe(1,'processPictureChange(): Exif DOES NOT exist in metadata');
-                        exifObj = {...exifObj, 'Exif' : { [piexif.ExifIFD.UserComment] : [newValue]}};
-                    }
-                    LogMe(2,'exifObj modified: '+JSON.stringify(exifObj));
-                    LogMe(1,'processPictureChange(): piexif.dump');
-                    let exifBytes = piexif.dump(exifObj);
-        
-                    LogMe(1,'processPictureChange(): piexif.insert');
-                    let dataContentsWithInsertedMetadata = await piexif.insert(exifBytes, dataUri);
-                    let base64ContentsWithInsertedMetadata = dataContentsWithInsertedMetadata.replace('data:image/'+fileExt+';base64,', '');
-                    LogMe(2,'processPictureChange(): base64ContentsWithInsertedMetadata: ----'+base64ContentsWithInsertedMetadata);
-        
-                    // 
-                    LogMe(1,'processPictureChange(): Deleting/Writing to files');
-                    
-                    ImagePathTmp = FileSystem.documentDirectory + PARAM_PRIVATE_PICTURES_TMP_DIRNAME + '/' + uuid.v4() + '.' + fileExt;
-        
-                    LogMe(1,'processPictureChange(): writeAsStringAsync');
-                    await FileSystem.writeAsStringAsync(ImagePathTmp, base64ContentsWithInsertedMetadata, {encoding: 'base64'});
-                    LogMe(1, 'processPictureChange(): Tmp file saved to workspace: ' + ImagePathTmp); 
-        
-                    LogMe(1,'processPictureChange(): CameraRoll.saveAsset');
-                    await CameraRoll.saveAsset(ImagePathTmp, { type: 'auto', album: PARAM_PRIVATE_PICTURES_ALBUM_NAME } );
-        
-        
-                    //await WriteMyFileStream(imageInCameraRoll.uri+'.temp.jpg', 'base64', false, base64ContentsWithInsertedMetadata);    
-                    /*
-                    await FileSystem.writeAsStringAsync(
-                        imageInCameraRoll.uri+'.temp.jpg',
-                        dataContentsWithInsertedMetadata.replace('data:image/'+fileExt+';base64,', ''),
-                        {encoding: 'base64'}
-                    );
-                    await FileSystem.deleteAsync(imageInCameraRoll.uri, {idempotent: true});
-                    */
-        
-                } catch (err){
-                    ErrorAlert('Error: '+err.message, err);
-                } finally {
-                    try {
-                        await FileSystem.deleteAsync(ImagePathTmp, {idempotent: true});
-                    } catch (err) {
-                        //ErrorAlert('Error: '+err.message, err);
-                    } finally {
-                        setAssets([]);
-                        setIsProcessing(false);
-                    }
+    async function ExecuteTheMarking () {
+        LogMe(1,'ExecuteTheMarking() called'); 
+
+        setProcessingMessage('Processing image(s). Please wait.');
+        setIsProcessing(true);
+
+        try {
+    
+            // LIMITATION: We can't delete files in shared storage, with the regular permissions
+            // In Android, to delete files in shared storage we need to use special APIs
+
+            for (let i = 0; i < assets.length; i++) {
+
+                let fileExt = assets[i].uri.split('.').pop().toLowerCase();
+                if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
+                if (!IsValidImageExtensionAndContentType(fileExt)) {
+                    ErrorAlert('Image URI extension is not valid: '+fileExt);  
+                    return;                 
+                } 
+                if (fileExt!='jpeg' &&  fileExt!='tiff') {
+                    // Unsupported
+                    ErrorAlert('Image extension '+fileExt+' is not supported. Only jpg/jpeg and tiff images are supported.');
+                    return;
                 }
-                        
-            } else {  // Unchecked picture
-                // Nothing to do
-            }    
+                // Get exif data as object. jpegData must be a string that starts with "data:image/jpeg;base64,"(DataURL), "\xff\xd8", or "Exif".
+                LogMe(1,'ExecuteTheMarking(): readAsStringAsync');
+                let fileContentsOriginal = await FileSystem.readAsStringAsync(assets[i].uri, {encoding: 'base64'});
+                let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
+                LogMe(2,'ExecuteTheMarking(): dataUri: ----'+dataUri);
+                LogMe(1,'ExecuteTheMarking(): piexif.load');
+                let exifObj = piexif.load(dataUri);
+                LogMe(2,'exifObj original: '+JSON.stringify(exifObj));
+    
+                let newValue = JSON.stringify({
+                    pictureType: 'private',
+                    privacyPolicies: {
+                        ViewOnce: selectionViewOnce,
+                        Expiration: selectionExpiration,
+                        KeepOpenTimer: selectionKeepOpenTimer,
+                    }
+                });
+                if (exifObj?.Exif) {
+                    LogMe(1,'ExecuteTheMarking(): Exif exists in metadata');
+                    exifObj['Exif'][piexif.ExifIFD.UserComment] = newValue;
+                } else {
+                    LogMe(1,'ExecuteTheMarking(): Exif DOES NOT exist in metadata');
+                    exifObj = {...exifObj, 'Exif' : { [piexif.ExifIFD.UserComment] : [newValue]}};
+                }
+                LogMe(2,'exifObj modified: '+JSON.stringify(exifObj));
+                LogMe(1,'ExecuteTheMarking(): piexif.dump');
+                let exifBytes = piexif.dump(exifObj);
+    
+                LogMe(1,'ExecuteTheMarking(): piexif.insert');
+                let dataContentsWithInsertedMetadata = await piexif.insert(exifBytes, dataUri);
+                let base64ContentsWithInsertedMetadata = dataContentsWithInsertedMetadata.replace('data:image/'+fileExt+';base64,', '');
+                LogMe(2,'ExecuteTheMarking(): base64ContentsWithInsertedMetadata: ----'+base64ContentsWithInsertedMetadata);
+    
+                // 
+                LogMe(1,'ExecuteTheMarking(): Deleting/Writing to files');
+
+                if (assets[i].albumId == privateAlbumID.key) {  // The picture is in the PrivatePics album
+                    LogMe(1,'ExecuteTheMarking(): processing a picture that is in PrivatePics');
+                    await FileSystem.writeAsStringAsync(
+                        assets[i].uri,
+                        base64ContentsWithInsertedMetadata,
+                        {encoding: 'base64'}
+                    );    
+                } else {  // The picture is NOT in the PrivatePics album
+                    LogMe(1,'ExecuteTheMarking(): processing a picture that is NOT in PrivatePics');
+                    let ImagePathTmp = FileSystem.documentDirectory + PARAM_PRIVATE_PICTURES_TMP_DIRNAME + '/' + uuid.v4() + '.' + fileExt;
+    
+                    LogMe(1,'ExecuteTheMarking(): writeAsStringAsync');
+                    await FileSystem.writeAsStringAsync(ImagePathTmp, base64ContentsWithInsertedMetadata, {encoding: 'base64'});
+                    LogMe(1, 'ExecuteTheMarking(): Tmp file saved to workspace: ' + ImagePathTmp); 
+        
+                    LogMe(1,'ExecuteTheMarking(): CameraRoll.saveAsset');
+                    await CameraRoll.saveAsset(ImagePathTmp, { type: 'auto', album: PARAM_PRIVATE_PICTURES_ALBUM_NAME } );
+    
+                }
+    
+    
+                //await WriteMyFileStream(imageInCameraRoll.uri+'.temp.jpg', 'base64', false, base64ContentsWithInsertedMetadata);    
+                /*
+                await FileSystem.writeAsStringAsync(
+                    imageInCameraRoll.uri+'.temp.jpg',
+                    dataContentsWithInsertedMetadata.replace('data:image/'+fileExt+';base64,', ''),
+                    {encoding: 'base64'}
+                );
+                await FileSystem.deleteAsync(imageInCameraRoll.uri, {idempotent: true});
+                */    
+            }
+                
+        } catch (err){
+            ErrorAlert('Error: '+err.message, err);
+        } finally {
+            try {
+                if (assets[i].albumId == privateAlbumID.key) {
+                    // When the picture was in the PrivatePics album: Nothing to do
+                } else {
+                    await FileSystem.deleteAsync(ImagePathTmp, {idempotent: true});
+                }
+            } catch (err) {
+                //ErrorAlert('Error: '+err.message, err);
+            } finally {
+                setAssets([]);
+                setOpen(true);
+                setIsProcessing(false);
+            }
         }
 
-        LogMe(1, 'processPictureChange(): Finished'); 
+        LogMe(1, 'ExecuteTheMarking(): Finished'); 
 
     } 
 
@@ -180,7 +196,7 @@ export const PPTaggingComponent = (props) => {
     async function ComponentRefresh() {  // Invoked every time this screen is loaded
         LogMe(1, 'Refreshing PPTagging Component');
 
-        LogMe(1,JSON.stringify('propsState.AccountData.taggedPictures: '+JSON.stringify(propsState.AccountData.taggedPictures)));
+        LogMe(1,JSON.stringify('propsState.AccountData: '+JSON.stringify(propsState.AccountData)));
 
         if (initStatus.key === 'init') {
             LogMe(1, 'Initialising PPTagging Component');
@@ -221,6 +237,51 @@ export const PPTaggingComponent = (props) => {
         }
     }
 
+    const radioButtonsViewOnce = useMemo(() => ([
+        {
+            id: 'Yes', // acts as primary key, should be unique and non-empty string
+            label: 'Yes',
+        },
+        {
+            id: 'No',
+            label: 'No',
+        },
+    ]), []);
+
+    const radioButtonsExpiration = useMemo(() => ([
+        {
+            id: '10 minutes', // acts as primary key, should be unique and non-empty string
+            label: '10 minutes',
+        },
+        {
+            id: '3 hours',
+            label: '3 hours',
+        },
+        {
+            id: '3 days',
+            label: '3 days',
+        },
+        {
+            id: '3 months',
+            label: '3 months',
+        },
+    ]), []);
+
+    const radioButtonsKeepOpenTimer = useMemo(() => ([
+        {
+            id: '10 seconds', // acts as primary key, should be unique and non-empty string
+            label: '10 seconds',
+        },
+        {
+            id: '2 minutes',
+            label: '2 minutes',
+        },
+        {
+            id: '2 hours',
+            label: '2 hours',
+        },
+    ]), []);
+
     // Initialisation
     ComponentRefresh();
     
@@ -231,7 +292,7 @@ export const PPTaggingComponent = (props) => {
                 <View style={styles.centercenterflex1}>
         
                     <View style={styles.headertitle}>
-                        <Text style={styles.large}>Mark pictures as private</Text>
+                        <Text style={styles.large}>Marking pictures as private</Text>
                     </View>
                     <View style={styles.centerleftflex1}>
                         <View style={styles.leftleft}>
@@ -249,63 +310,206 @@ export const PPTaggingComponent = (props) => {
             );
     
         } else {
-            return (
-                <View style={styles.centercenterflex1}>
-        
-                    <View style={styles.headertitle}>
-                        <Text style={styles.large}>Mark pictures as private</Text>
+            if (open) {
+                return (
+                    <View style={styles.centercenterflex1}>
+            
+                        <View style={styles.headertitle}>
+                            <Text style={styles.large}>Marking pictures as private</Text>
+                        </View>
+                        <View style={styles.centerleftflex1}>
+            
+                            <ImagePicker
+                                onSave={async(newassets) => {
+                                    LogMe(1, 'onSave: '+JSON.stringify(newassets));
+                                    setAssets(newassets);
+
+                                    // Load appropriate preselected values
+                                    if (newassets.length == 1 && newassets[0].albumId == privateAlbumID.key) {
+                                        LogMe(1, 'Loading current values');
+                                        let fileExt = newassets[0].uri.split('.').pop().toLowerCase();
+                                        if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
+                                        if (!IsValidImageExtensionAndContentType(fileExt)) {
+                                            ErrorAlert('Image URI extension is not valid: '+fileExt);  
+                                            return;                 
+                                        } 
+                                        if (fileExt!='jpeg' &&  fileExt!='tiff') {
+                                            // Unsupported
+                                            ErrorAlert('Image extension '+fileExt+' is not supported. Only jpg/jpeg and tiff images are supported.');
+                                            return;
+                                        }
+                                        let fileContentsOriginal = await FileSystem.readAsStringAsync(newassets[0].uri, {encoding: 'base64'});
+                                        let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
+                                        let exifObj = piexif.load(dataUri);
+                                        LogMe(1,'exifObj: '+JSON.stringify(exifObj));
+                                    
+                                        if (exifObj?.Exif) {
+                                            LogMe(1,'Checking if picture is actually marked as private: ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);
+                                            try {
+                                                metadata = JSON.parse(exifObj['Exif'][piexif.ExifIFD.UserComment]);
+                                                if (metadata?.pictureType === 'private') {
+                                                    LogMe(1,'The picture is indeed private!');
+                                                } else {
+                                                    let msg = 'Inconsistency: Picture '+newassets[i].uri+' is in PrivatePics album but is not marked as private. Aborting.';
+                                                    ErrorAlert(msg);
+                                                    LogMe(1, msg);
+                                                    return;
+                                                }
+                                                setSelectionViewOnce(metadata.privacyPolicies.ViewOnce);
+                                                setSelectionExpiration(metadata.privacyPolicies.Expiration);
+                                                setSelectionKeepOpenTimer(metadata.privacyPolicies.KeepOpenTimer);                                              
+                                            } catch (exc) {
+                                                let msg = 'Error parsing JPEG metadata. Possible another program is using the same field for other purposes. This error will be ignored. Error details: '+exc.message;
+                                                ErrorAlert(msg);
+                                                LogMe(1, msg);
+                                                return;
+                                            }
+                                        } else {
+                                            let msg = 'Inconsistency: Picture '+newassets[i].uri+' is in PrivatePics album but it does not have EXIF metadata. Aborting.';
+                                            ErrorAlert(msg);
+                                            LogMe(1, msg);
+                                            return;
+                                        }
+                                    } else {
+                                        LogMe(1, 'Setting `undefined` values');
+                                        setSelectionViewOnce();
+                                        setSelectionExpiration();
+                                        setSelectionKeepOpenTimer();                                        
+                                    }
+
+                                    // Load appropriate informational message
+                                    if (newassets[0].albumId == privateAlbumID.key) {
+                                        setSelectionInfoMessage('The privacy policies of the selected private pictures will be updated with the following values:');
+                                    } else {
+                                        setSelectionInfoMessage('The selected pictures will be duplicated to the PrivatePics album, and marked as `private` with the following policies:');
+                                    }
+
+                                    // Load next screen
+                                    setOpen(false);                            
+                                }}
+                                onCancel={() => {
+                                    LogMe(1, 'onCancel');
+                                }}
+                                onChange={async(image, checked) => {
+                                    LogMe(1, 'onChange');
+                                }}
+                                Albums
+                                selected={assets}
+                                multiple={true}
+                                onSelectAlbum={(album) => {
+                                    LogMe(1,'PPTagging: User selected album: '+JSON.stringify(album));
+                                    setAlbum(album);
+                                    if (album?.title==PARAM_PRIVATE_PICTURES_ALBUM_NAME) {
+                                        privateAlbumID.key = album?.id;
+                                    }
+                                }}
+                                selectedAlbum={album}                            
+                            />
+            
+                        </View>
+                        <TabsComponent activeTab="PPTagging" props={{propsState}} />
                     </View>
-                    <View style={styles.centerleftflex1}>
-        
-                        <ImagePicker
-                            onSave={async(assets) => {
-                                setAssets(assets)
-                                LogMe(1, 'onSave: '+JSON.stringify(assets));
-                                let cloneOfProps = {AccountData: propsState.AccountData};  // Force pass-by-value
-                                cloneOfProps.AccountData.taggedPictures = assets;
+                );    
+            } else {
+                return (
+                    <View style={styles.centercenterflex1}>
+                        <View style={styles.headertitle}>
+                            <Text style={styles.large}>PRIVACY POLICIES</Text>
+                        </View>
+                        <View style={styles.centerleftflex1}>
+                            <View style={styles.leftleft}>
+                                <Text>       </Text>{/* Left margin */}
+                            </View>
+                            <View style={styles.centerleftflex1}>
+                                <ScrollView style={styles.scrollView}>{/* ScrollView already expands, so we set their children not to expand, otherwise the buttons expand */}
                         
-                                try {
-                                    await storage.save({
-                                        key: 'accountData', // Note: Do not use underscore("_") in key!
-                                        data: cloneOfProps.AccountData,
-                                    });
-                                } catch(error) { 
-                                    ErrorAlert(error.message, error);  // Storage error
-                                }
-                        
-                                setPropsState(cloneOfProps);
-                        
-                            }}
-                            onCancel={() => {
-                            }}
-                            onChange={async(image, checked) => {
-                                LogMe(1, 'onChange');
-                                await processPictureChange (image, checked);
-                            }}
-                            Albums
-                            selected={assets}
-                            multiple={false}
-                            onSelectAlbum={(album) => {
-                                LogMe(1,'PPTagging: User selected album: '+JSON.stringify(album));
-                                setAlbum(album);
-                                if (album?.title==PARAM_PRIVATE_PICTURES_ALBUM_NAME) {
-                                    privateAlbumID.key = album?.id;
-                                }
-                            }}
-                            selectedAlbum={album}                            
-                        />
-        
+                                    <Text></Text>
+                                    <Text>{selectionInfoMessage}</Text>
+                                    <Text></Text>
+
+                                    <Text>View only once</Text>
+                                    <View style={styles.leftleft}>
+                                        <Text style={styles.explanation}>When enabled, the recipient can only request to open the picture once.</Text>
+                                    </View>
+                                    <RadioGroup 
+                                        radioButtons={radioButtonsViewOnce} 
+                                        onPress={(selection) => {
+                                            setSelectionViewOnce(selection)
+                                        }}
+                                        selectedId={selectionViewOnce}
+                                        layout='row'
+                                    />
+            
+                                    <Text />
+            
+                                    <Text>Expiration date</Text>
+                                    <View style={styles.leftleft}>
+                                        <Text style={styles.explanation}>From the time the picture is sent. After the configured expiration time, open requests will be refused.</Text>
+                                    </View>
+                                    <RadioGroup 
+                                        radioButtons={radioButtonsExpiration} 
+                                        onPress={(selection) => {
+                                            setSelectionExpiration(selection)
+                                        }}
+                                        selectedId={selectionExpiration}
+                                        containerStyle={styles.leftleftlist}
+                                        layout='column'
+                                    />
+            
+                                    <Text />
+            
+                                    <Text>Keep-open timer</Text>
+                                    <View style={styles.leftleft}>
+                                        <Text style={styles.explanation}>For a picture that has been opened, it will stay open in the screen for the configured time and the it will close automatically.</Text>
+                                    </View>
+                                    <RadioGroup 
+                                        radioButtons={radioButtonsKeepOpenTimer} 
+                                        onPress={(selection) => {
+                                            setSelectionKeepOpenTimer(selection)
+                                        }}
+                                        selectedId={selectionKeepOpenTimer}
+                                        containerStyle={styles.leftleftlist}
+                                        layout='column'
+                                    />
+            
+                                    <Text />
+
+                                    <View style={styles.leftleft}>
+                                    <Button title='PROCEED' onPress={() => {
+                                        if (selectionViewOnce==undefined) {
+                                            ErrorAlert('You must select a value for the `View Once`');
+                                        } else if (selectionExpiration==undefined) {
+                                            ErrorAlert('You must select a value for the `Expiration Timer`');
+                                        } else if (selectionKeepOpenTimer==undefined) {
+                                            ErrorAlert('You must select a value for the `Keep Open Timer`');
+                                        } else {
+                                            ExecuteTheMarking();
+                                        }
+                                     }}/>
+                                    <Text>   </Text>
+                                    <Button title='CANCEL' onPress={() => {
+                                        setAssets([]);
+                                        setOpen(true);
+                                    }}/>
+                                    </View>
+            
+                                </ScrollView>
+                            </View>
+                            <View style={styles.leftleft}>
+                                <Text>       </Text>{/* Right margin */}
+                            </View>
+                        </View>
+                        <TabsComponent activeTab="PPTagging" props={{propsState}} />
                     </View>
-                    <TabsComponent activeTab="PPTagging" props={{propsState}} />
-                </View>
-            );    //selected={propsState.AccountData.taggedPictures}    
+                );
+            }
         }
     } else {
         return (
             <View style={styles.centercenterflex1}>
     
                 <View style={styles.headertitle}>
-                    <Text style={styles.large}>Mark pictures as private</Text>
+                    <Text style={styles.large}>Marking pictures as private</Text>
                 </View>
                 <View style={styles.centerleftflex1}>
                     <View style={styles.leftleft}>

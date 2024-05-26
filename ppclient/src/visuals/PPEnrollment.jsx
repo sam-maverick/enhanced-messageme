@@ -1,6 +1,6 @@
 //import { StatusBar } from 'expo-status-bar';
 import React, {useState, useCallback, useEffect, useRef} from 'react';
-import { StyleSheet, Button, Text, TextInput, View, Alert, ScrollView, Platform } from 'react-native';
+import { StyleSheet, Button, Text, TextInput, View, Alert, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import * as Device from 'expo-device';
 import RNRestart from 'react-native-restart';  // Use only in PROD
 import { DevSettings} from 'react-native';  // Use only in DEV
@@ -25,9 +25,10 @@ import {
     PARAM_PP__IMAGEMARKER_PLAYSTOREID,
     PARAM_PP__IMAGEMARKER_URL,
     PARAM_DEBUG_MODE,
+    PARAM_SHOW_EXTRA_INFO_IN_SETTINGS,
  } from '../parameters.js';
 
-import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer, ApiTestNetworkConnection } from '../network/networkApi.js';
+import { ApiTestNetworkConnection } from '../network/networkApi.js';
 
 import * as AppIntegrity from '../integrity/integrityapis.js';
  
@@ -397,6 +398,10 @@ export const PPEnrollmentComponent = (props) => {
         }
     }
     
+    async function OpenSettingsTab() {
+        navigation.navigate('PPSettings', propsState);
+    }
+
     async function OpenImageMarkerApp() { 
         await AppLink.maybeOpenURL(
             PARAM_PP__IMAGEMARKER_URL, 
@@ -410,7 +415,7 @@ export const PPEnrollmentComponent = (props) => {
         );  // We need to pass a callback function to show the Alert, because Alerts are not shown when the app is in the background.
             // See: https://stackoverflow.com/questions/74662876/popup-alert-dialog-in-react-native-android-app-while-app-is-not-in-foreground
           
-      LogUS(1, 'URL call to open has completed');
+      LogMe(1, 'URL call to open has completed');
     }
 
     const CompletionInfoComponent = () => {
@@ -425,11 +430,11 @@ export const PPEnrollmentComponent = (props) => {
                     <Text/>
 
                     <View style={styles.leftleft}>
-                        <Text>NEXT STEPS: Mark as 'private' the pictures you want to protect, using the ppimagemarker app.</Text>
+                        <Text>NEXT STEPS:</Text>
                     </View>
-                    <View style={styles.leftleft}>
-                        <Button title='Go to ppimagemarker' onPress={async() => await OpenImageMarkerApp()} />
-                    </View>
+                    <Text/>
+
+                    <StepsComponent/>
 
                 </View>
             );
@@ -451,7 +456,23 @@ export const PPEnrollmentComponent = (props) => {
         }
     }
 
-
+    const StepsComponent = () => {
+        return(
+            <View>
+                <View style={styles.leftleft}>
+                    <Text>1. Mark as 'private' the pictures you want to protect, using the <Text style={styles.link} onPress={OpenImageMarkerApp}>ppimagemarker app</Text>.</Text>
+                </View>
+                <Text/>
+                <View style={styles.leftleft}>
+                    <Text>2. Go to the <Text style={styles.link} onPress={OpenSettingsTab}>Settings tab</Text> and configure your privacy policies.</Text>
+                </View>
+                <Text/>
+                <View style={styles.leftleft}>
+                    <Text>3. In your messaging app, pictures shared from the PrivatePics album will be protected by the Privacy Provider.</Text>
+                </View>
+            </View>
+        );
+    }
 
     const CompletionComponent = () => {
         return(
@@ -476,6 +497,19 @@ export const PPEnrollmentComponent = (props) => {
         );
     }
 
+    const ReEnrollComponent = () => {
+        if (PARAM_SHOW_EXTRA_INFO_IN_SETTINGS) {
+            return(
+                <View>
+                    <View style={styles.leftleft}>
+                        <Text>If you want to re-enroll, delete the local data by using the Settings option of this app, or reinstall the app. Re-enroll only if absolutely necessary, as there are security limits on the number of times that a device can re-enroll.</Text>
+                    </View>
+
+                    <Text/>                    
+                </View>
+            );    
+        }
+    }
 
     const EnrollmentMainComponent = () => {
 
@@ -490,9 +524,14 @@ export const PPEnrollmentComponent = (props) => {
     
                         <Text/>
     
+                        <ReEnrollComponent/>
+
                         <View style={styles.leftleft}>
-                            <Text>If you want to re-enroll, delete the local data by using the Settings option of this app, or reinstall the app. Re-enroll only if absolutely necessary, as there are security limits on the number of times that a device can re-enroll.</Text>
+                            <Text>This is how you use the security and privacy features provided by this app:</Text>
                         </View>
+                        <Text/>
+                        <StepsComponent/>
+                        
                     </View>
                 );
             } else if (internalSyncState.attempted) {  // Attempted in a prior run but not completed

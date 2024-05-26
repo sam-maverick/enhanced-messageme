@@ -39,6 +39,15 @@ export const styles = StyleSheet.create({
     fontSize: getFontSize(10),  
   },
 
+  link: {
+    color: '#0000FF',
+  },
+
+  explanation: {
+    fontSize: getFontSize(12),  
+    color: '#777777',
+  },
+
   small: {
     fontSize: getFontSize(12),  
   },
@@ -103,6 +112,13 @@ export const styles = StyleSheet.create({
   },  
   leftleft: {  // aligns left, does not fill
     flexDirection:'row', 
+    justifyContent:'flex-start', 
+    alignItems: 'flex-start', 
+    backgroundColor: '#fff', 
+    alignSelf: "stretch",
+  },
+  leftleftlist: {  // aligns left, does not fill
+    flexDirection:'column', 
     justifyContent:'flex-start', 
     alignItems: 'flex-start', 
     backgroundColor: '#fff', 

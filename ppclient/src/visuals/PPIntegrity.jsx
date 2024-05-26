@@ -16,8 +16,6 @@ import storage from '../storage/storageApi.js';
 
 import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_IOS_KEY_IDENTIFIER } from '../parameters.js';
 
-import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer } from '../network/networkApi.js';
-
 import { useNavigation } from '@react-navigation/native';
 
 import { DoKeygen, DoWarmup, CheckIntegrity } from '../integrity/integrityapis.js';

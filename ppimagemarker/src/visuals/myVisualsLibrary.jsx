@@ -42,7 +42,14 @@ export const styles = StyleSheet.create({
   enormous: {
     fontSize: getFontSize(20),  
   },
-
+  explanation: {
+    fontSize: getFontSize(12),  
+    color: '#777777',
+  },
+  explanationalert: {
+    fontSize: getFontSize(12),  
+    color: 'red',
+  },
   usernamestyle: {
     fontSize: getFontSize(20),  
     fontWeight: 'bold'
@@ -79,6 +86,13 @@ export const styles = StyleSheet.create({
   },  
   leftleft: {  // aligns left, does not fill
     flexDirection:'row', 
+    justifyContent:'flex-start', 
+    alignItems: 'flex-start', 
+    backgroundColor: '#fff', 
+    alignSelf: "stretch",
+  },
+  leftleftlist: {  // aligns left, does not fill
+    flexDirection:'column', 
     justifyContent:'flex-start', 
     alignItems: 'flex-start', 
     backgroundColor: '#fff', 

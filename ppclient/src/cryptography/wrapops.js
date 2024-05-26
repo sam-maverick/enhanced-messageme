@@ -31,9 +31,9 @@ import * as AppIntegrity from '../integrity/integrityapis.js';
 
 
 // We assume that Platform.OS has already been checked to be compatible
-export async function RequestToDecryptKey(myPPEcookie, encryptedKeyB64) {
-  LogMe(1, 'RequestToDecryptKey() called');
-  LogMe(1, 'encryptedKeyB64:'+encryptedKeyB64);
+export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
+  LogMe(1, 'RequestToDecryptThings() called');
+  LogMe(2, 'requestDataObject:'+JSON.stringify(requestDataObject));
   LogMe(1, 'Requesting token(s) from server');
 
   // GET NONCE(S)
@@ -124,7 +124,7 @@ export async function RequestToDecryptKey(myPPEcookie, encryptedKeyB64) {
         attestationobject1,
         'standard',
         attestationobject2,
-        encryptedKeyB64
+        requestDataObject,
       );
     } else {  // ios
       apiressubmitobject = await ApiSubmitAttestationTokenToServer(
@@ -134,7 +134,7 @@ export async function RequestToDecryptKey(myPPEcookie, encryptedKeyB64) {
         Platform.Version, 
         'assertion', 
         attestationobject1,
-        encryptedKeyB64
+        requestDataObject,
       );
     }
   } catch(error) {  // Network error
@@ -149,12 +149,12 @@ export async function RequestToDecryptKey(myPPEcookie, encryptedKeyB64) {
 
   if ( ! apiressubmitobject.isSuccessful) {
     // Failed by application (attestation rejected)
-    const msg = 'Attestation has failed. Check that your device is not rooted/jailbroken, that you have all security rotections enabled, and that you downloaded the app from the official store. Then try again.\nServer message: ' + apiressubmitobject.resultMessage;
+    const msg = 'Operation has failed. Check that your device is not rooted/jailbroken, that you have all security rotections enabled, and that you downloaded the app from the official store. Then try again.\n\nServer message: ' + apiressubmitobject.resultMessage;
     LogMe(1, msg);
     return Promise.reject({message: msg});
   } else {
       // Successful
-      return Promise.resolve(apiressubmitobject.decryptedKey);
+      return Promise.resolve(apiressubmitobject);
   }
 
 }
@@ -196,34 +196,35 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
     // We assume that the device is already enrolled (it must be checked and it is checked by PPWrapOps.jsx)
     // In any case, in practice, server response will give a FAIL if not enrolled
 
-    /// BEGIN
-
     let returnObject = {};
 
     if (ppPpChunkContents.null_crypto) {
       returnObject = {
-        contentType: ppPpChunkContents.contentType,
         data: ppPpChunkContents.data,
+        contentType: ppPpChunkContents.contentType,
+        privacyPolicies: ppPpChunkContents.privacyPolicies, 
       };
     } else {
-      // STAGE3
-      LogMe(1, 'UnwrapPicture(): STAGE3');           
+      // STAGE3 & STAGE2
+      LogMe(1, 'UnwrapPicture(): Requesting PP server');
 
-      const stage2_key_B64 = await RequestToDecryptKey(myAccountData.PPEcookie, ppPpChunkContents.stage3.encrypted_stage2_key_b64);
-
-      LogMe(2, 'Decrypted key from server: '+stage2_key_B64);
-
-      //STAGE2
-      LogMe(1, 'UnwrapPicture(): STAGE2');
-      const cipher2 = Crypto.createDecipheriv(
-        ppPpChunkContents.stage2.encryption_algorithm, 
-        EncodeFromB64ToBuffer(stage2_key_B64), 
-        EncodeFromB64ToBuffer(ppPpChunkContents.stage2.iv_b64)
+      // Make request to the PP server to decrypt stuff
+      const replyObjectFromServer = await RequestToDecryptThings(
+        myAccountData.PPEcookie,
+        {
+          stage2: {
+            encrypted_stage2_key_b64: ppPpChunkContents.stage2.encrypted_stage2_key_b64,
+            iv_b64: ppPpChunkContents.stage2.iv_b64, 
+            encryption_algorithm: ppPpChunkContents.stage2.encryption_algorithm, 
+          },
+          stage1: {
+            encrypted_stage1_key_and_params_b64: ppPpChunkContents.stage1.encrypted_stage1_key_and_params_b64,
+            ciphertext_to_server_data: ppPpChunkContents.stage1.ciphertext_to_server_data,
+          },
+        },
       );
-      await cipher2.write(EncodeFromB64ToBuffer(ppPpChunkContents.stage1.ciphertext));
-      await cipher2.end();
-      const decrypted_stage1 = JSON.parse(await cipher2.read());
-      // Here we get the privacy parameters
+
+      LogMe(2, 'replyDataObjectFromServer: '+JSON.stringify(replyObjectFromServer));
 
       //STAGE1
       LogMe(1, 'UnwrapPicture(): STAGE1');
@@ -236,10 +237,11 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       const key = Crypto.pbkdf2Sync(password, salt, pbkdf_iterations, 32, pbkdf_algorithm);
       */
       const cipher1 = Crypto.createDecipheriv(
-        decrypted_stage1.encryption_algorithm, 
-        EncodeFromB64ToBuffer(decrypted_stage1.key_b64), 
-        EncodeFromB64ToBuffer(decrypted_stage1.iv_b64)
+        replyObjectFromServer.replyDataObject.stage1.encryption_algorithm, 
+        EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.key_b64), 
+        EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.iv_b64)
       );
+
       await cipher1.write(EncodeFromB64ToBuffer(ppPpChunkContents.ciphertext));
       await cipher1.end();
       const decrypted_picture = await cipher1.read();
@@ -248,10 +250,10 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       returnObject = {
         'contentType': ppPpChunkContents.contentType,
         'data': decrypted_picture,
+        'privacyPolicies': replyObjectFromServer.replyDataObject.privacyPolicies,
       };
     }
 
-    /// END
     LogMe(1, 'UnwrapPicture(): Finished');
     return returnObject;
   }
@@ -260,16 +262,12 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
 
 
 
-
-
 // plainPicture is a picture content in base64 formatted String
 // It returns a base64 formatted String
-export async function WrapPicture (plainPicture, fileExt) {
+export async function WrapPicture (plainPicture, fileExt, myAccountData, privacyPoliciesObj) {
     LogMe(1, 'WrapPicture() called');
 
     // Wrap cryptographically
-
-    /// BEGIN
 
     let ppPlainPictureObjectStr = '';
 
@@ -278,6 +276,7 @@ export async function WrapPicture (plainPicture, fileExt) {
         'null_crypto': true,
         'data': plainPicture, 
         'contentType': fileExt,
+        'privacyPolicies': privacyPoliciesObj, 
       });  
     } else {
       // STAGE1
@@ -310,6 +309,14 @@ export async function WrapPicture (plainPicture, fileExt) {
       await cipher2.end();
       const ciphertext_stage1 = await cipher2.read();
 
+      const cipher2b = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
+      await cipher2b.write(JSON.stringify({
+        privacyPolicies: privacyPoliciesObj,
+        nonDiscloseToRecipientData: '----',  // TBC
+      }));
+      await cipher2b.end();
+      const ciphertext_to_server_data = await cipher2b.read();
+
       // STAGE3
       LogMe(1, 'WrapPicture(): STAGE3');
       const provider_pubkey = EncodeFromB64ToBinary(require('../../bundled_files/json/rsa-pubkey-wrapping-ppclient.pem.json').data);
@@ -325,24 +332,23 @@ export async function WrapPicture (plainPicture, fileExt) {
       ppPlainPictureObjectStr = JSON.stringify({
         null_crypto: false,
         stage1: {
-          ciphertext: EncodeFromBufferToB64(ciphertext_stage1),
+          encrypted_stage1_key_and_params_b64: EncodeFromBufferToB64(ciphertext_stage1),
+          ciphertext_to_server_data: EncodeFromBufferToB64(ciphertext_to_server_data),  // privacy policies will go here
+          // We could put the privacy policies also in the clear, here, for informational purposes. Our algorithms are CPA-secure.
         },
         stage2: {
           encryption_algorithm: PARAM_PP__CRYPTO.stage2.encryption_algorithm,
           iv_b64: EncodeFromBufferToB64(stage2_iv),
-          // privacy parameters will go here
+          encrypted_stage2_key_b64: EncodeFromBufferToB64(encrypted_stage2_key),
         }, 
         stage3: {
           provider: 'someprovider',
           encryption_algorithm: PARAM_PP__CRYPTO.stage3.encryption_algorithm,
-          encrypted_stage2_key_b64: EncodeFromBufferToB64(encrypted_stage2_key),
         }, 
         ciphertext: EncodeFromBufferToB64(ciphertext_picture), 
         contentType: fileExt,
       });  
     }
-
-    /// END
 
     // Wrap inside a picture (steganographically)
 

@@ -56,12 +56,11 @@ export const PPInitComponent = ({ route, navigation }) => {
   
                 // Default volatile startup values
                 accountData.key = {
-                  'username': '',  
+                  'username': 'ppuser',  
                   'PPIcookie': '',  
                   'PPEcookie': '',  
                   'enrollmentAttempted': false,  
                   'enrollmentCompleted': false,  
-                  //'taggedPictures': [],  
                 };
   
                 // any exception including data not found goes to catch()

@@ -1,5 +1,5 @@
 //import { StatusBar } from 'expo-status-bar';
-import React, {useState, useCallback, useEffect, useRef} from 'react';
+import React, {useState, useCallback, useEffect, useRef, useMemo} from 'react';
 import { StyleSheet, Button, Text, TextInput, View, Alert, ScrollView, Platform } from 'react-native';
 import * as Device from 'expo-device';
 import RNRestart from 'react-native-restart';  // Use only in PROD
@@ -96,38 +96,9 @@ export const PPSettingsComponent = (props) => {
         }         
     }
 
-
-    async function EraseAllServerData() {
-        LogMe(1, 'EraseAllServerData()');
-        Alert.alert('Confirmation', 'All user data on the server side, as well as the app\'s local data, will be erased. All other client apps will have to be restarted. Are you sure you want to continue?', [
-          {
-            text: 'Cancel',
-            //onPress: () => ,
-            style: 'cancel',
-          },
-          {
-            text: 'OK', onPress: async () => 
-                {
-                    try {
-                        let res = await ApiResetFactoryDB();
-                        if (!res.isSuccessful) {
-                            ErrorAlert('An error has occurred on the server. Check the server and try again.');  // Network error
-                        } else {
-                            await HandlerForLocalDataEraseFromSettings();                    
-                        }
-                    } catch(error) {
-                        //console.error(error);
-                        ErrorAlert(error.message, error);  // Network error
-                    }        
-                },
-          },
-        ]);    
-    }
-
-
     
     async function EraseLocalUserData() {
-        Alert.alert('Confirmation', 'All your local data will be wiped. You will lose the data of all private pictures received so far. Are you sure you want to continue?', [
+        Alert.alert('Confirmation', 'All your local data will be wiped. Are you sure you want to continue?', [
           {
             text: 'Cancel',
             //onPress: () => ,
@@ -143,9 +114,9 @@ export const PPSettingsComponent = (props) => {
     }
 
 
-    async function SaveUsername(newusername) {
+    async function SaveAccountData(isUsername, fieldname, newdata) {
         let cloneOfProps = {AccountData: propsState.AccountData};  // Force pass-by-value
-        cloneOfProps.AccountData.username = newusername;
+        cloneOfProps.AccountData[fieldname] = newdata;
 
         try {
             const storagenewdata = {
@@ -160,7 +131,7 @@ export const PPSettingsComponent = (props) => {
 
         setPropsState(cloneOfProps);
         
-        UpdateLogMeUsername(newusername);
+        if (isUsername)  { UpdateLogMeUsername(newdata); }
     }    
 
 
@@ -181,11 +152,106 @@ export const PPSettingsComponent = (props) => {
     // Initialisation
     ComponentRefresh();
     
-    
+
+    const ExtraInfoComponent = () => {
+        return(
+            <View>
+
+                    <Text />
+                    
+                    <View style={styles.leftleft}>
+                        <Text>SYSTEM INFO AND SETTINGS:</Text>
+                    </View>
+
+                    <Text />
+
+                    <View style={styles.leftleft}>
+                        <Text style={{fontWeight: "bold"}}>Username is: </Text>
+                        <TextInput
+                            style={styles.textfield}
+                            onChangeText={newText => SaveAccountData(true, 'username', newText)}
+                            defaultValue={propsState.AccountData.username}
+                        />
+                    </View>
+                    <View style={styles.leftleft}>
+                        <Text>Used only for debugging.</Text>
+                    </View>
+
+                    <Text />
+
+                    <View style={styles.leftleft}>
+                        <Button title='Check PP server connection' onPress={() => CheckPPServer()} />
+                    </View>
+
+                    <View style={styles.leftleft}>
+                        <Text>Network connection to PP server is: </Text><Text style={{fontWeight: "bold"}}>{ networkStatus }</Text>
+                    </View>
+
+                    <Text />
+
+                    <View style={styles.leftleft}>
+                        <Text style={{fontWeight: "bold"}}>Is this a physical device? {Device.isDevice ? 'Yes' : 'No'}</Text>
+                    </View>
+                    <View style={styles.leftleft}>
+                    <Text>Corresponds to Device.isDevice.</Text>
+                    </View>
+
+                    <Text />
+
+                    <View style={styles.leftleft}>
+                        <Text style={{fontWeight: "bold"}}>Platform OS is: {Platform.OS}</Text>
+                    </View>
+                    <View style={styles.leftleft}>
+                    <Text>Corresponds to Platform.OS.</Text>
+                    </View>
+
+                    <Text />
+
+                    <View style={styles.leftleft}>
+                        <Text style={{fontWeight: "bold"}}>Platform version is: {Platform.Version}</Text>
+                    </View>
+                    <View style={styles.leftleft}>
+                    <Text>Corresponds to Platform.Version.</Text>
+                    </View>
+
+                    <Text />
+                    <View style={styles.leftleft}>
+                        <Text style={{fontWeight: "bold"}}>Is this a development environment? {__DEV__ ? 'Yes' : 'No'}</Text>
+                    </View>
+
+                    <View style={styles.leftleft}>
+                    <Text>Corresponds to __DEV__.</Text>
+                    </View>
+                    <View style={styles.leftleft}>
+                    <Text>Used to trigger the appropriate app reload function. In Expo Go (say, development) we use DevSettings.reload(), whereas in the bare React Native app we use RNRestart.restart().</Text>
+                    </View>
+
+                    <Text />
+
+                    <View style={styles.leftleft}>
+                        <Button title='Erase PP user data on this device' onPress={() => EraseLocalUserData()} />
+                    </View>
+
+                    <Text />
+
+                    <View style={styles.leftleft}>
+                        <Text style={{fontWeight: "bold"}}>Storage data: </Text>
+                    </View>
+                    <View style={styles.leftleft}>
+                        <Text>{ storageDataShow }</Text>
+                    </View>
+
+                    <Text />
+            </View>
+        );
+    }
+
+
+
     return (
         <View style={styles.centercenterflex1}>
             <View style={styles.headertitle}>
-                <Text style={styles.large}>System info and settings</Text>
+                <Text style={styles.large}>Settings</Text>
             </View>
             <View style={styles.centerleftflex1}>
                 <View style={styles.leftleft}>
@@ -194,83 +260,7 @@ export const PPSettingsComponent = (props) => {
                 <View style={styles.centerleftflex1}>
                     <ScrollView style={styles.scrollView}>{/* ScrollView already expands, so we set their children not to expand, otherwise the buttons expand */}
 
-                        <View style={styles.leftleft}>
-                            <Text style={{fontWeight: "bold"}}>Storage data: </Text>
-                        </View>
-                        <View style={styles.leftleft}>
-                            <Text>{ storageDataShow }</Text>
-                        </View>
-
-                        <Text />
-
-                        <View style={styles.leftleft}>
-                            <Text style={{fontWeight: "bold"}}>Username is: </Text>
-                            <TextInput
-                                style={styles.textfield}
-                                onChangeText={newText => SaveUsername(newText)}
-                                defaultValue={propsState.AccountData.username}
-                            />
-                        </View>
-                        <View style={styles.leftleft}>
-                            <Text>Used only for debugging.</Text>
-                        </View>
-
-                        <Text />
-
-                        <View style={styles.leftleft}>
-                            <Button title='Check PP server connection' onPress={() => CheckPPServer()} />
-                        </View>
-
-                        <View style={styles.leftleft}>
-                            <Text>Network connection to PP server is: </Text><Text style={{fontWeight: "bold"}}>{ networkStatus }</Text>
-                        </View>
-
-                        <Text />
-
-                        <View style={styles.leftleft}>
-                            <Text style={{fontWeight: "bold"}}>Is this a physical device? {Device.isDevice ? 'Yes' : 'No'}</Text>
-                        </View>
-                        <View style={styles.leftleft}>
-                        <Text>Corresponds to Device.isDevice.</Text>
-                        </View>
-
-                        <Text />
-
-                        <View style={styles.leftleft}>
-                            <Text style={{fontWeight: "bold"}}>Platform OS is: {Platform.OS}</Text>
-                        </View>
-                        <View style={styles.leftleft}>
-                        <Text>Corresponds to Platform.OS.</Text>
-                        </View>
-
-                        <Text />
-
-                        <View style={styles.leftleft}>
-                            <Text style={{fontWeight: "bold"}}>Platform version is: {Platform.Version}</Text>
-                        </View>
-                        <View style={styles.leftleft}>
-                        <Text>Corresponds to Platform.Version.</Text>
-                        </View>
-
-                        <Text />
-                        <View style={styles.leftleft}>
-                            <Text style={{fontWeight: "bold"}}>Is this a development environment? {__DEV__ ? 'Yes' : 'No'}</Text>
-                        </View>
-
-                        <View style={styles.leftleft}>
-                        <Text>Corresponds to __DEV__.</Text>
-                        </View>
-                        <View style={styles.leftleft}>
-                        <Text>Used to trigger the appropriate app reload function. In Expo Go (say, development) we use DevSettings.reload(), whereas in the bare React Native app we use RNRestart.restart().</Text>
-                        </View>
-
-                        <Text />
-
-                        <View style={styles.leftleft}>
-                            <Button title='Erase PP user data on this device' onPress={() => EraseLocalUserData()} />
-                        </View>
-
-                        <Text />
+                        <ExtraInfoComponent/>
 
                     </ScrollView>
                 </View>

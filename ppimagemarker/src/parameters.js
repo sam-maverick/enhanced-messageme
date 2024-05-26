@@ -20,9 +20,11 @@ export const PARAM_PRIVATE_PICTURES_ALBUM_NAME = 'PrivatePics';
 export const PARAM_PRIVATE_PICTURES_TMP_DIRNAME = 'PrivatePicturesTmp';
 
 export const PARAM_WELCOME_MESSAGE = 'Welcome to ppimagemarker. \
-This apps lets you select the pictures you want to protect via the Privacy Provider framework. \
-When you select a picture to protect, this app will create a copy of that picture \
-with EXIF metadata indicating that it is a private picture. This copy will be saved in a separate album called '+
+This apps lets you select the pictures you want to protect via the Privacy Provider framework, and assign privacy policies to them. \
+For every picture you select, this app will create a copy of that picture \
+with EXIF metadata indicating that it is a private picture and what privacy policies it holds. This copy will be saved in a separate album called '+
 PARAM_PRIVATE_PICTURES_ALBUM_NAME+
-'. The original will be preserved; you can delete it through the system Files app if you wish.';
+'. The original will be preserved; you can delete it through the system Files/Gallery app if you wish. \
+\
+For pictures that are already in the PrivatePics album, we will update the privacy policies directly. If you select a single picture from the PrivatePics album, we will preselect the current privacy policies that it has.';
 

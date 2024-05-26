@@ -41,6 +41,8 @@ import {
     ReadMyFileStream,
     WriteMyFileStream,
     IsValidImageExtensionAndContentType,
+    SafeUrlEncodeForB64,
+    SafeUrlDecodeForB64,
  } from '../myGeneralLibrary.jsx';
 
 import storage from '../storage/storageApi.js';
@@ -362,9 +364,13 @@ export const PPWrapOpsComponent = (props) => {
                 let plainPrivatePictureContents = '';
                 let wrappedPrivatePictureContents = '';
     
+                if (urlParams?.privacyPolicies === undefined)  { ErrorAlert('Error: privacyPolicies parameter missing', undefined); return; }
+                let privacyPolicies = JSON.parse(EncodeFromB64ToBinary(SafeUrlDecodeForB64(urlParams.privacyPolicies)));
+                LogMe(1, 'privacyPolicies: ' + JSON.stringify(privacyPolicies));
+
                 if (Platform.OS === 'android') {
                     if (urlParams?.fileUri === undefined)  { ErrorAlert('Error: fileUri parameter missing', undefined); return; }
-    
+
                     LogMe(1, 'Received Uri: '+urlParams.fileUri);
                     if (PARAM_DEBUG_MODE)  { setReceivedPlainImageFromSourceUri({uri: urlParams.fileUri}); }
                     LogMe(1, 'Reading '+urlParams.fileUri);
@@ -385,11 +391,7 @@ export const PPWrapOpsComponent = (props) => {
                                         
                     LogMe(1, 'Read');
                 } else {
-                    plainPrivatePictureContents = urlParams.fileContents
-                    .replaceAll('-','+')
-                    .replaceAll('_','/')
-                    .replaceAll('.','=')
-                    ;  // reverse URL-safe formatting for base64
+                    plainPrivatePictureContents = SafeUrlDecodeForB64(urlParams.fileContents);
                 }
     
                 // We assume that the extension coincides with the ISO content-type            
@@ -408,7 +410,7 @@ export const PPWrapOpsComponent = (props) => {
                 if (PARAM_DEBUG_MODE)  { setReceivedPlainImageAsRead({uri: 'data:image/' + fileExt + ';base64,' + plainPrivatePictureContents}); }
     
                 LogMe(1, 'Wrapping');
-                wrappedPrivatePictureContents = await WrapPicture(plainPrivatePictureContents, fileExt);  // Do the magic on the picture
+                wrappedPrivatePictureContents = await WrapPicture(plainPrivatePictureContents, fileExt, accountData.key, privacyPolicies);  // Do the magic on the picture
                 fileExt = 'png';
                 LogMe(1, 'Wrapped');
     
@@ -422,11 +424,7 @@ export const PPWrapOpsComponent = (props) => {
                     LogMe(1, 'UI updated');
     
                 } else {
-                    callbackURL.searchParams.append('fileContents', wrappedPrivatePictureContents
-                    .replaceAll('+','-')
-                    .replaceAll('/','_')
-                    .replaceAll('=','.')
-                    );  // perform URL-safe formatting for base64
+                    callbackURL.searchParams.append('fileContents', SafeUrlEncodeForB64(wrappedPrivatePictureContents));
                 }
     
                 LogMe(2, '----- wrappedPrivatePictureContents: '+wrappedPrivatePictureContents);
@@ -475,14 +473,26 @@ export const PPWrapOpsComponent = (props) => {
 
                     LogMe(1, 'Read');
                 } else {
-                    wrappedPrivatePictureContents = urlParams.fileContents
-                    .replaceAll('-','+')
-                    .replaceAll('_','/')
-                    .replaceAll('.','=')
-                    ;  // reverse URL-safe formatting for base64
+                    wrappedPrivatePictureContents = SafeUrlDecodeForB64(urlParams.fileContents);
                 }
 
                 let unwrappedDataObject = await UnwrapPicture(wrappedPrivatePictureContents, accountData.key);
+
+                LogMe(1, 'privacyPolicies: '+JSON.stringify(unwrappedDataObject.privacyPolicies));
+
+                let KeepOpenTimerMs = 1;
+                switch (unwrappedDataObject.privacyPolicies.KeepOpenTimer) {
+                    case '10 seconds':
+                        KeepOpenTimerMs = 10 * 1000;
+                        break;
+                    case '2 minutes':
+                        KeepOpenTimerMs = 2 * 60 * 1000;
+                        break;
+                    case '2 hours':
+                        KeepOpenTimerMs = 2 * 60 * 60 * 1000;
+                        break;
+                }
+                LogMe(1, 'KeepOpenTimer set to: '+KeepOpenTimerMs.toString());
 
                 setPrivatePictureContents({uri: 'data:image/'+unwrappedDataObject.contentType+';base64,'+unwrappedDataObject.data});
 
@@ -515,7 +525,7 @@ export const PPWrapOpsComponent = (props) => {
                         LogMe(1, 'Calling ClearWorkingData() for a partial clean on setTimeout() timer expired');
                         await ClearWorkingData({mode: 'partial', androidContentUri: urlParams?.fileUri});
                     }, 
-                    10000
+                    KeepOpenTimerMs
                 );
                 LogMe(1, 'timeoutID: '+timeoutID);
 

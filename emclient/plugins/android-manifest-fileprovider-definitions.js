@@ -37,6 +37,7 @@ const withAndroidManifestFileProviderConfigurations = config => {
             'android:authorities': 'pt.lasige.safex.enhmessageme.MyFileProvider',
             'android:grantUriPermissions': 'true',
             'android:permission': 'pt.lasige.safex.permission.PRIVACY_PROVIDER',  // The PP client app will need this permission to access the content provided by MyFileProvider. The calling code from the messaging app (system update) will also need to set grantUriPermission()
+            // NOTE: In Android 11 we have observed that granting the permission through the GUI is not necessary but grantUriPermission() is necessary and having the permission in the manifest is necessary.
             'android:exported': 'true',  // Setting this to 'true' causes a 'Provider must not be exported' SecurityException when using android.content.FileProvider
             /**
             * According to https://developer.android.com/guide/topics/manifest/provider-element.html#exported, 
