@@ -422,7 +422,7 @@ export const PPWrapOpsComponent = (props) => {
         if (errormsgoncheck != '') {
             callbackURL.searchParams.append('result', 'fail');    
             callbackURL.searchParams.append('message', errormsgoncheck);  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions
-            await ErrorAlertAsync(errormsgoncheck+' Press Ok to come back to your messaging app.', undefined);  
+            await ErrorAlertAsync(errormsgoncheck+' Press Ok to go back to your messaging app.', undefined);  
             setScreenToShow('jobcompleted');
             var_screenToShow='jobcompleted';  
             Linking.openURL(callbackURL.toString());
@@ -543,7 +543,7 @@ export const PPWrapOpsComponent = (props) => {
                 LogMe(1,'wrappedPrivatePictureContents length: '+wrappedPrivatePictureContents.length);
                 if (PARAM_DEBUG_MODE)  { setWrappedImageData({ uri: 'data:image/' + fileExt + ';base64,' + wrappedPrivatePictureContents}); }
                 
-                // Work done. Come back to the messaging app
+                // Work done. Go back to the messaging app
                 callbackURL.searchParams.append('result', 'success');  
                 await ClearWorkingData({mode: 'full', androidContentUri: urlParams.fileUri});                
                 setScreenToShow('jobcompleted');  
@@ -680,7 +680,7 @@ export const PPWrapOpsComponent = (props) => {
                 callbackURL.searchParams.append('result', 'fail');    
                 callbackURL.searchParams.append('message', err.message);  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions
                 await ClearWorkingData({mode: 'partial', androidContentUri: urlParams?.fileUri});
-                await ErrorAlertAsync(errormsg+' Press Ok to come back to your messaging app.', err);
+                await ErrorAlertAsync(errormsg+' Press Ok to go back to your messaging app.', err);
                 setScreenToShow('jobcompleted');  
                 var_screenToShow='jobcompleted';
                 Linking.openURL(callbackURL.toString());    

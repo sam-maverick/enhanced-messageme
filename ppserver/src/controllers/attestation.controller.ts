@@ -177,6 +177,8 @@ export class AttestationController {
 
     while (i < req.body.subrequests.length) {
 
+        const advicemsg = '\n\nUpdate your system and your PP client app, check that your device is not rooted/jailbroken, enable all security protections, and make sure you downloaded the app from the official store. Then try again.'; 
+
         const issueidmsg = req.body.subrequests.length>1 ? 'There was an isue with subrequest #'+i+' ['+String(req.body?.subrequests[i]?.requestType)+']: ' : '';
 
         const resultVerifyRequest = checkRequestPlatformAndType(String(req.body.platformType), String(req.body?.subrequests[i]?.requestType));
@@ -186,17 +188,17 @@ export class AttestationController {
     
         // Check that a token is provided
         if ( ! req.body?.subrequests[i]?.token) {
-            return {isSuccessful: false, resultMessage: issueidmsg+'No token was provided.'};
+            return {isSuccessful: false, resultMessage: issueidmsg+'No token was provided.'+advicemsg};
         }
     
         // Cross-consistency check, and existence of nonce check
         if ( deviceObject.nonces[req.body.platformType+'_'+req.body.subrequests[i].requestType].nonce === '' ) {
-            return {isSuccessful: false, resultMessage: issueidmsg+'platformType or requestType inconsistency. You are submitting a token for which a nonce was not generated.'};
+            return {isSuccessful: false, resultMessage: issueidmsg+'platformType or requestType inconsistency. You are submitting a token for which a nonce was not generated.'+advicemsg};
         }
     
         // Single-consumption check for the nonce
         if ( deviceObject.nonces[req.body.platformType+'_'+req.body.subrequests[i].requestType].consumed === true ) {
-            return {isSuccessful: false, resultMessage: issueidmsg+'This nonce has already been consumed.'};
+            return {isSuccessful: false, resultMessage: issueidmsg+'This nonce has already been consumed.'+advicemsg};
         }
     
     
@@ -225,20 +227,20 @@ export class AttestationController {
     
             // Check attestation
             if (resultOperation.status !== 'success') {
-                return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message};
+                return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message+advicemsg};
             }
     
             if (resultOperation.status === 'success') {
                 // Check things after attestation. These things are not attested directly but indirectly.
                 // Check version
                 if( ! ((typeof req.body.platformVersion) === 'number')) {  // Is of number type?
-                    return {isSuccessful: false, resultMessage: issueidmsg+"Wrong type for platformVersion. We expected number. We found "+(typeof req.body.platformVersion)+"."};
+                    return {isSuccessful: false, resultMessage: issueidmsg+"Wrong type for platformVersion. We expected number. We found "+(typeof req.body.platformVersion)+"."+advicemsg};
                 } else if (req.body.platformVersion < MINIMUM_ANDROID_API_LEVEL) {
-                    return {isSuccessful: false, resultMessage: issueidmsg+"OS version is unsupported. Expected >= " + MINIMUM_ANDROID_API_LEVEL + ". Found " + req.body.platformVersion + "."};
+                    return {isSuccessful: false, resultMessage: issueidmsg+"OS version is unsupported. Expected >= " + MINIMUM_ANDROID_API_LEVEL + ". Found " + req.body.platformVersion + "."+advicemsg};
                 }
                 // Check maximum delay
                 if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.subrequests[i].requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.subrequests[i].requestType]) {
-                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."};
+                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."+advicemsg};
                 }
                 // Note: We do not attest device type (tablet, phone, ...)
             }
@@ -271,7 +273,7 @@ export class AttestationController {
     
                 // Check attestation
                 if (resultOperation.status !== 'success') {
-                    return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message};
+                    return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message+advicemsg};
                 }
     
                 // Check things after attestation. These things are not attested directly but indirectly.
@@ -279,12 +281,12 @@ export class AttestationController {
                 // Check version
                 let versionCheckResult = CheckIosVersion(req.body.platformVersion);
                 if (versionCheckResult.status !== 'success') {
-                    return {isSuccessful: false, resultMessage: issueidmsg+versionCheckResult.message};
+                    return {isSuccessful: false, resultMessage: issueidmsg+versionCheckResult.message+advicemsg};
                 }
     
                 // Check maximum delay
                 if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.subrequests[i].requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.subrequests[i].requestType]) {
-                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."};
+                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."+advicemsg};
                 }
     
                 // Note: We do not attest device type (iPad, iPhone, Mac, ...)
@@ -301,7 +303,7 @@ export class AttestationController {
                 );
     
                 if ( ! updateResult) {
-                    return {isSuccessful: false, resultMessage: issueidmsg+"DB error when updating your request."};
+                    return {isSuccessful: false, resultMessage: issueidmsg+"DB error when updating your request."+advicemsg};
                 }
     
     
@@ -310,7 +312,7 @@ export class AttestationController {
     
                 if ( ! deviceObject?.iosPublicKeyPEM || deviceObject.iosPublicKeyPEM=='') {
                     // The user previously got a nonce but did not provide an attestation
-                    return {isSuccessful: false, resultMessage: issueidmsg+"You need to submit a successful attestation before requesting an assertion."};
+                    return {isSuccessful: false, resultMessage: issueidmsg+"You need to submit a successful attestation before requesting an assertion."+advicemsg};
                 }
     
                 let resultOperation = undefined;
@@ -333,7 +335,7 @@ export class AttestationController {
     
                 // Check assertion
                 if (resultOperation.status !== 'success') {
-                    return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message};
+                    return {isSuccessful: false, resultMessage: issueidmsg+resultOperation.message+advicemsg};
                 }
     
                 // Check things after assertion. These things are not attested directly but indirectly.
@@ -341,11 +343,11 @@ export class AttestationController {
                 // Check version
                 let versionCheckResult = CheckIosVersion(req.body.platformVersion);
                 if (versionCheckResult.status !== 'success') {
-                    return {isSuccessful: false, resultMessage: issueidmsg+versionCheckResult.message};
+                    return {isSuccessful: false, resultMessage: issueidmsg+versionCheckResult.message+advicemsg};
                 }
                 // Check maximum delay
                 if (Date.now() - deviceObject.nonces[req.body.platformType + '_' + req.body.subrequests[i].requestType].timestamp > MAX_TOTAL_DELAY_MS[req.body.platformType + '_' + req.body.subrequests[i].requestType]) {
-                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."};
+                    return {isSuccessful: false, resultMessage: issueidmsg+"Request too old. Took too long from generating the nonce on our server to checking it on our server."+advicemsg};
                 }
     
                 // Note: We do not attest device type (iPad, iPhone, Mac, ...)
