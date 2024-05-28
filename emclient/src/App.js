@@ -72,6 +72,9 @@ export default function App() {
                     syncInBackground: false,        
                     key: 'accountData',
                 });
+
+                LogMe(1, 'retStorage='+JSON.stringify(retStorage));
+                // Note: when using the the bare workflow, old data may reappear. This should not happen with the APK/standalone workflow
                     
                 try {
                  

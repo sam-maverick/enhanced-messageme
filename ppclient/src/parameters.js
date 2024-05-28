@@ -12,6 +12,11 @@ import * as Device from 'expo-device';
  */ 
 export const PARAM_IMAGE_PICKER_QUALITY = 1;
 
+/** 
+ * Show developer info in PPSettings tab
+*/
+export const PARAM_SHOW_EXTRA_INFO = false;
+
 let server_host = '';
 if (Device.isDevice) {
     server_host = '192.168.12.1';  // Change accordingly to your network environment.

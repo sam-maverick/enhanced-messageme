@@ -103,6 +103,14 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: "stretch",
   },
+  centerleftflex1blackcol: { // fills up space, vertical alignment middle, horizontal alignment left
+    flex:1,
+    backgroundColor: '#000',
+    flexDirection:'column', 
+    justifyContent:'flex-start', 
+    alignItems: 'center',
+    alignSelf: "stretch",
+  },
   leftcenter: {  // aligns center, does not fill
     flexDirection:'row', 
     justifyContent:'center', 
@@ -110,6 +118,20 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff', 
     alignSelf: "center",
   },  
+  leftleftline: {  // aligns left, does not fill
+    flexDirection:'row', 
+    justifyContent:'flex-start', 
+    alignItems: 'flex-start', 
+    backgroundColor: 'green', 
+    alignSelf: "stretch",
+  },
+  leftleftlinebg: {  // aligns left, does not fill
+    flexDirection:'row', 
+    justifyContent:'flex-start', 
+    alignItems: 'flex-start', 
+    backgroundColor: 'black', 
+    alignSelf: "stretch",
+  },
   leftleft: {  // aligns left, does not fill
     flexDirection:'row', 
     justifyContent:'flex-start', 
@@ -174,6 +196,19 @@ export const styles = StyleSheet.create({
     backgroundColor: '#aaa',
     alignItems: 'center',
     justifyContent: 'center',
+  },  
+  headertitlecentercenterflex1row: { 
+    flex:1,
+    backgroundColor: '#aaa',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection:'row', 
+  },  
+  leftleftflex1rownobg: { 
+    flex:1,
+    alignItems: 'left',
+    justifyContent: 'left',
+    flexDirection:'row', 
   },  
   headertitleleftcenter: {  
     flexDirection:'row', 

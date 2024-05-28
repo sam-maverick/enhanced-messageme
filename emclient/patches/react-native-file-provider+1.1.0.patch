@@ -813,7 +813,7 @@ index 0000000..a251197
 +    }
 +}
 diff --git a/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/RNFileProviderModule.java b/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/RNFileProviderModule.java
-index a9bc7d9..65be504 100644
+index a9bc7d9..7386e55 100644
 --- a/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/RNFileProviderModule.java
 +++ b/node_modules/react-native-file-provider/android/src/main/java/com/artirigo/fileprovider/RNFileProviderModule.java
 @@ -9,8 +9,8 @@ import com.facebook.react.bridge.Callback;
@@ -835,7 +835,7 @@ index a9bc7d9..65be504 100644
        promise.resolve(contentUri.toString());
      } catch (Exception ex) {
        ex.printStackTrace();
-@@ -42,6 +42,52 @@ public class RNFileProviderModule extends ReactContextBaseJavaModule {
+@@ -42,6 +42,60 @@ public class RNFileProviderModule extends ReactContextBaseJavaModule {
      }
    }
  
@@ -856,6 +856,10 @@ index a9bc7d9..65be504 100644
 +    try {
 +      reactContext.getApplicationContext().revokeUriPermission(Uri.parse(uri), Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 +      promise.resolve(null);
++    } catch (SecurityException secex) {
++        // Ignored
++        // This is to skip SecurityException in devices prior to Build.VERSION_CODES.LOLLIPOP
++        // https://developer.android.com/reference/android/content/Context#revokeUriPermission(android.net.Uri,%20int)
 +    } catch (Exception ex) {
 +      ex.printStackTrace();
 +      reject(promise, uri, ex);
@@ -879,6 +883,10 @@ index a9bc7d9..65be504 100644
 +    try {
 +      reactContext.getApplicationContext().revokeUriPermission(Uri.parse(uri), Intent.FLAG_GRANT_READ_URI_PERMISSION);
 +      promise.resolve(null);
++    } catch (SecurityException secex) {
++        // Ignored
++        // This is to skip SecurityException in devices prior to Build.VERSION_CODES.LOLLIPOP
++        // https://developer.android.com/reference/android/content/Context#revokeUriPermission(android.net.Uri,%20int)
 +    } catch (Exception ex) {
 +      ex.printStackTrace();
 +      reject(promise, uri, ex);

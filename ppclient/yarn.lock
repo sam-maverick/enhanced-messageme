@@ -4807,6 +4807,11 @@ inquirer@3.0.6:
     strip-ansi "^3.0.0"
     through "^2.3.6"
 
+install@^0.13.0:
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/install/-/install-0.13.0.tgz#6af6e9da9dd0987de2ab420f78e60d9c17260776"
+  integrity sha512-zDml/jzr2PKU9I8J/xyZBQn8rPCAY//UOYNmR01XwNwyfhEWObo2SWfSl1+0tm1u6PhxLwDnfsT/6jB7OUxqFA==
+
 internal-ip@4.3.0:
   version "4.3.0"
   resolved "https://registry.npmjs.org/internal-ip/-/internal-ip-4.3.0.tgz"
@@ -6904,6 +6909,11 @@ react-native-elements@^3.4.3:
     react-native-ratings "8.0.4"
     react-native-size-matters "^0.3.1"
 
+react-native-file-provider@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/react-native-file-provider/-/react-native-file-provider-1.1.0.tgz#500d44f5254ea46ba1bbfbd72c064fcc20db762c"
+  integrity sha512-q7LfHen5wsJWXsWrB07DFQ8di17pT8ymBy24odEOWTXTJuRprxoq8HtV1onlaqNMugwsc/OZPY9lMe+SNk+oFg==
+
 react-native-fs@^2.20.0:
   version "2.20.0"
   resolved "https://registry.npmjs.org/react-native-fs/-/react-native-fs-2.20.0.tgz"
@@ -6911,6 +6921,11 @@ react-native-fs@^2.20.0:
   dependencies:
     base-64 "^0.1.0"
     utf8 "^3.0.0"
+
+react-native-popup-menu@^0.16.1:
+  version "0.16.1"
+  resolved "https://registry.yarnpkg.com/react-native-popup-menu/-/react-native-popup-menu-0.16.1.tgz#b1bb56be5c0838bbc2f532af7b1f554b7ceef566"
+  integrity sha512-xRS7mRh0exwu7Iw8PPVHdM11d13A/KzYjy0/fZx3zVtxISxPkNaDGayau6oa7HqO3Nj0oS9ulFCYjcQfG6vahA==
 
 react-native-quick-base64@^2.0.5, react-native-quick-base64@^2.0.8:
   version "2.1.2"

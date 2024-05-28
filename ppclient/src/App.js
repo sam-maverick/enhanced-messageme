@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SafeAreaView, AppRegistry } from 'react-native';
 import React, {useState, useCallback, useEffect, useRef} from 'react';
 
+import { MenuProvider } from 'react-native-popup-menu';
+
 import * as Linking from "expo-linking";
 import * as Integrity from 'expo-app-integrity';
 
@@ -117,20 +119,22 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.safeview}>
-        <NavigationContainer linking={linking} fallback={<LoadingComponent />}>
-          <StatusBar animated={false} backgroundColor="transparent" />
-          <Stack.Navigator initialRouteName="Init" screenOptions={{ animation: 'none' }}>
-            <Stack.Screen options={{headerShown: false}} name="Init" component={PPInitComponent} />
-            <Stack.Screen options={{headerShown: false}} name="PPReload" component={PPReloadComponent} />
-            <Stack.Screen options={{headerShown: false}} name="PPSettings" component={PPSettingsComponent} />
-            <Stack.Screen options={{headerShown: false}} name="PPIntegrity" component={PPIntegrityComponent} />
-            <Stack.Screen options={{headerShown: false}} name="PPEnrollment" component={PPEnrollmentComponent} />
-            <Stack.Screen options={{headerShown: false}} name="PPWrapOps" component={PPWrapOpsComponent} />
-            <Stack.Screen options={{headerShown: false}} name="PPNotFound" component={PPNotFoundComponent} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </View>
+      <MenuProvider>
+        <View style={styles.safeview}>
+          <NavigationContainer linking={linking} fallback={<LoadingComponent />}>
+            <StatusBar animated={false} backgroundColor="transparent" />
+            <Stack.Navigator initialRouteName="Init" screenOptions={{ animation: 'none' }}>
+              <Stack.Screen options={{headerShown: false}} name="Init" component={PPInitComponent} />
+              <Stack.Screen options={{headerShown: false}} name="PPReload" component={PPReloadComponent} />
+              <Stack.Screen options={{headerShown: false}} name="PPSettings" component={PPSettingsComponent} />
+              <Stack.Screen options={{headerShown: false}} name="PPIntegrity" component={PPIntegrityComponent} />
+              <Stack.Screen options={{headerShown: false}} name="PPEnrollment" component={PPEnrollmentComponent} />
+              <Stack.Screen options={{headerShown: false}} name="PPWrapOps" component={PPWrapOpsComponent} />
+              <Stack.Screen options={{headerShown: false}} name="PPNotFound" component={PPNotFoundComponent} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </View>
+      </MenuProvider>
     </SafeAreaView>
   );
   

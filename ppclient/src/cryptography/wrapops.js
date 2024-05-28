@@ -149,7 +149,7 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
 
   if ( ! apiressubmitobject.isSuccessful) {
     // Failed by application (attestation rejected)
-    const msg = 'Operation has failed. Check that your device is not rooted/jailbroken, that you have all security rotections enabled, and that you downloaded the app from the official store. Then try again.\n\nServer message: ' + apiressubmitobject.resultMessage;
+    const msg = '' + apiressubmitobject.resultMessage;
     LogMe(1, msg);
     return Promise.reject({message: msg});
   } else {
@@ -209,7 +209,7 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       LogMe(1, 'UnwrapPicture(): Requesting PP server');
 
       // Make request to the PP server to decrypt stuff
-      const replyObjectFromServer = await RequestToDecryptThings(
+      let replyObjectFromServer = await RequestToDecryptThings(
         myAccountData.PPEcookie,
         {
           stage2: {
@@ -241,7 +241,6 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
         EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.key_b64), 
         EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.iv_b64)
       );
-
       await cipher1.write(EncodeFromB64ToBuffer(ppPpChunkContents.ciphertext));
       await cipher1.end();
       const decrypted_picture = await cipher1.read();
@@ -253,6 +252,9 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
         'privacyPolicies': replyObjectFromServer.replyDataObject.privacyPolicies,
       };
     }
+
+    replyObjectFromServer = undefined;
+    gc();  // Call garbage collector
 
     LogMe(1, 'UnwrapPicture(): Finished');
     return returnObject;
@@ -309,13 +311,15 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       await cipher2.end();
       const ciphertext_stage1 = await cipher2.read();
 
+      const myPictureId = Crypto.randomBytes(32);
       const cipher2b = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
       await cipher2b.write(JSON.stringify({
         privacyPolicies: privacyPoliciesObj,
-        nonDiscloseToRecipientData: '----',  // TBC
+        pictureId: EncodeFromBufferToB64(myPictureId),  // This must be kept secret from the recipient
       }));
       await cipher2b.end();
       const ciphertext_to_server_data = await cipher2b.read();
+      LogMe(1, 'Encoded pictureId='+EncodeFromBufferToB64(myPictureId));
 
       // STAGE3
       LogMe(1, 'WrapPicture(): STAGE3');
@@ -334,7 +338,6 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
         stage1: {
           encrypted_stage1_key_and_params_b64: EncodeFromBufferToB64(ciphertext_stage1),
           ciphertext_to_server_data: EncodeFromBufferToB64(ciphertext_to_server_data),  // privacy policies will go here
-          // We could put the privacy policies also in the clear, here, for informational purposes. Our algorithms are CPA-secure.
         },
         stage2: {
           encryption_algorithm: PARAM_PP__CRYPTO.stage2.encryption_algorithm,
@@ -347,6 +350,9 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
         }, 
         ciphertext: EncodeFromBufferToB64(ciphertext_picture), 
         contentType: fileExt,
+        // We can put the privacy policies also in the clear, here, for informational purposes. Our algorithms are CPA-secure.
+        // This can be used in the recipient's GUI of the messging app to show information about the expiration date of the picture, etc.
+        privacyPoliciesInfo: privacyPoliciesObj,
       });  
     }
 

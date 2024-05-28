@@ -45,6 +45,7 @@ export async function DecryptThings (requestDataObject: any) {
   await cipher2b.end();
   const decrypted_to_server_data = JSON.parse(await cipher2b.read());
 
+  LogMe(1, 'decrypted_to_server_data='+JSON.stringify(decrypted_to_server_data));
   LogMe(1, 'DecryptThings(): finished');
   return ({
     stage1: decrypted_stage1,

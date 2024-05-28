@@ -1,9 +1,9 @@
 import { Controller, Post, Req } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
-
 import { AppService } from '../app.service';
 import DevicesModel from '../middleware/database/schemas/Device';
+import PicturesModel from '../middleware/database/schemas/Picture';
 import { PARAM_LENGTH_TOKENS, MINIMUM_ANDROID_API_LEVEL, ANDROID_CHECK_MODE, 
     PARAM_IOS_KEY_IDENTIFIER, IOS_SUPPORTED_VERSIONS, IOS_IS_DEVELOPMENT_ENVIRONMENT, MAX_TOTAL_DELAY_MS, PARAM_TEST_MODE } from '../parameters';
 import { LogMe, GenerateRandomString, isAnInteger, EncodeFromB64ToBuffer, EncodeFromBufferToB64, EncodeFromB64ToBinary, EncodeFromBinaryToB64 } from '../serverLibrary';
@@ -382,9 +382,68 @@ export class AttestationController {
     if(req.body.environment === 'PPWrapOps') {
         try {
             const fullDataObject = await DecryptThings(req.body.requestDataObject);
+            LogMe(1, 'fullDataObject?.to_server_data: '+fullDataObject?.to_server_data);
 
-            // Enforce privacy policies here  .... TBC
+            // Enforce privacy policies here
             //
+
+            // Expiration Date
+            let currentDate = Date.now();
+            if ( ! fullDataObject?.to_server_data?.privacyPolicies?.ExpirationDate) {
+                let msg = 'Error: Missing to_server_data.privacyPolicies.ExpirationDate field.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
+            if ((typeof fullDataObject.to_server_data.privacyPolicies.ExpirationDate) !== 'number') {
+                let msg = 'Error: to_server_data.privacyPolicies.ExpirationDate field is not a number.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
+            if (currentDate > fullDataObject.to_server_data.privacyPolicies.ExpirationDate) {
+                let msg = 'Access denied: Attempting to open a private picture past the expiration date.';
+                LogMe(1, msg + ' Expiration date is ' + fullDataObject.to_server_data.privacyPolicies.ExpirationDate.toString());
+                return {isSuccessful: false, resultMessage: msg};        
+            }
+
+            // View Once
+            if ( ! fullDataObject?.to_server_data?.privacyPolicies?.ViewOnce) {
+                let msg = 'Error: missing to_server_data.privacyPolicies.ViewOnce field.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
+            if ( fullDataObject.to_server_data.privacyPolicies.ViewOnce!=='Yes' && fullDataObject.to_server_data.privacyPolicies.ViewOnce!=='No' ) {
+                let msg = 'Error: to_server_data.privacyPolicies.ViewOnce field must be either `Yes` or `No`.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
+            if ( ! fullDataObject?.to_server_data?.pictureId) {
+                let msg = 'Error: Missing to_server_data.pictureId field.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
+            if (fullDataObject.to_server_data.pictureId=='') {
+                let msg = 'Error: to_server_data.pictureId field cannot be empty.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
+            if ((typeof fullDataObject.to_server_data.pictureId) !== 'string') {
+                let msg = 'Error: to_server_data.pictureId field is not a string.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
+            if (fullDataObject.to_server_data.privacyPolicies.ViewOnce==='Yes') {
+                const pictureObject = await PicturesModel.findOne({'pictureId': fullDataObject.to_server_data.pictureId});
+                if (pictureObject) {
+                    let msg = 'Access denied: Attempting to re open a private picture that is set to view only once.';
+                    LogMe(1, msg);
+                    return {isSuccessful: false, resultMessage: msg};    
+                } else {
+                    const mynewpicture = await PicturesModel.create({pictureId: fullDataObject.to_server_data.pictureId});
+                    if (!mynewpicture) {
+                       throw new Error('Could not insert picture with ID='+fullDataObject.to_server_data.pictureId+' into the database'); 
+                    }
+                }
+            }
 
             // Success
             return {

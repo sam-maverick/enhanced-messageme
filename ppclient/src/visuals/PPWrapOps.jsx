@@ -12,8 +12,18 @@ var RNFS = require('react-native-fs');
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft';
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons/faTriangleExclamation';
+import { faEyeSlash } from '@fortawesome/free-solid-svg-icons/faEyeSlash';
+import { faCalendarXmark } from '@fortawesome/free-solid-svg-icons/faCalendarXmark';
+import { faEllipsis } from '@fortawesome/free-solid-svg-icons/faEllipsis';
 
-//import FileProvider from 'react-native-file-provider';
+import {
+    Menu,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+  } from 'react-native-popup-menu';
+
+import FileProvider from 'react-native-file-provider';
 
 import { disallowScreenshot, keepAwake } from 'react-native-screen-capture';
 
@@ -43,11 +53,13 @@ import {
     IsValidImageExtensionAndContentType,
     SafeUrlEncodeForB64,
     SafeUrlDecodeForB64,
+    FromTimeSpanToHumanReadableString,
  } from '../myGeneralLibrary.jsx';
 
 import storage from '../storage/storageApi.js';
 import { PPEnrollmentComponent } from './PPEnrollment.jsx';
 import { PPFinishedComponent } from './PPFinished.jsx';
+import { CountdownComponent } from './Countdown.jsx';
 
 import { PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS } from '../parameters.js';
 
@@ -56,6 +68,11 @@ import { WrapPicture, UnwrapPicture } from '../cryptography/wrapops.js';
 var mutexPPclientAccess = withTimeout(new Mutex(), PARAM_PP__PROCESSING_TIMEOUT_MS);
 var timeoutID = 0;
 var androidContentUriGlobal = undefined;
+
+var var_screenToShow = 'none';
+var var_showPrivatePicture = false;
+var var_timerExpired = false;
+
 
 
 export const PPWrapOpsComponent = (props) => {
@@ -66,6 +83,7 @@ export const PPWrapOpsComponent = (props) => {
     const [screenToShow, setScreenToShow] = useState('none');
 
     const placeholderimage = require('../../assets/custom/paper.png');
+    const blankimage = require('../../assets/custom/blank.png');
     const loadingimage = require('../../assets/custom/loading.gif');
     const loading2image = require('../../assets/custom/loading2.gif');
 
@@ -83,7 +101,11 @@ export const PPWrapOpsComponent = (props) => {
     const [reportingFunction, setReportingFunction] = useState(() => () => {});
     const [returnFunction, setReturnFunction] = useState(() => () => {});
     const appState = useRef(AppState.currentState);
-    
+
+    const [viewOnce, setViewOnce] = useState(false);
+    const [expirationDateRelative, setExpirationDateRelative] = useState('');
+    const [countdownTimer, setCountdownTimer] = useState();
+
     const navigation = useNavigation();
 
 
@@ -95,16 +117,43 @@ export const PPWrapOpsComponent = (props) => {
             disallowScreenshot(true);
 
             const subscription = AppState.addEventListener('change', async (nextAppState) => {
+                // NOTE: our AppState events are not triggered when running on the bare workflow
+                // but they do work with the APK/standalone workflow.
                 if (
                         appState.current.match(/active/) &&
                         (nextAppState === 'inactive' || nextAppState === 'background')
                     ) {
-                  LogMe(1, 'App state changed from active to inactive|background');
-                  LogMe(1, 'Calling ClearWorkingData() for a partial clean on app state change');
-                  setTimerExpired(true);
-                  await ClearWorkingData({mode: 'partial', androidContentUri: androidContentUriGlobal});
+                    LogMe(1, 'App state changed from active to inactive|background');
+                    LogMe(1, 'Calling ClearWorkingData() for a partial clean on app state change');
+
+                    LogMe(1, 'var_screenToShow='+var_screenToShow.toString());
+                    LogMe(1, 'var_showPrivatePicture='+var_showPrivatePicture.toString());
+                    LogMe(1, 'var_timerExpired='+var_timerExpired.toString());
+
+                    if ((var_screenToShow === 'unwrapop' && !var_showPrivatePicture) || var_screenToShow === 'wrapop') {
+                        // App lost focus while processing information
+                        // Nothing to do
+                        LogMe(1, 'App lost focus while processing information');
+                    } else {
+                        LogMe(1, 'App lost focus while not processing information');
+                        if ((var_screenToShow === 'unwrapop' && var_showPrivatePicture)) {
+                            // There is a private picture shown or a 'timer expired' message shown with regards to a picture that was shown
+                            LogMe(1, 'Private picture shown or expired');
+                            if (var_timerExpired) {
+                                LogMe(1, 'Private picture expired');
+                                await ClearWorkingData({mode: 'partial', androidContentUri: androidContentUriGlobal}); 
+                                setScreenToShow('jobcompleted');
+                                var_screenToShow='jobcompleted';        
+                            } else {
+                                LogMe(1, 'Private picture shown');
+                                setTimerExpired(true);
+                                var_timerExpired=true;
+                                await ClearWorkingData({mode: 'partial', androidContentUri: androidContentUriGlobal});  
+                            }
+                        }
+                    }
                 }
-                // NOTE: Using inactive->active event is problematic because it makes the jobcompleted screen appear while it is still processing a private picture
+                // NOTE: Using inactive->active event is problematic because it makes the jobcompleted screen appear while it is processing the newly received private picture
                 /*
                 if (
                         appState.current.match(/inactive|background/) &&
@@ -113,6 +162,7 @@ export const PPWrapOpsComponent = (props) => {
                   LogMe(1, 'App state changed from inactive|background to active');
                   await ClearWorkingData({mode: 'full', androidContentUri: androidContentUriGlobal});
                   setScreenToShow('jobcompleted');
+                  var_screenToShow='jobcompleted';
                 }
                 */
             });              
@@ -211,17 +261,19 @@ export const PPWrapOpsComponent = (props) => {
 
         if (options?.mode==='full' || options?.mode==='partial') {
             setRequestedUrlParams({});
-            setPrivatePictureContents(placeholderimage);
+            setPrivatePictureContents(blankimage);
             if (Platform.OS === 'android' && options.androidContentUri) {
-                ////LogMe(1, 'ClearWorkingData(): Clearing Android FileProvider permissions');
-                ////await FileProvider.revokeUriPermissionR(options.androidContentUri);  // Apparently, we can do this from the recipient app
+                LogMe(1, 'ClearWorkingData(): Clearing Android FileProvider permissions');
+                await FileProvider.revokeUriPermissionR(options.androidContentUri);  // Empirically, we have cheched that can do this from the consumer app
             }          
             androidContentUriGlobal = undefined;  
         }
 
         if (options?.mode==='full') {
             setShowPrivatePicture(false);
+            var_showPrivatePicture=false;
             setTimerExpired(false);
+            var_timerExpired=false;
             setReportingFunction((previous) => {
                     return async () => {};
                 }
@@ -286,7 +338,9 @@ export const PPWrapOpsComponent = (props) => {
                 await InitialisationActions();   
             } catch(error) {
                 await ErrorAlertAsync('Error in InitialisationActions()', error);  // Some error
+                await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
                 setScreenToShow('jobcompleted');  
+                var_screenToShow='jobcompleted';
                 return;
             }
     
@@ -300,7 +354,9 @@ export const PPWrapOpsComponent = (props) => {
                 break;
               default:
                 await ErrorAlertAsync(error.message, error);  // Storage error
-                setScreenToShow('jobcompleted');  
+                await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
+                setScreenToShow('jobcompleted'); 
+                var_screenToShow='jobcompleted'; 
                 return;
             }
         }
@@ -309,15 +365,35 @@ export const PPWrapOpsComponent = (props) => {
         // CHECK INPUT AND ENVIRONMENT
 
         if ( (Platform.OS !== 'android') && (Platform.OS !== 'ios') ) {
+            await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
             await ErrorAlertAsync('Patform not supported: '+Platform.OS, undefined);
             setScreenToShow('jobcompleted');  
+            var_screenToShow='jobcompleted';
             return;
         }
 
         // Note: urlParams is of type object, but not of type URL
-        if (urlParams?.operationName === 'unwrap' && urlParams?.imageUriReference === undefined)  { ErrorAlert('Error: imageUriReference parameter missing', undefined); return; }
-        if (urlParams?.callbackURL === undefined)  { ErrorAlert('Error: callbackURL parameter missing', undefined); return; }
-        if (urlParams?.authToken === undefined)  { ErrorAlert('Error: authToken parameter missing', undefined); return; }
+        if (urlParams?.operationName === 'unwrap' && urlParams?.imageUriReference === undefined)  { 
+            await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
+            await ErrorAlertAsync('Error: imageUriReference parameter missing', undefined);
+            setScreenToShow('jobcompleted');  
+            var_screenToShow='jobcompleted';
+            return;
+        }
+        if (urlParams?.callbackURL === undefined)  { 
+            await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
+            await ErrorAlertAsync('Error: callbackURL parameter missing', undefined); 
+            setScreenToShow('jobcompleted');  
+            var_screenToShow='jobcompleted';
+            return; 
+        }
+        if (urlParams?.authToken === undefined)  { 
+            await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
+            await ErrorAlertAsync('Error: authToken parameter missing', undefined); 
+            setScreenToShow('jobcompleted'); 
+            var_screenToShow='jobcompleted'; 
+            return;
+        }
         let callbackURL = new URL(urlParams.callbackURL);
         if (callbackURL.protocol.toLowerCase() == PARAM_OUR_SCHEME)  { ErrorAlert('Error: Loop detected: callbackURL cannot be of protocol '+PARAM_OUR_SCHEME, undefined) }
         callbackURL.searchParams.append('authToken', urlParams.authToken);
@@ -325,12 +401,14 @@ export const PPWrapOpsComponent = (props) => {
         if ( ! accountData.key.enrollmentAttempted) {
             LogMe(1, '--------- Cold boot - Attempting enrollment now as it looks like first time run ------------');
             setScreenToShow('enrollment');  // It should come back with the callback
+            var_screenToShow='jobcompleted';
+            // Do not clear working data here
             return;
         }
 
         let errormsgoncheck = '';
         if ((!PARAM_DEBUG_MODE) && (accountData.key.enrollmentCompleted !== true) ) {
-            errormsgoncheck = 'Ooops. This device has not been able to complete the enrollment. Is your device rooted? Check that you downloaded the app via the official store, and that you have all security protections enabled.';
+            errormsgoncheck = 'Ooops. This device has not been able to complete the enrollment. Is your device rooted/jailbroken? Check that you downloaded the app via the official store, and that you have all security protections enabled.';
         }
         // Unless stated explicitly by our custom build parameter, we do not allow debug/emulated environments
         if ((! PARAM_DEBUG_MODE) && (! Device.isDevice) ) {
@@ -345,7 +423,8 @@ export const PPWrapOpsComponent = (props) => {
             callbackURL.searchParams.append('result', 'fail');    
             callbackURL.searchParams.append('message', errormsgoncheck);  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions
             await ErrorAlertAsync(errormsgoncheck+' Press Ok to come back to your messaging app.', undefined);  
-            setScreenToShow('jobcompleted');  
+            setScreenToShow('jobcompleted');
+            var_screenToShow='jobcompleted';  
             Linking.openURL(callbackURL.toString());
             return;
         }
@@ -358,18 +437,51 @@ export const PPWrapOpsComponent = (props) => {
                 LogMe(1, '--------- DO STUFF: wrap ------------');
                 setOperationTitle('Wrapping your private picture...');
                 setScreenToShow('wrapop');
+                var_screenToShow='wrapop';
                 // 
                 //
                 
                 let plainPrivatePictureContents = '';
                 let wrappedPrivatePictureContents = '';
     
-                if (urlParams?.privacyPolicies === undefined)  { ErrorAlert('Error: privacyPolicies parameter missing', undefined); return; }
+                if (urlParams?.privacyPolicies === undefined)  { 
+                    await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
+                    await ErrorAlertAsync('Error: privacyPolicies parameter missing', undefined); 
+                    setScreenToShow('jobcompleted');  
+                    var_screenToShow='jobcompleted';
+                    return; 
+                }
                 let privacyPolicies = JSON.parse(EncodeFromB64ToBinary(SafeUrlDecodeForB64(urlParams.privacyPolicies)));
-                LogMe(1, 'privacyPolicies: ' + JSON.stringify(privacyPolicies));
+                LogMe(1, 'privacyPolicies original: ' + JSON.stringify(privacyPolicies));
+
+                let currentDate = Date.now();
+                switch (privacyPolicies.Expiration) {
+                    case '15 minutes':
+                        privacyPolicies['ExpirationDate'] = currentDate + (15 * 60 * 1000);
+                        break;
+                    case '3 hours':
+                        privacyPolicies['ExpirationDate'] = currentDate + (3 * 60 * 60 * 1000);
+                        break;
+                    case '3 days':
+                        privacyPolicies['ExpirationDate'] = currentDate + (3 * 24 * 60 * 60 * 1000);
+                        break;
+                    case '90 days':
+                        privacyPolicies['ExpirationDate'] = currentDate + (3 * 30 * 24 * 60 * 60 * 1000);
+                        break;
+                    default:               
+                        throw new Error('Invalid value for privacyPolicies. Expiration: ' + privacyPolicies.Expiration.toString());
+                }
+                delete privacyPolicies.Expiration;
+                LogMe(1, 'privacyPolicies modified: ' + JSON.stringify(privacyPolicies));
 
                 if (Platform.OS === 'android') {
-                    if (urlParams?.fileUri === undefined)  { ErrorAlert('Error: fileUri parameter missing', undefined); return; }
+                    if (urlParams?.fileUri === undefined)  { 
+                        await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
+                        await ErrorAlertAsync('Error: fileUri parameter missing', undefined); 
+                        setScreenToShow('jobcompleted');  
+                        var_screenToShow='jobcompleted';
+                        return; 
+                    }
 
                     LogMe(1, 'Received Uri: '+urlParams.fileUri);
                     if (PARAM_DEBUG_MODE)  { setReceivedPlainImageFromSourceUri({uri: urlParams.fileUri}); }
@@ -433,15 +545,19 @@ export const PPWrapOpsComponent = (props) => {
                 
                 // Work done. Come back to the messaging app
                 callbackURL.searchParams.append('result', 'success');  
+                await ClearWorkingData({mode: 'full', androidContentUri: urlParams.fileUri});                
                 setScreenToShow('jobcompleted');  
+                var_screenToShow='jobcompleted';
                 Linking.openURL(callbackURL.toString());
     
             } catch (err) {
-                let errormsg = 'Ooops. An unexpected error has occurred while wrapping the image: `' + err.message + '`. ';
+                let errormsg = '' + err.message + '';
                 callbackURL.searchParams.append('result', 'fail');    
                 callbackURL.searchParams.append('message', err.message);  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions
+                await ClearWorkingData({mode: 'full', androidContentUri: urlParams.fileUri});                
                 await ErrorAlertAsync(errormsg+' Press Ok to come back to your messaging app.', err);
-                setScreenToShow('jobcompleted');  
+                setScreenToShow('jobcompleted');
+                var_screenToShow='jobcompleted';  
                 Linking.openURL(callbackURL.toString());    
             }
 
@@ -450,6 +566,7 @@ export const PPWrapOpsComponent = (props) => {
             LogMe(1, '--------- DO STUFF: unwrap ------------');
             setOperationTitle('Unwrapping your private picture...');
             setScreenToShow('unwrapop');
+            var_screenToShow='unwrapop';
             //
             //
             try {
@@ -457,7 +574,13 @@ export const PPWrapOpsComponent = (props) => {
                 let wrappedPrivatePictureContents = '';
 
                 if (Platform.OS === 'android') {
-                    if (urlParams?.fileUri === undefined)  { ErrorAlert('Error: fileUri parameter missing', undefined); return; }
+                    if (urlParams?.fileUri === undefined)  { 
+                        await ClearWorkingData({mode: 'full', androidContentUri: urlParams.fileUri});                
+                        await ErrorAlertAsync('Error: fileUri parameter missing', undefined); 
+                        setScreenToShow('jobcompleted'); 
+                        var_screenToShow='jobcompleted';
+                        return; 
+                    }
 
                     LogMe(1, 'Received Uri: '+urlParams.fileUri);
                     LogMe(1, 'Reading '+urlParams.fileUri);
@@ -478,9 +601,10 @@ export const PPWrapOpsComponent = (props) => {
 
                 let unwrappedDataObject = await UnwrapPicture(wrappedPrivatePictureContents, accountData.key);
 
-                LogMe(1, 'privacyPolicies: '+JSON.stringify(unwrappedDataObject.privacyPolicies));
+                LogMe(1, 'privacyPolicies: '+JSON.stringify(unwrappedDataObject?.privacyPolicies));
 
-                let KeepOpenTimerMs = 1;
+                // Calculate timer value
+                let KeepOpenTimerMs;
                 switch (unwrappedDataObject.privacyPolicies.KeepOpenTimer) {
                     case '10 seconds':
                         KeepOpenTimerMs = 10 * 1000;
@@ -491,8 +615,19 @@ export const PPWrapOpsComponent = (props) => {
                     case '2 hours':
                         KeepOpenTimerMs = 2 * 60 * 60 * 1000;
                         break;
+                    default:              
+                        throw new Error('The specified KeepOpenTimer in the privacyPolicies is not valid: '+unwrappedDataObject.privacyPolicies.KeepOpenTimer.toString());
                 }
                 LogMe(1, 'KeepOpenTimer set to: '+KeepOpenTimerMs.toString());
+
+                // Show or hide View Once icon
+                if (unwrappedDataObject.privacyPolicies.ViewOnce === 'Yes') {
+                    setViewOnce(true);
+                } else {
+                    setViewOnce(false);
+                }
+
+                setExpirationDateRelative(FromTimeSpanToHumanReadableString(Number(unwrappedDataObject.privacyPolicies.ExpirationDate) - Date.now()));
 
                 setPrivatePictureContents({uri: 'data:image/'+unwrappedDataObject.contentType+';base64,'+unwrappedDataObject.data});
 
@@ -501,9 +636,11 @@ export const PPWrapOpsComponent = (props) => {
                         LogMe(1, 'reportingFunction() called');
                         callbackURL.searchParams.append('result', 'report');  
                         callbackURL.searchParams.append('RefImageUri', urlParams?.imageUriReference);
-                        setScreenToShow('jobcompleted');
+                        unwrappedDataObject = undefined;
                         LogMe(1, 'calling ClearWorkingData() on reportingFunction() before Linking.openURL()');
                         await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});
+                        setScreenToShow('jobcompleted');
+                        var_screenToShow='jobcompleted';
                         Linking.openURL(callbackURL.toString());  
                     }
                 });
@@ -512,9 +649,11 @@ export const PPWrapOpsComponent = (props) => {
                     return async () => {
                         LogMe(1, 'returnFunction() called');
                         callbackURL.searchParams.append('result', 'success');  
-                        setScreenToShow('jobcompleted');
+                        unwrappedDataObject = undefined;
                         LogMe(1, 'calling ClearWorkingData() on returnFunction() before Linking.openURL()');
                         await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});
+                        setScreenToShow('jobcompleted');
+                        var_screenToShow='jobcompleted';
                         Linking.openURL(callbackURL.toString());  
                     }
                 });
@@ -522,6 +661,8 @@ export const PPWrapOpsComponent = (props) => {
                 timeoutID = setTimeout(
                     async() => {
                         setTimerExpired(true);
+                        var_timerExpired=true;
+                        unwrappedDataObject = undefined;
                         LogMe(1, 'Calling ClearWorkingData() for a partial clean on setTimeout() timer expired');
                         await ClearWorkingData({mode: 'partial', androidContentUri: urlParams?.fileUri});
                     }, 
@@ -529,23 +670,27 @@ export const PPWrapOpsComponent = (props) => {
                 );
                 LogMe(1, 'timeoutID: '+timeoutID);
 
+                setCountdownTimer(KeepOpenTimerMs);
                 setShowPrivatePicture(true);
+                var_showPrivatePicture=true;
 
             } catch (err) {
-                let errormsg = 'Ooops. An unexpected error has occurred while unwrapping the image: `' + err.message + '`. ';
+                let errormsg = '' + err.message + '';
                 LogMe(1, errormsg);
                 callbackURL.searchParams.append('result', 'fail');    
                 callbackURL.searchParams.append('message', err.message);  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions
+                await ClearWorkingData({mode: 'partial', androidContentUri: urlParams?.fileUri});
                 await ErrorAlertAsync(errormsg+' Press Ok to come back to your messaging app.', err);
                 setScreenToShow('jobcompleted');  
+                var_screenToShow='jobcompleted';
                 Linking.openURL(callbackURL.toString());    
             }
 
-
-
-
         } else {
-            await ErrorAlertAsync('API programming error. Unknown operation: '+urlParams?.operationName, undefined);
+            await ClearWorkingData({mode: 'partial', androidContentUri: urlParams?.fileUri});
+            await ErrorAlertAsync('API error. Unknown operation: '+urlParams?.operationName, undefined);
+            setScreenToShow('jobcompleted'); 
+            var_screenToShow='jobcompleted';
         }
 
     }
@@ -641,11 +786,13 @@ export const PPWrapOpsComponent = (props) => {
             return(
                 <View style={styles.centercenterflex1}>
     
-                <View style={styles.leftleft}>
-                    <Text style={styles.large}>Picture has expired</Text>
+                <View style={styles.leftcenter}>
+                    <Text style={styles.large}>Contents have been consumed</Text>
                 </View>                
 
-                <View style={styles.leftleft}>
+                <Text></Text>
+
+                <View style={styles.leftcenter}>
                     <Button title='Go back to your app' onPress={returnFunction} />
                 </View>                
     
@@ -653,31 +800,47 @@ export const PPWrapOpsComponent = (props) => {
             );
         } else {
             return (
-                <View style={styles.centerleftflex1black}>
+                <View style={styles.centerleftflex1blackcol}>
     
-                <ReactNativeZoomableView
-                    maxZoom={3}
-                    minZoom={0.2}
-                    zoomStep={0.5}
-                    initialZoom={1}
-                    bindToBorders={true}
-                    style={{
-                        padding: 0,
-                        backgroundColor: 'black',
-                    }}
-                >
-                    <Image
-                        style={styles.imagewrpfull}
-                        source={privatePictureContents}
-                        alt="Placeholder for: Contents of the private picture"
-                    />
-                </ReactNativeZoomableView>
-    
-                    { /*<ExtraInfoComponent/> */ }
+                    <CountdownComponent countdownInitialTimerMs={countdownTimer}/>
+
+                    <View style={styles.centerleftflex1black}>
+                        <ReactNativeZoomableView
+                            maxZoom={4}
+                            minZoom={0.2}
+                            zoomStep={0.5}
+                            initialZoom={1}
+                            bindToBorders={true}
+                            style={{
+                                padding: 0,
+                                backgroundColor: 'black',
+                            }}
+                        >
+                            <Image
+                                style={styles.imagewrpfull}
+                                source={privatePictureContents}
+                                alt="Placeholder for: Contents of the private picture"
+                            />
+                        </ReactNativeZoomableView>
+                    </View>
+
+                        { /*<ExtraInfoComponent/> */ }
     
                 </View>
             );    
         }
+    }
+
+    const ViewOnceComponent = () => {
+        return(
+            <View style={{opacity: ( viewOnce ? 100 : 0 ) }}>
+                <FontAwesomeIcon
+                    size={25}
+                    icon={faEyeSlash}
+                    color={'black'}
+                />
+            </View>
+        );
     }
 
 
@@ -747,23 +910,50 @@ export const PPWrapOpsComponent = (props) => {
                             </TouchableOpacity>
                         </View>
                         <View>
-                            <Text style={styles.large}>  Back to your app</Text>
+                            <Text style={styles.large}>{/*  Back to your app*/}</Text>
                         </View>
                     </View>
 
-                    <View style={styles.headertitlecentercenterflex1}>
-                        <Text style={styles.large}>{/* text in the center */}</Text>
+                    <View style={styles.headertitlecentercenterflex1row}>
+                        
+                        <ViewOnceComponent/>
+
+                        <Text>   </Text>
+
+                        <FontAwesomeIcon
+                                    size={25}
+                                    icon={faCalendarXmark}
+                                    color={'black'}
+                        />
+
+                        <Text style={styles.large}> { expirationDateRelative }</Text>
+
                     </View>
 
                     <View style={styles.headertitleleftcenter}>    
                         <View>
-                            <TouchableOpacity onPress={reportingFunction}>
-                                <FontAwesomeIcon
-                                    size={25}
-                                    icon={faTriangleExclamation}
-                                    color={'#FF2222'}
-                                />
-                            </TouchableOpacity>
+
+
+                        <Menu>
+                            <MenuTrigger text={<FontAwesomeIcon
+                                            size={25}
+                                            icon={faEllipsis}
+                                            color={'black'}
+                                        />} />
+                            <MenuOptions>
+                                <MenuOption onSelect={reportingFunction}>
+                                    <View style={styles.leftleftflex1rownobg}>
+                                        <FontAwesomeIcon
+                                            size={25}
+                                            icon={faTriangleExclamation}
+                                            color={'#FF2222'}
+                                        />
+                                        <Text style={styles.large}>Report</Text>
+                                    </View>
+                                </MenuOption>
+                            </MenuOptions>
+                        </Menu>
+
                         </View>
                         <Text style={styles.large}>  </Text>
                     </View>

@@ -20,6 +20,7 @@ import { ApiTestNetworkConnection } from '../network/networkApi.js';
 
 import { useNavigation } from '@react-navigation/native';
 
+import { PARAM_SHOW_EXTRA_INFO } from '../parameters.js';
 
 
 var currentProps = undefined;
@@ -154,96 +155,75 @@ export const PPSettingsComponent = (props) => {
     
 
     const ExtraInfoComponent = () => {
-        return(
-            <View>
-
-                    <Text />
-                    
-                    <View style={styles.leftleft}>
-                        <Text>SYSTEM INFO AND SETTINGS:</Text>
-                    </View>
-
-                    <Text />
-
-                    <View style={styles.leftleft}>
-                        <Text style={{fontWeight: "bold"}}>Username is: </Text>
-                        <TextInput
-                            style={styles.textfield}
-                            onChangeText={newText => SaveAccountData(true, 'username', newText)}
-                            defaultValue={propsState.AccountData.username}
-                        />
-                    </View>
-                    <View style={styles.leftleft}>
-                        <Text>Used only for debugging.</Text>
-                    </View>
-
-                    <Text />
-
-                    <View style={styles.leftleft}>
-                        <Button title='Check PP server connection' onPress={() => CheckPPServer()} />
-                    </View>
-
-                    <View style={styles.leftleft}>
-                        <Text>Network connection to PP server is: </Text><Text style={{fontWeight: "bold"}}>{ networkStatus }</Text>
-                    </View>
-
-                    <Text />
-
-                    <View style={styles.leftleft}>
-                        <Text style={{fontWeight: "bold"}}>Is this a physical device? {Device.isDevice ? 'Yes' : 'No'}</Text>
-                    </View>
-                    <View style={styles.leftleft}>
-                    <Text>Corresponds to Device.isDevice.</Text>
-                    </View>
-
-                    <Text />
-
-                    <View style={styles.leftleft}>
-                        <Text style={{fontWeight: "bold"}}>Platform OS is: {Platform.OS}</Text>
-                    </View>
-                    <View style={styles.leftleft}>
-                    <Text>Corresponds to Platform.OS.</Text>
-                    </View>
-
-                    <Text />
-
-                    <View style={styles.leftleft}>
-                        <Text style={{fontWeight: "bold"}}>Platform version is: {Platform.Version}</Text>
-                    </View>
-                    <View style={styles.leftleft}>
-                    <Text>Corresponds to Platform.Version.</Text>
-                    </View>
-
-                    <Text />
-                    <View style={styles.leftleft}>
-                        <Text style={{fontWeight: "bold"}}>Is this a development environment? {__DEV__ ? 'Yes' : 'No'}</Text>
-                    </View>
-
-                    <View style={styles.leftleft}>
-                    <Text>Corresponds to __DEV__.</Text>
-                    </View>
-                    <View style={styles.leftleft}>
-                    <Text>Used to trigger the appropriate app reload function. In Expo Go (say, development) we use DevSettings.reload(), whereas in the bare React Native app we use RNRestart.restart().</Text>
-                    </View>
-
-                    <Text />
-
-                    <View style={styles.leftleft}>
-                        <Button title='Erase PP user data on this device' onPress={() => EraseLocalUserData()} />
-                    </View>
-
-                    <Text />
-
-                    <View style={styles.leftleft}>
-                        <Text style={{fontWeight: "bold"}}>Storage data: </Text>
-                    </View>
-                    <View style={styles.leftleft}>
-                        <Text>{ storageDataShow }</Text>
-                    </View>
-
-                    <Text />
-            </View>
-        );
+        if (PARAM_SHOW_EXTRA_INFO) {
+            return(
+                <View>    
+                        <Text />
+                        
+                        <View style={styles.leftleft}>
+                            <Text style={{fontWeight: "bold"}}>Username is: </Text>
+                            <TextInput
+                                style={styles.textfield}
+                                onChangeText={newText => SaveAccountData(true, 'username', newText)}
+                                defaultValue={propsState.AccountData.username}
+                            />
+                        </View>
+                        <View style={styles.leftleft}>
+                            <Text>Used only for debugging.</Text>
+                        </View>
+    
+                        <Text />
+    
+                        <View style={styles.leftleft}>
+                            <Text style={{fontWeight: "bold"}}>Is this a physical device? {Device.isDevice ? 'Yes' : 'No'}</Text>
+                        </View>
+                        <View style={styles.leftleft}>
+                        <Text>Corresponds to Device.isDevice.</Text>
+                        </View>
+    
+                        <Text />
+    
+                        <View style={styles.leftleft}>
+                            <Text style={{fontWeight: "bold"}}>Platform OS is: {Platform.OS}</Text>
+                        </View>
+                        <View style={styles.leftleft}>
+                        <Text>Corresponds to Platform.OS.</Text>
+                        </View>
+    
+                        <Text />
+    
+                        <View style={styles.leftleft}>
+                            <Text style={{fontWeight: "bold"}}>Platform version is: {Platform.Version}</Text>
+                        </View>
+                        <View style={styles.leftleft}>
+                        <Text>Corresponds to Platform.Version.</Text>
+                        </View>
+    
+                        <Text />
+                        <View style={styles.leftleft}>
+                            <Text style={{fontWeight: "bold"}}>Is this a development environment? {__DEV__ ? 'Yes' : 'No'}</Text>
+                        </View>
+    
+                        <View style={styles.leftleft}>
+                        <Text>Corresponds to __DEV__.</Text>
+                        </View>
+                        <View style={styles.leftleft}>
+                        <Text>Used to trigger the appropriate app reload function. In Expo Go (say, development) we use DevSettings.reload(), whereas in the bare React Native app we use RNRestart.restart().</Text>
+                        </View>
+    
+                        <Text />
+    
+                        <View style={styles.leftleft}>
+                            <Text style={{fontWeight: "bold"}}>Storage data: </Text>
+                        </View>
+                        <View style={styles.leftleft}>
+                            <Text>{ storageDataShow }</Text>
+                        </View>
+    
+                        <Text />
+                </View>
+            );    
+        }
     }
 
 
@@ -259,6 +239,22 @@ export const PPSettingsComponent = (props) => {
                 </View>
                 <View style={styles.centerleftflex1}>
                     <ScrollView style={styles.scrollView}>{/* ScrollView already expands, so we set their children not to expand, otherwise the buttons expand */}
+
+                    <Text />
+    
+                        <View style={styles.leftleft}>
+                            <Button title='Check PP server connection' onPress={() => CheckPPServer()} />
+                        </View>
+
+                        <View style={styles.leftleft}>
+                            <Text>Network connection to PP server is: </Text><Text style={{fontWeight: "bold"}}>{ networkStatus }</Text>
+                        </View>
+
+                        <Text />
+
+                        <View style={styles.leftleft}>
+                            <Button title='Erase PP user data on this device' onPress={() => EraseLocalUserData()} />
+                        </View>
 
                         <ExtraInfoComponent/>
 

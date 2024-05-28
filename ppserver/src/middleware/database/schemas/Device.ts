@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 
-const DeviceSchema = new Schema({  // These are the user accounts
+const DeviceSchema = new Schema({
     nonces: {
         android_classic: {
             nonce: {type: String},

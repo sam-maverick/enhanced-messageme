@@ -196,7 +196,7 @@ export const PPTaggingComponent = (props) => {
     async function ComponentRefresh() {  // Invoked every time this screen is loaded
         LogMe(1, 'Refreshing PPTagging Component');
 
-        LogMe(1,JSON.stringify('propsState.AccountData: '+JSON.stringify(propsState.AccountData)));
+        LogMe(1,'propsState.AccountData: '+JSON.stringify(propsState.AccountData));
 
         if (initStatus.key === 'init') {
             LogMe(1, 'Initialising PPTagging Component');
@@ -250,8 +250,8 @@ export const PPTaggingComponent = (props) => {
 
     const radioButtonsExpiration = useMemo(() => ([
         {
-            id: '10 minutes', // acts as primary key, should be unique and non-empty string
-            label: '10 minutes',
+            id: '15 minutes', // acts as primary key, should be unique and non-empty string
+            label: '15 minutes',
         },
         {
             id: '3 hours',
@@ -262,8 +262,8 @@ export const PPTaggingComponent = (props) => {
             label: '3 days',
         },
         {
-            id: '3 months',
-            label: '3 months',
+            id: '90 days',
+            label: '90 days',
         },
     ]), []);
 
@@ -341,7 +341,7 @@ export const PPTaggingComponent = (props) => {
                                         let fileContentsOriginal = await FileSystem.readAsStringAsync(newassets[0].uri, {encoding: 'base64'});
                                         let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
                                         let exifObj = piexif.load(dataUri);
-                                        LogMe(1,'exifObj: '+JSON.stringify(exifObj));
+                                        LogMe(2,'exifObj: '+JSON.stringify(exifObj));
                                     
                                         if (exifObj?.Exif) {
                                             LogMe(1,'Checking if picture is actually marked as private: ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);

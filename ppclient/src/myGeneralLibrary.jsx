@@ -23,6 +23,32 @@ import ReactNativeBlobUtil from 'react-native-blob-util';
 
 let LogMeUsername = false;
 
+const MillisDay = 1000 * 60 * 60 * 24;
+const MillisHour = 1000 * 60 * 60;
+const MillisMinute = 1000 * 60;
+const MillisSecond = 1000;
+
+
+
+export function FromTimeSpanToHumanReadableString(lapseMs) {
+    if (lapseMs >= (MillisDay)) {
+        let days = Math.floor(lapseMs/MillisDay);
+        let hours = Math.floor((lapseMs-(days*MillisDay))/MillisHour);
+        return(days+'d' + (hours>0 ? (hours+'h') : '') );
+    } else if (lapseMs >= (MillisHour)) {
+        let hours = Math.floor(lapseMs/MillisHour);
+        let minutes = Math.floor((lapseMs-(hours*MillisHour))/MillisMinute);
+        return(hours+'h' + (minutes>0 ? (minutes+'m') : '') );
+    } else if (lapseMs >= (MillisMinute)) {
+        let minutes = Math.floor(lapseMs/MillisMinute);
+        let seconds = Math.floor((lapseMs-(minutes*MillisMinute))/MillisSecond);
+        return(minutes+'m' + (seconds>0 ? (seconds+'s') : '') );
+    } else if (lapseMs >= (MillisSecond)) {
+        return(Math.floor(lapseMs/MillisSecond)+'s');
+    } else {
+        return('<1s');
+    }  
+}
 
 
 export async function ReadMyFileStream (path, mode) {
