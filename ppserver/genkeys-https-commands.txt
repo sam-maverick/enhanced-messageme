@@ -1,0 +1,65 @@
+# Create directory structure
+# Omit 'file already exists' errors
+mkdir secrets
+mkdir secrets/https
+mkdir secrets/https/ca
+mkdir secrets/https/srv
+
+
+############## CA
+
+# If you ever generate a new key but reuse an ancient CN for the CA, then do not create a new serial;
+# You must reuse the old serial because otherwiseFirefox complains about reusing serial numbers (it 
+# considers two CA's with the same CN to be the same CA).
+echo "01" > ./secrets/https/ca/crlnumber
+echo "01" > ./secrets/https/ca/serial
+touch ./secrets/https/ca/index.txt
+
+# This is to list available ECC algorithms:
+#openssl ecparam -list_curves
+
+# Generate private key using ECC
+openssl ecparam -genkey -name prime256v1 -out ./secrets/https/ca/ca_priv.key
+
+# Generate CA certificate
+openssl req -config ./openssl-ca.cnf -new -nodes -days 3650 -x509 -extensions v3_ca -key ./secrets/https/ca/ca_priv.key -out ./secrets/https/ca/ca_cert.cer
+
+# Generate first CRL for the CA
+openssl ca -gencrl -crldays 5840 -config ./openssl-ca.cnf -keyfile ./secrets/https/ca/ca_priv.key -cert ./secrets/https/ca/ca_cert.cer -out ./secrets/https/ca/ca_crl_B64.crl
+
+# We convert from B64 to binary DER (Firefox doesn't like B64):
+#openssl crl -inform PEM -outform DER -in ./secrets/https/ca/ca_crl_B64.crl -out ./secrets/https/ca/ca_crl_DER.crl
+
+
+############## SRV
+
+# This is to list available ECC algorithms:
+#openssl ecparam -list_curves
+
+# Generate private key using ECC
+openssl ecparam -genkey -name prime256v1 -out ./secrets/https/srv/srv_priv.key
+
+# Generate new certificate and CSR for the server
+openssl req -config ./openssl-srv.cnf -new -nodes -days 1460 -key ./secrets/https/srv/srv_priv.key -out ./secrets/https/srv/srv_csr.csr
+
+# We sign the CSR with our CA
+openssl ca -config ./openssl-ca.cnf -days 1460 -out ./secrets/https/srv/srv_cert.cer -infiles ./secrets/https/srv/srv_csr.csr
+
+# We attach the CA certificate to the certificate chain of the server certificate
+echo "" >> ./secrets/https/srv/srv_cert.cer
+cat ./secrets/https/ca/ca_cert.cer >> ./secrets/https/srv/srv_cert.cer
+
+# This is to have a PEM with both public and private keys in it
+#cat ./secrets/https/srv/srv_cert.cer > ./secrets/https/srv/srv_pem_pubpri.pem
+#cat ./secrets/https/srv/srv_priv.key >> ./secrets/https/srv/srv_pem_pubpri.pem
+
+# Convert to PKCS. It will ask us to provide a PSK to protect the private key of the server certificate
+#openssl pkcs12 -export -in ./secrets/https/srv/srv_pem_pubpri.pem -out ./secrets/https/srv/srv_pkcs_pubpri.pem
+
+
+############## Android
+
+Because the CA certificate is embedded within the app assets, there is no need to install the CA
+in the Android system as a trusted user certificate. That would only be necessary if we were to use
+a browser to connect to https://ppserver-gen.localnet...
+

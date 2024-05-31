@@ -7,8 +7,8 @@ import { EncodeFromB64ToBuffer, EncodeFromBufferToB64, LogMe } from '../serverLi
 
 
 // our cwd is the dist folder!
-const PPserverPrivateKey = fs.readFileSync(require.resolve('../../secrets/rsa-privkey.pem')).toString();
-console.log('Private key loaded');
+const PPserverPrivateKey = fs.readFileSync(require.resolve('../../../secrets/wrapping/rsa-privkey.pem')).toString();
+console.log('Private key for wrapping, loaded');
 
 
 

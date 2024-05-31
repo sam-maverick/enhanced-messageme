@@ -9,9 +9,23 @@ export const PARAM_TEST_MODE = true;
 //     END OF DANGER ZONE
 
 
+
+/**
+ * A nickname idetifying your PP platform.
+ * Maximum 5 characters!!!!
+ * Examples: ios, droid, gen
+ */
+
+export const PP_PLATFORM_NICKNAME = "gen";
+
+/**
+ * A name idetifying your PP platform.
+ */
+export const PP_PLATFORM_NAME = "generic";
+
+
 export const PARAM_API_PORT = 3020;
 
-export const PARAM_WEBSOCKET_PORT = 3021;
 
 export const PARAM_DATABASE_URL = "mongodb://127.0.0.1:27017/ppmessagemedb";
 

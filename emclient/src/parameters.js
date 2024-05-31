@@ -1,6 +1,6 @@
 // Do not import custom libraries from here
 
-// NOTE: When changes are made to files that do not contain components, these changes are not pulled to running apps in real time. You need tore-launch the app to force a re-download.
+// NOTE: When changes are made to files that do not contain components, these changes are not pulled to running apps in real time. You need to re-launch the app to force a re-download.
 
 import * as Device from 'expo-device';
 

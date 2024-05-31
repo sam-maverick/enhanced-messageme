@@ -201,7 +201,7 @@ if (process.argv[2] === 'bare') {
       exit(1);
     }
   } else {
-    myExec('npm run android');
+    myExec('npm run android -c');
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
       echo('Aborting on ' + env.RESULT + ', command failed:');

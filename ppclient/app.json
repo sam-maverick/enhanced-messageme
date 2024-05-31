@@ -2,7 +2,7 @@
   "expo": {
     "plugins": [
       [
-        "./plugins/android-manifest-http-traffic.js"
+        "./plugins/android-manifest-https-traffic.js"
       ],
       [
         "./plugins/android-manifest-package-visibility.js"
@@ -32,7 +32,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro",
-    "version": "2.3.118",
+    "version": "2.3.138",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -63,7 +63,7 @@
         "pt.lasige.safex.permission.PRIVACY_PROVIDER"
       ],
       "package": "pt.lasige.safex.ppclient",
-      "versionCode": 324
+      "versionCode": 326
     },
     "web": {
       "favicon": "./assets/favicon.png"

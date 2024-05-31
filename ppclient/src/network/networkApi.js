@@ -1,14 +1,15 @@
 import { PARAM_SERVER_API_URL } from '../parameters.js';
 import { ErrorAlert, LogMe } from '../myGeneralLibrary.jsx';
 
-
 const POST_HEADERS = {
     method: 'POST',
     headers: {
         'Content-type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': 0
     },
 };
-
 
 
 export async function ApiSubmitAttestationTokenToServer(environment, cookie, platformType, platformVersion, requestType, token, requestDataObject) {
@@ -33,7 +34,6 @@ export async function ApiSubmitAttestationTokenToServer(environment, cookie, pla
     .then((res) => res)
 
 }
-
 
 
 export async function ApiSubmitTwoAttestationTokensToServer(environment, cookie, platformType, platformVersion, requestType1, token1, requestType2, token2, requestDataObject) {

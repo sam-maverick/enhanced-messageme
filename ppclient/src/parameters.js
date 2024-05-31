@@ -1,34 +1,30 @@
 // Do not import custom libraries from here
 
-// NOTE: When changes are made to files that do not contain components, these changes are not pulled to running apps in real time. You need tore-launch the app to force a re-download.
+// NOTE: When changes are made to files that do not contain components, these changes are not pulled to running apps in real time. You need to re-launch the app to force a re-download.
 
 import * as Device from 'expo-device';
 
-/**
- * Quality of the image (resampling)
- * // from 0 to 1, float. 0=lowest resolution, 1=highest resolution
- *  NOTE: In some devices, only 1 is supported!!!! Check: https://github.com/expo/expo/issues/19512
- * Check: https://github.com/react-native-image-picker/react-native-image-picker/blob/a5d2938cd19e1d26614bd78c89d3e02467da28a6/docs/Reference.md#options
- */ 
-export const PARAM_IMAGE_PICKER_QUALITY = 1;
+// When set to true, the PP client app will wrap and attempt to unwrap private pictures even when not enrolled.
+// Useful when running the app from APK loaded via adb, and to check that protections work regardless of app logic.
+export const PARAM_DEBUG_MODE = true;
 
 /** 
  * Show developer info in PPSettings tab
 */
 export const PARAM_SHOW_EXTRA_INFO = false;
 
-let server_host = '';
-if (Device.isDevice) {
-    server_host = '192.168.12.1';  // Change accordingly to your network environment.
-} else {
-    server_host = '10.0.2.2';  // Do not change. 10.0.2.2 is used as loopback address of the emulator host by Expo Go.
-}
+/**
+ * The name identifiers of the PP platform
+ */
+export const PP_PLATFORM_NICKNAME = "gen";
+export const PP_PLATFORM_NAME = "generic";
 
-export const PARAM_SERVER_API_URL = 'http://' + server_host + ':3020'; // Change port if needed
 
-export const PARAM_SERVER_WS_URL = 'ws://' + server_host + ':3021'; // Change port if needed
-
-export const PARAM_IMAGES_DIRNAME = 'chatHistoryPictures';  // You shouldn't need to change this
+export const PARAM_SERVER_API_URL = 
+'https://' + // Change to http or https accordingly to your environment
+`ppserver-${PP_PLATFORM_NICKNAME}` +
+'.localnet' + 
+':3020'; // Change port if needed
 
 // Console logging. 0=disabled, 1=normal logging, 2=verbose debugging
 // NOTE: Setting this to anything other than 0 may significantly impact performance
@@ -46,11 +42,6 @@ export const PARAM_IOS_KEY_IDENTIFIER = {
 
 // The custom scheme of our app, in lowercase
 export const PARAM_OUR_SCHEME = 'pripro';
-
-// When set to true, the PP client app will wrap and attempt to unwrap private pictures even when not enrolled.
-// Useful when running the app from APK loaded via adb, and to check that protections work regardless of app logic.
-export const PARAM_DEBUG_MODE = true;
-
 
 /** 
  * ppimagemarker app name
@@ -77,12 +68,14 @@ export const PARAM_PP__IMAGEMARKER_PLAYSTOREID = 'pt.lasige.safex.ppimagemarker'
  */
 export const PARAM_PP__IMAGEMARKER_URL = 'ppimagemarker://pptagging';
  
-
 /**
  * Maximum processing time. Applies both to wrapping and unwrapping operations.
  */
 export const PARAM_PP__PROCESSING_TIMEOUT_MS = 3 * 60 * 1000;
  
+/**
+ * Selected cryptographic algorithms and parameters used to wrap private pictures
+ */
 export const PARAM_PP__CRYPTO = {
     'null_crypto': false,  // Set to true to do null-encryption for testing purposes. Do not set to true in production!!
     'stage1': {
@@ -95,6 +88,6 @@ export const PARAM_PP__CRYPTO = {
         'encryption_algorithm': 'aes-256-cbc',
     },
     'stage3': {
-        'encryption_algorithm': 'rsa',  // Only 'rsa' is supported
+        'encryption_algorithm': 'rsa',  // Only 'rsa' is supported; this parameter is not read. It is here for informational purposes only.
     },
 };

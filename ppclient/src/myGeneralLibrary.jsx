@@ -8,7 +8,7 @@ import * as FileSystem from 'expo-file-system';
 
 import { Asset } from 'expo-asset';
 
-import { PARAM_IMAGES_DIRNAME, PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO } from './parameters.js';
+import { PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO } from './parameters.js';
 
 
 import storage from './storage/storageApi.js';
@@ -241,15 +241,6 @@ export async function InitialisationActions() {
 
     LogMeUsername = false;
 
-    // Create images dir, if it does not exist
-    try {
-        await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + PARAM_IMAGES_DIRNAME);
-    }
-    // Ignored -- Directory already exists
-    // We can't distinguish between 'directory already exists' and other types of errors
-    catch(error) { 
-    }
-
     if (PARAM_PP__CRYPTO.null_crypto) {
       LogMe(1, 'Show warning about null_crypto');
       await AsyncAlert('PARAM_PP__CRYPTO.null_crypto is enabled. This means that the private pictures will not be encrypted!', 'WARNING');
@@ -261,8 +252,7 @@ export async function  EraseLocalData() {
     LogMe(1, 'EraseLocalData()');
     // delete images folder
     try {
-        await FileSystem.deleteAsync(FileSystem.documentDirectory + PARAM_IMAGES_DIRNAME, {idempotent: true})  // Because idempotent is set to true, it does not throw error if directory does not exist
-        // Also delete key-value pairs from storage
+        // Delete key-value pairs from storage
         //await AsyncStorage.clear();
         await storage.clearMap();
         await storage.clearAll();  // Undocumented function but necessary, otherwise old data reappears

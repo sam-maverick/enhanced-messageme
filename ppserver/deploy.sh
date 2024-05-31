@@ -7,4 +7,6 @@ if [ $RESULT != 0 ]; then
     exit $RESULT
 fi
 
+rm -r ./dist
+
 npm start --reset-cache
