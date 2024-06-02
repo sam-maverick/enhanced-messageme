@@ -89,5 +89,13 @@ export const PARAM_PP__CRYPTO = {
     },
     'stage3': {
         'encryption_algorithm': 'rsa',  // Only 'rsa' is supported; this parameter is not read. It is here for informational purposes only.
+        // https://github.com/margelo/react-native-quick-crypto
+        // https://github.com/tradle/react-native-crypto
     },
 };
+
+/**
+ * Library to use for B64 encoding/decoding.
+ * Set to 'n' for native.
+ */
+export const PARAM_B64impl = 'n';

@@ -173,10 +173,10 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
   let ppPpChunkContents = {};
 
   LogMe(1, 'UnwrapPicture(): Unpackaging metadata');
-  let s = EncodeFromB64ToBinary(wrappedPictureObject);
+  let s = await EncodeFromB64ToBuffer(wrappedPictureObject);
 
   LogMe(1, 'Parsing PNG metadata');
-  let list = png.splitChunk(s);
+  let list = png.splitChunkBuffer(s);
   LogMe(2, 'Metadata contents:'+JSON.stringify(list))
 
   await list.forEach(function (arrayItem) {
@@ -230,18 +230,18 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       LogMe(1, 'UnwrapPicture(): STAGE1');
       /*
       // Since the key is not a human password but random bits, we do not need to pbkdfify
-      const pbkdf_algorithm = EncodeFromB64ToBinary(ppPpChunkContents.stage1.pbkdf_algorithm).toString();
-      const pbkdf_iterations = Number(EncodeFromB64ToBinary(ppPpChunkContents.stage1.pbkdf_iterations));
+      const pbkdf_algorithm = await EncodeFromB64ToBinary(ppPpChunkContents.stage1.pbkdf_algorithm).toString();
+      const pbkdf_iterations = Number(await EncodeFromB64ToBinary(ppPpChunkContents.stage1.pbkdf_iterations));
       const password = ...
       const salt = ...
       const key = Crypto.pbkdf2Sync(password, salt, pbkdf_iterations, 32, pbkdf_algorithm);
       */
       const cipher1 = Crypto.createDecipheriv(
         replyObjectFromServer.replyDataObject.stage1.encryption_algorithm, 
-        EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.key_b64), 
-        EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.iv_b64)
+        await EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.key_b64), 
+        await EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.iv_b64)
       );
-      await cipher1.write(EncodeFromB64ToBuffer(ppPpChunkContents.ciphertext));
+      await cipher1.write(await EncodeFromB64ToBuffer(ppPpChunkContents.ciphertext));
       await cipher1.end();
       const decrypted_picture = await cipher1.read();
 
@@ -282,7 +282,6 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       });  
     } else {
       // STAGE1
-      LogMe(1, 'WrapPicture(): STAGE1');
       /*
       // Since the key is not a human password but random bits, we do not need to pbkdfify
       const pbkdf_algorithm = PARAM_PP__CRYPTO.stage1.pbkdf_algorithm;
@@ -294,10 +293,12 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       const stage1_key = Crypto.randomBytes(32);
       const stage1_iv = Crypto.randomBytes(16);
       const cipher1 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage1.encryption_algorithm, stage1_key, stage1_iv);
+      LogMe(1, 'WrapPicture(): STAGE1.5');
       await cipher1.write(plainPicture);
+      LogMe(1, 'WrapPicture(): STAGE1.6');
       await cipher1.end();
       const ciphertext_picture = await cipher1.read();
-
+ 
       // STAGE2
       LogMe(1, 'WrapPicture(): STAGE2');
       const stage2_key = Crypto.randomBytes(32);
@@ -305,8 +306,8 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       const cipher2 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
       await cipher2.write(JSON.stringify({
         encryption_algorithm: PARAM_PP__CRYPTO.stage1.encryption_algorithm,
-        iv_b64: EncodeFromBufferToB64(stage1_iv),
-        key_b64: EncodeFromBufferToB64(stage1_key),
+        iv_b64: await EncodeFromBufferToB64(stage1_iv),
+        key_b64: await EncodeFromBufferToB64(stage1_key),
       }));  // stage1 data
       await cipher2.end();
       const ciphertext_stage1 = await cipher2.read();
@@ -315,15 +316,15 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       const cipher2b = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
       await cipher2b.write(JSON.stringify({
         privacyPolicies: privacyPoliciesObj,
-        pictureId: EncodeFromBufferToB64(myPictureId),  // This must be kept secret from the recipient
+        pictureId: await EncodeFromBufferToB64(myPictureId),  // This must be kept secret from the recipient
       }));
       await cipher2b.end();
       const ciphertext_to_server_data = await cipher2b.read();
-      LogMe(1, 'Encoded pictureId='+EncodeFromBufferToB64(myPictureId));
+      LogMe(1, 'Encoded pictureId=' + await EncodeFromBufferToB64(myPictureId));
 
       // STAGE3
       LogMe(1, 'WrapPicture(): STAGE3');
-      const provider_pubkey = EncodeFromB64ToBinary(require('../../bundled_files/json/rsa-pubkey-wrapping-ppclient.pem.json').data);
+      const provider_pubkey = await EncodeFromB64ToBinary(require('../../bundled_files/json/rsa-pubkey-wrapping-ppclient.pem.json').data);
 
       const encrypted_stage2_key = Crypto.publicEncrypt(
         Buffer.from(provider_pubkey), 
@@ -332,23 +333,29 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
 
       // Pack contents
 
+      LogMe(1, 'WrapPicture(): ciphertext_picture_B64 start B64 encoding, length in bytes='+ciphertext_picture.length);
+      const ciphertext_picture_B64 = await EncodeFromBufferToB64(ciphertext_picture);
+      LogMe(1, 'WrapPicture(): ciphertext_picture_B64 end B64 encoding');
+
+      LogMe(1, 'WrapPicture(): Creating metadata object');
+
       LogMe(1, 'WrapPicture(): Creating metadata object');
       ppPlainPictureObjectStr = JSON.stringify({
         null_crypto: false,
         stage1: {
-          encrypted_stage1_key_and_params_b64: EncodeFromBufferToB64(ciphertext_stage1),
-          ciphertext_to_server_data: EncodeFromBufferToB64(ciphertext_to_server_data),  // privacy policies will go here
+          encrypted_stage1_key_and_params_b64: await EncodeFromBufferToB64(ciphertext_stage1),
+          ciphertext_to_server_data: await EncodeFromBufferToB64(ciphertext_to_server_data),  // privacy policies will go here
         },
         stage2: {
           encryption_algorithm: PARAM_PP__CRYPTO.stage2.encryption_algorithm,
-          iv_b64: EncodeFromBufferToB64(stage2_iv),
-          encrypted_stage2_key_b64: EncodeFromBufferToB64(encrypted_stage2_key),
+          iv_b64: await EncodeFromBufferToB64(stage2_iv),
+          encrypted_stage2_key_b64: await EncodeFromBufferToB64(encrypted_stage2_key),
         }, 
         stage3: {
           provider: 'someprovider',
           encryption_algorithm: PARAM_PP__CRYPTO.stage3.encryption_algorithm,
         }, 
-        ciphertext: EncodeFromBufferToB64(ciphertext_picture), 
+        ciphertext: ciphertext_picture_B64, 
         contentType: fileExt,
         // We can put the privacy policies also in the clear, here, for informational purposes. Our algorithms are CPA-secure.
         // This can be used in the recipient's GUI of the messging app to show information about the expiration date of the picture, etc.
@@ -363,17 +370,30 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
     // Reading Asset files works just fine with the bare workflow on metro, but it doesn't work with the production build of APK/AAB.
     // Therefore, the code below does not work
     //var sb64 = await FileSystem.readAsStringAsync(require('../../assets/custom/base_image_for_wrapping.png'), {encoding: 'base64'});
-    //var s = EncodeFromB64ToBinary(await LoadBaseImageAssetFileB64());
+    //var s = await EncodeFromB64ToBinary(await LoadBaseImageAssetFileB64());
 
     LogMe(1, 'WrapPicture(): Packaging metadata');
-    const s = EncodeFromB64ToBinary(require('../../bundled_files/json/base_image_for_wrapping.png.json').data);
+    const basedata = require('../../bundled_files/json/base_image_for_wrapping.png.json').data;
+
+    LogMe(1, 'WrapPicture(): basedata start B64 decoding, length in bytes='+basedata.length);
+    const s = await EncodeFromB64ToBuffer(basedata);
+    LogMe(1, 'WrapPicture(): basedata end B64 decoding');
 
     // split
-    var list = png.splitChunk(s);
+    LogMe(1, 'WrapPicture(): splitChunk');
+    var list = png.splitChunkBuffer(s);
     // append
+    LogMe(1, 'WrapPicture(): pop');
     var iend = list.pop(); // remove IEND
 
-    var newchunk1 = png.createChunk("ppPp", ppPlainPictureObjectStr);
+    LogMe(1, 'WrapPicture(): createChunk');
+    /**
+     * WARNING:
+     * For png.createChunk(), you must use `new String('...')` for String literals!
+     * Otherwise, png.crc32() str.charCodeAt() fails
+     * I think it is because '' yields a string object, whereas "" yields a string object
+     */
+    var newchunk1 = png.createChunk(new String("ppPp"), ppPlainPictureObjectStr);
     //https://en.wikipedia.org/wiki/PNG
     list.push(newchunk1);
 
@@ -384,10 +404,17 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
 
     list.push(iend);
     // join
-    var newpng = png.joinChunk(list);
+    LogMe(1, 'WrapPicture(): joinChunk');
+    var newpng = png.joinChunkBuffer(list);
     // save to file
     //fs.writeFileSync(outfile, newpng, 'binary');
+
+    LogMe(1, 'WrapPicture(): newpng_B64 start B64 encoding, length in bytes='+newpng.length);
+    const newpng_B64 = await EncodeFromBufferToB64(newpng);  // changed from FromBinary to FromBuffer
+    LogMe(1, 'WrapPicture(): newpng_B64 end B64 encoding');
+
     LogMe(1, 'WrapPicture(): Finished');
-    return EncodeFromBinaryToB64(newpng);
+
+    return newpng_B64;
     
 }

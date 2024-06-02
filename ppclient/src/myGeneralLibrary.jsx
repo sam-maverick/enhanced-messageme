@@ -8,12 +8,12 @@ import * as FileSystem from 'expo-file-system';
 
 import { Asset } from 'expo-asset';
 
-import { PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO } from './parameters.js';
+import { PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO, PARAM_B64impl } from './parameters.js';
 
 
 import storage from './storage/storageApi.js';
 
-const Buffer = require("buffer").Buffer;
+const Buffer = require('buffer').Buffer;
 
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
@@ -28,6 +28,7 @@ const MillisHour = 1000 * 60 * 60;
 const MillisMinute = 1000 * 60;
 const MillisSecond = 1000;
 
+const startDate = Date.now();
 
 
 export function FromTimeSpanToHumanReadableString(lapseMs) {
@@ -137,32 +138,47 @@ export function SafeUrlDecodeForB64 (s) {  //
 }
 
 
-export function EncodeFromB64ToBuffer (str) {
+export async function EncodeFromB64ToBuffer (str) {
   LogMe(1,'EncodeFromB64ToBuffer() called');
   return Buffer.from(str, 'base64');  // Returns a Buffer
 }
 
-export function EncodeFromBufferToB64 (buff) {
+export async function EncodeFromBufferToB64 (buff) {
   LogMe(1,'EncodeFromBbufferToB64() called');
-  return buff.toString('base64');  // Returns a String
+  if (PARAM_B64impl=='n') {
+    return buff.toString('base64');  // Returns a String
+  } else {
+    
+  }
 }
 
-export function EncodeFromB64ToBinary (str) {  // Affected by caveat: https://nodejs.org/api/crypto.html#using-strings-as-inputs-to-cryptographic-apis
+export async function EncodeFromB64ToBinary (str) {  // Affected by caveat: https://nodejs.org/api/crypto.html#using-strings-as-inputs-to-cryptographic-apis
   LogMe(1,'EncodeFromB64ToBinary() called');
   return Buffer.from(str, 'base64').toString('binary');  // Returns a String
 }
 
-export function EncodeFromBinaryToB64 (str) {
+export async function EncodeFromBinaryToB64 (str) {
   LogMe(1,'EncodeFromBinaryToB64() called');
-  return Buffer.from(str, 'binary').toString('base64');  // Returns a String
+  if (PARAM_B64impl=='n') {
+    
+    LogMe(1,'EncodeFromBinaryToB64(): buffering');
+    const buffervalue = Buffer.from(str, 'binary');
+    LogMe(1,'EncodeFromBinaryToB64(): toString');
+    return buffervalue.toString('base64');  // Returns a String
+    
+    // Don't do that - it doesn't work!
+    //return str.toString('base64');  // Returns a String
+  } else {
+    
+  }  
 }
 
-export function EncodeFromB64ToUTF8 (str) {
+export async function EncodeFromB64ToUTF8 (str) {
   LogMe(1,'EncodeFromB64ToUTF8() called');
   return Buffer.from(str, 'base64').toString('utf8');  // Returns a String
 }
 
-export function EncodeFromUTF8ToB64 (str) {
+export async function EncodeFromUTF8ToB64 (str) {
   LogMe(1,'EncodeFromUTF8ToB64() called');
   return Buffer.from(str, 'utf8').toString('base64');  // Returns a String
 }
@@ -179,7 +195,12 @@ export function LogMe(level, message) {
         if (! LogMeUsername === false) {
             usernameHeader = '['+LogMeUsername+']: ';
         }
-        console.log('(ppclient) '+usernameHeader + message);
+        let HRspan = FromTimeSpanToHumanReadableString(Date.now() - startDate);
+        const difflen = 3 - HRspan.length;
+        if (difflen>0) {
+          HRspan = ' '.repeat(difflen) + HRspan;
+        }
+        console.log(HRspan + ' (ppclient) '+usernameHeader + message);
     }
 }
 

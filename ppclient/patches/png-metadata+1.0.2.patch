@@ -1,21 +1,23 @@
 diff --git a/node_modules/png-metadata/lib/png-metadata.js b/node_modules/png-metadata/lib/png-metadata.js
-index 806a95a..a0d5e6d 100644
+index 806a95a..aea8328 100644
 --- a/node_modules/png-metadata/lib/png-metadata.js
 +++ b/node_modules/png-metadata/lib/png-metadata.js
-@@ -1,10 +1,11 @@
+@@ -1,10 +1,13 @@
  var metadata = {};
  module.exports = metadata;
  
 -var fs = require('fs');
 +//var fs = require('fs');
  
++const Buffer = require('buffer').Buffer;
  metadata.PNG_SIG = String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
++metadata.PNG_SIG_BUFF = Buffer.from(metadata.PNG_SIG, 'binary');
  
 +/*
  // read pngfile by binary
  metadata.readFileSync = function (path) {
    var buf = fs.readFileSync(path, "binary");
-@@ -13,6 +14,7 @@ metadata.readFileSync = function (path) {
+@@ -13,6 +16,7 @@ metadata.readFileSync = function (path) {
  metadata.writeFileSync = function (path, bin) {
    fs.writeFileSync(path, bin, "binary");
  };
@@ -23,3 +25,93 @@ index 806a95a..a0d5e6d 100644
  
  // check PNG signature
  metadata.isPNG = function (s) {
+@@ -20,7 +24,12 @@ metadata.isPNG = function (s) {
+   return (sig == metadata.PNG_SIG);
+ };
+ 
+-metadata.splitChunk= function (s) {
++metadata.isPNGBuffer = function (s) {  // Same as metadata.isPNG, but s is Buffer
++  var sig = s.slice(0, 8);
++  return (sig.equals(metadata.PNG_SIG_BUFF));
++};
++
++metadata.splitChunk = function (s) {
+   // read signature
+   var sig = s.substr(0, 8);
+   if (!metadata.isPNG(sig)) return false;
+@@ -50,6 +59,37 @@ metadata.splitChunk= function (s) {
+   return chunklist;
+ };
+ 
++// Same as metadata.splitChunk, but takes s as Buffer instead of String
++metadata.splitChunkBuffer = function (s) {
++  // read signature
++  var sig = s.slice(0, 8);
++  if (!metadata.isPNGBuffer(sig)) return false;
++  s = s.slice(8); // chomp sig
++  var chunklist = [];
++  // read chunk list
++  while (s.length != 0) {
++    var chunk = {};
++    // read chunk size
++    var size = stoi(s.slice(0, 4).toString('binary'));
++    if (size < 0) {
++      // If the size is negative, the data is likely corrupt, but we'll let
++      // the caller decide if any of the returned chunks are usable.
++      // We'll move forward in the file with the minimum chunk length (12 bytes).
++      size = 0;
++    }
++    var buf = s.slice(0, size + 12).toString('binary');
++    s = s.slice(size + 12); // delete this chunk
++    // read chunk data
++    chunk.size = size;
++    chunk.type = buf.substr(4, 4);
++    chunk.data = buf.substr(8, size);
++    chunk.crc  = stoi(buf.substr(8 + size, 4));
++    // add chunk
++    chunklist.push(chunk);
++  }
++  return chunklist;
++};
++
+ metadata.joinChunk = function (chunklist) {
+   var pf = metadata.PNG_SIG;
+   for (var i in chunklist) {
+@@ -70,6 +110,37 @@ metadata.joinChunk = function (chunklist) {
+   return pf;
+ };
+ 
++// Same as metadata.joinChunk but it returns a Buffer instead of a String
++metadata.joinChunkBuffer = function (chunklist) {
++  var totalchunksize = metadata.PNG_SIG.length;
++  for (var j in chunklist) {
++    totalchunksize = totalchunksize + (4+chunklist[j].type.length+chunklist[j].data.length+4);
++  }
++  var buf = Buffer.alloc(totalchunksize);
++  var cursor = 0;
++  var numbyteswritten = 0;
++  numbyteswritten = buf.write(metadata.PNG_SIG, cursor, totalchunksize, 'binary');
++  cursor = cursor + numbyteswritten;
++
++  for (var i in chunklist) {
++    // check size
++    // chunk.size = chunk.data.length;
++    // calc crc
++    // var crc_v = crc32(chunk.type + chunk.data);
++    // 
++    numbyteswritten = buf.write(itos(chunklist[i].size, 4), cursor, totalchunksize, 'binary');
++    cursor = cursor + numbyteswritten;
++    numbyteswritten = buf.write(chunklist[i].type, cursor, totalchunksize, 'binary');
++    cursor = cursor + numbyteswritten;
++    numbyteswritten = buf.write(chunklist[i].data, cursor, totalchunksize, 'binary');
++    cursor = cursor + numbyteswritten;
++    numbyteswritten = buf.write(itos(chunklist[i].crc, 4), cursor, totalchunksize, 'binary');
++    cursor = cursor + numbyteswritten;
++    // console.log("w", chunk.size, chunk.type, ToUInt32(chunk.crc));
++  }
++  return buf;
++};
++
+ metadata.createChunk = function (type, data) {
+   var c = {};
+   c.type = type;

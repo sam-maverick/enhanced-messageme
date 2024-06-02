@@ -451,7 +451,7 @@ export const PPWrapOpsComponent = (props) => {
                     var_screenToShow='jobcompleted';
                     return; 
                 }
-                let privacyPolicies = JSON.parse(EncodeFromB64ToBinary(SafeUrlDecodeForB64(urlParams.privacyPolicies)));
+                let privacyPolicies = JSON.parse(await EncodeFromB64ToBinary(SafeUrlDecodeForB64(urlParams.privacyPolicies)));
                 LogMe(1, 'privacyPolicies original: ' + JSON.stringify(privacyPolicies));
 
                 let currentDate = Date.now();
