@@ -16,3 +16,4 @@ exec('npx patch-package expo-device --exclude "^dummy\\$" --include "^android/bu
 exec('npx patch-package png-metadata --exclude "^dummy\\$" --include "^lib/png-metadata\\\\.js\\$"');
 exec('npx patch-package react-native-file-provider --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$|^android/src"');
 exec('npx patch-package react-native-popup-menu --exclude "^dummy\\$" --include "^src|^build"');
+exec('npx patch-package react-native-quick-base64 --exclude "^dummy\\$" --include "^src/"');

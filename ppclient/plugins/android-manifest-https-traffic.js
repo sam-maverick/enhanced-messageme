@@ -39,7 +39,7 @@ const withAndroidManifestHttpConfigurations = config => {
       fs.mkdirSync(rawdir, { recursive: true });
     
       fs.copyFileSync(
-        '../ppserver/secrets/https/ca/ca_cert.cer', 
+        'assets/custom/ca_cert.cer', 
         rawdir+'my_ca',  // Do not use file extension for the file name
       );    
     } catch (err) {

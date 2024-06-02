@@ -96,6 +96,7 @@ export const PARAM_PP__CRYPTO = {
 
 /**
  * Library to use for B64 encoding/decoding.
- * Set to 'n' for native.
+ * Set to 'n' for using buff.toString('base64').
+ * Set to 'q' for using 'react-native-quick-base64' module.
  */
-export const PARAM_B64impl = 'n';
+export const PARAM_B64impl = 'q';

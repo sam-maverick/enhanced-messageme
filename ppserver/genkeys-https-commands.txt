@@ -1,9 +1,8 @@
 # Create directory structure
-# Omit 'file already exists' errors
-mkdir secrets
-mkdir secrets/https
-mkdir secrets/https/ca
-mkdir secrets/https/srv
+mkdir secrets 2> /dev/null
+mkdir secrets/https 2> /dev/null
+mkdir secrets/https/ca 2> /dev/null
+mkdir secrets/https/srv 2> /dev/null
 
 
 ############## CA
@@ -59,7 +58,11 @@ cat ./secrets/https/ca/ca_cert.cer >> ./secrets/https/srv/srv_cert.cer
 
 ############## Android
 
-Because the CA certificate is embedded within the app assets, there is no need to install the CA
-in the Android system as a trusted user certificate. That would only be necessary if we were to use
-a browser to connect to https://ppserver-gen.localnet...
+cp ./secrets/https/ca/ca_cert.cer ../ppclient/assets/custom/ca_cert.cer
+
+#Because the CA certificate is embedded within the app assets, there is no need to install the CA
+#in the Android system as a trusted user certificate. That would only be necessary if we were to use
+#a browser to connect to https://ppserver-gen.localnet...
+#You just need to rebuild the Android target in ppclient; it will configure the certificate pinning via 
+#the android-manifest-https-traffic.js plugin.
 

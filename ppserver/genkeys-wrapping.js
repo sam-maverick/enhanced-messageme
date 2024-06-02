@@ -11,7 +11,7 @@ if (!fs.existsSync('./secrets/wrapping/')){
   
 const keyPair = crypto.generateKeyPairSync(
     'rsa', {
-        modulusLength: 3072,
+        modulusLength: 2048,
         publicKeyEncoding: {
             type: 'spki',
             format: 'pem',
@@ -24,11 +24,10 @@ const keyPair = crypto.generateKeyPairSync(
 );
 
 // Saving the keys
-fs.writeFileSync('./secrets/wrapping/rsa-pubkey.pem', keyPair.publicKey); 
-fs.writeFileSync('./secrets/wrapping/rsa-privkey.pem', keyPair.privateKey); 
+fs.writeFileSync('./secrets/wrapping/rsa-pubkey.pem', keyPair.publicKey);
+fs.writeFileSync('./secrets/wrapping/rsa-privkey.pem', keyPair.privateKey);
 
-
-
+fs.writeFileSync('../ppclient/bundled_files/source/rsa-pubkey-wrapping-ppclient.pem', keyPair.publicKey);
 
 /*
 var cp = require('child_process');

@@ -5,7 +5,7 @@ import { StyleSheet, Button, Text, TextInput, View, SafeAreaView, Alert, Platfor
 //import Storage from 'react-native-storage';
 
 import * as FileSystem from 'expo-file-system';
-
+import * as RNQB64 from 'react-native-quick-base64';
 import { Asset } from 'expo-asset';
 
 import { PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO, PARAM_B64impl } from './parameters.js';
@@ -144,12 +144,13 @@ export async function EncodeFromB64ToBuffer (str) {
 }
 
 export async function EncodeFromBufferToB64 (buff) {
-  LogMe(1,'EncodeFromBbufferToB64() called');
-  if (PARAM_B64impl=='n') {
-    return buff.toString('base64');  // Returns a String
-  } else {
-    
-  }
+  LogMe(1,'EncodeFromBufferToB64() called');
+  return buff.toString('base64');
+}
+
+export async function EncodeFromStringToB64 (str) {  //*
+  LogMe(1,'EncodeFromStringToB64() called');
+  return RNQB64.btoa(str);
 }
 
 export async function EncodeFromB64ToBinary (str) {  // Affected by caveat: https://nodejs.org/api/crypto.html#using-strings-as-inputs-to-cryptographic-apis
@@ -159,18 +160,13 @@ export async function EncodeFromB64ToBinary (str) {  // Affected by caveat: http
 
 export async function EncodeFromBinaryToB64 (str) {
   LogMe(1,'EncodeFromBinaryToB64() called');
-  if (PARAM_B64impl=='n') {
-    
-    LogMe(1,'EncodeFromBinaryToB64(): buffering');
-    const buffervalue = Buffer.from(str, 'binary');
-    LogMe(1,'EncodeFromBinaryToB64(): toString');
-    return buffervalue.toString('base64');  // Returns a String
-    
-    // Don't do that - it doesn't work!
-    //return str.toString('base64');  // Returns a String
-  } else {
-    
-  }  
+  LogMe(1,'EncodeFromBinaryToB64(): buffering');
+  const buffervalue = Buffer.from(str, 'binary');
+  LogMe(1,'EncodeFromBinaryToB64(): toString');
+  return buffervalue.toString('base64');  // Returns a String
+  
+  // Don't do that - it doesn't work!
+  //return str.toString('base64');  // Returns a String
 }
 
 export async function EncodeFromB64ToUTF8 (str) {
@@ -202,6 +198,10 @@ export function LogMe(level, message) {
         }
         console.log(HRspan + ' (ppclient) '+usernameHeader + message);
     }
+}
+
+export function LogSys(libname, level, message) {
+  LogMe (level, libname+' '+message);
 }
 
 export const AsyncAlert = async (message, title) => new Promise((resolve) => {

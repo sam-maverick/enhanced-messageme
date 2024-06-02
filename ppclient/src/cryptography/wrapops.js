@@ -7,6 +7,7 @@ var png = require('png-metadata');
 import { 
     EncodeFromB64ToBuffer, 
     EncodeFromBufferToB64, 
+    EncodeFromStringToB64,
     EncodeFromB64ToBinary, 
     EncodeFromBinaryToB64, 
     EncodeFromB64ToUTF8,
@@ -21,6 +22,7 @@ import {
   PARAM_PP__CRYPTO,
   PARAM_IOS_KEY_IDENTIFIER,
   PARAM_GOOGLE_CLOUD_PROJECT_NUMBER,
+  PARAM_B64impl,
 } from '../parameters.js';
 
 import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer, ApiSubmitTwoAttestationTokensToServer } from '../network/networkApi.js';
@@ -405,12 +407,12 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
     list.push(iend);
     // join
     LogMe(1, 'WrapPicture(): joinChunk');
-    var newpng = png.joinChunkBuffer(list);
+    var newpng = (PARAM_B64impl=='n' ? png.joinChunkBuffer(list) : png.joinChunk(list));
     // save to file
     //fs.writeFileSync(outfile, newpng, 'binary');
 
     LogMe(1, 'WrapPicture(): newpng_B64 start B64 encoding, length in bytes='+newpng.length);
-    const newpng_B64 = await EncodeFromBufferToB64(newpng);  // changed from FromBinary to FromBuffer
+    const newpng_B64 = (PARAM_B64impl=='n' ? await EncodeFromBufferToB64(newpng) : await EncodeFromStringToB64(newpng));
     LogMe(1, 'WrapPicture(): newpng_B64 end B64 encoding');
 
     LogMe(1, 'WrapPicture(): Finished');
