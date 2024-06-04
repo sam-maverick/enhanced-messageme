@@ -8,6 +8,7 @@ import {
     EncodeFromB64ToBuffer, 
     EncodeFromBufferToB64, 
     EncodeFromStringToB64,
+    EncodeFromArrayBufferToB64,
     EncodeFromB64ToBinary, 
     EncodeFromBinaryToB64, 
     EncodeFromB64ToUTF8,
@@ -22,7 +23,9 @@ import {
   PARAM_PP__CRYPTO,
   PARAM_IOS_KEY_IDENTIFIER,
   PARAM_GOOGLE_CLOUD_PROJECT_NUMBER,
-  PARAM_B64impl,
+  PARAM_IMPLEMENTATION_OPTION_B64,
+  PARAM_IMPLEMENTATION_OPTION_PNG,
+  PARAM_IMPLEMENTATION_ARTIFACT_FORMAT,
 } from '../parameters.js';
 
 import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer, ApiSubmitTwoAttestationTokensToServer } from '../network/networkApi.js';
@@ -174,15 +177,43 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
   let ppPpChunkFound = false;
   let ppPpChunkContents = {};
 
-  LogMe(1, 'UnwrapPicture(): Unpackaging metadata');
-  let s = await EncodeFromB64ToBuffer(wrappedPictureObject);
-
   LogMe(1, 'Parsing PNG metadata');
-  let list = png.splitChunkBuffer(s);
+  let list = await ( async () => {
+    switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
+      case 's': 
+        LogMe(1, 'Parsing PNG metadata: decoding from B64 to Binary string');
+        const s = await EncodeFromB64ToBinary(wrappedPictureObject);
+        LogMe(1, 'Parsing PNG metadata: splitChunk');
+        return await png.splitChunk(s);
+      case 'b':
+        LogMe(1, 'Parsing PNG metadata: decoding from B64 to Buffer');
+        const b = await EncodeFromB64ToBuffer(wrappedPictureObject);
+        LogMe(1, 'Parsing PNG metadata: splitChunk');
+        return await png.splitChunkBufferTyped(b);
+      default:
+        throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
+    }
+  } )();
+  
   LogMe(2, 'Metadata contents:'+JSON.stringify(list))
 
+  LogMe(1, 'Checking if there is ppPp chunk');
   await list.forEach(function (arrayItem) {
-      if (arrayItem?.type === 'ppPp' && arrayItem?.data) {
+      const isThis_a_ppPp_chunk = ( () => {
+        if ( ! arrayItem?.type) {
+          return false;
+        }
+        switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
+          case 's': 
+            return arrayItem.type === 'ppPp';
+          case 'b':
+            return arrayItem.type.equals(Buffer.from('ppPp', 'binary'));
+          default:
+            throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
+        }
+      } )();
+
+      if (isThis_a_ppPp_chunk && arrayItem?.data) {
           LogMe(1, 'Found ppPp chunk with data');
           ppPpChunkFound = true;
           ppPpChunkContents = JSON.parse(arrayItem.data);
@@ -308,8 +339,8 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       const cipher2 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
       await cipher2.write(JSON.stringify({
         encryption_algorithm: PARAM_PP__CRYPTO.stage1.encryption_algorithm,
-        iv_b64: await EncodeFromBufferToB64(stage1_iv),
-        key_b64: await EncodeFromBufferToB64(stage1_key),
+        iv_b64: await EncodeFromArrayBufferToB64(stage1_iv.buffer),
+        key_b64: await EncodeFromArrayBufferToB64(stage1_key.buffer),
       }));  // stage1 data
       await cipher2.end();
       const ciphertext_stage1 = await cipher2.read();
@@ -318,11 +349,11 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       const cipher2b = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
       await cipher2b.write(JSON.stringify({
         privacyPolicies: privacyPoliciesObj,
-        pictureId: await EncodeFromBufferToB64(myPictureId),  // This must be kept secret from the recipient
+        pictureId: await EncodeFromArrayBufferToB64(myPictureId.buffer),  // This must be kept secret from the recipient
       }));
       await cipher2b.end();
       const ciphertext_to_server_data = await cipher2b.read();
-      LogMe(1, 'Encoded pictureId=' + await EncodeFromBufferToB64(myPictureId));
+      LogMe(1, 'Encoded pictureId=' + await EncodeFromArrayBufferToB64(myPictureId.buffer));
 
       // STAGE3
       LogMe(1, 'WrapPicture(): STAGE3');
@@ -336,22 +367,20 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       // Pack contents
 
       LogMe(1, 'WrapPicture(): ciphertext_picture_B64 start B64 encoding, length in bytes='+ciphertext_picture.length);
-      const ciphertext_picture_B64 = await EncodeFromBufferToB64(ciphertext_picture);
+      const ciphertext_picture_B64 = await EncodeFromArrayBufferToB64(ciphertext_picture.buffer);
       LogMe(1, 'WrapPicture(): ciphertext_picture_B64 end B64 encoding');
-
-      LogMe(1, 'WrapPicture(): Creating metadata object');
 
       LogMe(1, 'WrapPicture(): Creating metadata object');
       ppPlainPictureObjectStr = JSON.stringify({
         null_crypto: false,
         stage1: {
-          encrypted_stage1_key_and_params_b64: await EncodeFromBufferToB64(ciphertext_stage1),
-          ciphertext_to_server_data: await EncodeFromBufferToB64(ciphertext_to_server_data),  // privacy policies will go here
+          encrypted_stage1_key_and_params_b64: await EncodeFromArrayBufferToB64(ciphertext_stage1.buffer),
+          ciphertext_to_server_data: await EncodeFromArrayBufferToB64(ciphertext_to_server_data.buffer),  // privacy policies will go here
         },
         stage2: {
           encryption_algorithm: PARAM_PP__CRYPTO.stage2.encryption_algorithm,
-          iv_b64: await EncodeFromBufferToB64(stage2_iv),
-          encrypted_stage2_key_b64: await EncodeFromBufferToB64(encrypted_stage2_key),
+          iv_b64: await EncodeFromArrayBufferToB64(stage2_iv.buffer),
+          encrypted_stage2_key_b64: await EncodeFromArrayBufferToB64(encrypted_stage2_key.buffer),
         }, 
         stage3: {
           provider: 'someprovider',
@@ -364,6 +393,7 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
         privacyPoliciesInfo: privacyPoliciesObj,
       });  
     }
+    LogMe(1, 'WrapPicture(): Created metadata object');
 
     // Wrap inside a picture (steganographically)
 
@@ -377,13 +407,25 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
     LogMe(1, 'WrapPicture(): Packaging metadata');
     const basedata = require('../../bundled_files/json/base_image_for_wrapping.png.json').data;
 
-    LogMe(1, 'WrapPicture(): basedata start B64 decoding, length in bytes='+basedata.length);
-    const s = await EncodeFromB64ToBuffer(basedata);
-    LogMe(1, 'WrapPicture(): basedata end B64 decoding');
-
     // split
     LogMe(1, 'WrapPicture(): splitChunk');
-    var list = png.splitChunkBuffer(s);
+    var list = await ( async () => {
+      switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
+        case 's': 
+          LogMe(1, 'Packing PNG metadata: decoding from B64 to Binary string');
+          const s = await EncodeFromB64ToBinary(basedata);
+          LogMe(1, 'Packing PNG metadata: splitChunk');
+          return await png.splitChunk(s);
+        case 'b':
+          LogMe(1, 'Packing PNG metadata: decoding from B64 to Buffer');
+          const b = await EncodeFromB64ToBuffer(basedata);
+          LogMe(1, 'Packing PNG metadata: splitChunk');
+          return await png.splitChunkBufferTyped(b);
+        default:
+          throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
+      }
+    } )();
+    
     // append
     LogMe(1, 'WrapPicture(): pop');
     var iend = list.pop(); // remove IEND
@@ -395,7 +437,18 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
      * Otherwise, png.crc32() str.charCodeAt() fails
      * I think it is because '' yields a string object, whereas "" yields a string object
      */
-    var newchunk1 = png.createChunk(new String("ppPp"), ppPlainPictureObjectStr);
+    //var newchunk1 = png.createChunkTyped(new String("ppPp"), ppPlainPictureObjectStr);
+    var newchunk1 = ( () => {
+      switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
+        case 's': 
+          return png.createChunk("ppPp", ppPlainPictureObjectStr);
+        case 'b':
+          return png.createChunkTyped("ppPp", ppPlainPictureObjectStr);
+        default:
+          throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
+      }
+    } )();
+    
     //https://en.wikipedia.org/wiki/PNG
     list.push(newchunk1);
 
@@ -405,18 +458,53 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
     //list.push(newchunk2);
 
     list.push(iend);
+
+    LogMe(1, 'Printing list');
+    for (i in list) {
+      LogMe(1, 'size['+i+']: '+list[i].size);
+      LogMe(1, 'type['+i+']: '+typeof list[i]);
+    }
+
     // join
     LogMe(1, 'WrapPicture(): joinChunk');
-    var newpng = (PARAM_B64impl=='n' ? png.joinChunkBuffer(list) : png.joinChunk(list));
+    var newpng = ( () => {
+      switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
+        case 's': 
+          return png.joinChunk(list);
+        case 'b':
+          return png.joinChunkBufferTyped(list);
+        default:
+          throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
+      }
+    } )();
+    
     // save to file
     //fs.writeFileSync(outfile, newpng, 'binary');
 
     LogMe(1, 'WrapPicture(): newpng_B64 start B64 encoding, length in bytes='+newpng.length);
-    const newpng_B64 = (PARAM_B64impl=='n' ? await EncodeFromBufferToB64(newpng) : await EncodeFromStringToB64(newpng));
+    // a Buffer.buffer gives an ArrayBuffer
+    const newpng_retval = ( async () => {
+
+      if (PARAM_IMPLEMENTATION_ARTIFACT_FORMAT==='utf8') {
+        return newpng;
+      }
+
+      switch ( PARAM_IMPLEMENTATION_OPTION_B64 ) {
+        case 'n': 
+          return await EncodeFromBufferToB64(newpng);
+        case 'q':
+          return await EncodeFromArrayBufferToB64(newpng.buffer);
+        case 's':
+          return await EncodeFromBinaryToB64(newpng);
+        default:
+          throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_B64: ' + PARAM_IMPLEMENTATION_OPTION_B64);
+      }
+    } )();
+
     LogMe(1, 'WrapPicture(): newpng_B64 end B64 encoding');
 
     LogMe(1, 'WrapPicture(): Finished');
 
-    return newpng_B64;
+    return newpng_retval;
     
 }

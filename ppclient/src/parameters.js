@@ -95,8 +95,33 @@ export const PARAM_PP__CRYPTO = {
 };
 
 /**
- * Library to use for B64 encoding/decoding.
- * Set to 'n' for using buff.toString('base64').
- * Set to 'q' for using 'react-native-quick-base64' module.
+ * Library to use for PNG implementation for the typing of chunk.type and chunk.data.
+ * Set to 's' for using String.
+ * Set to 'b' for using Buffer in all chunks, except on ppPp chunk type and data which are string. Requires PARAM_IMPLEMENTATION_OPTION_B64='n'.
+ * NOTE: The 'b' option yields the same performance when converting to BASE64 in the last step of WrapPicture, but it has degraded performance in png-metadata because of slow writes
+ * Note that `new String('something')` yields a String *object*, not a string primitive.
  */
-export const PARAM_B64impl = 'q';
+export const PARAM_IMPLEMENTATION_OPTION_PNG = 's';
+
+/**
+ * Library to use for base64 encoding/decoding.
+ * Set to 's' for input as string.
+ * Set to 'n' for using buff.toString('base64'), with input as Buffer. Requires PARAM_IMPLEMENTATION_OPTION_PNG='b'
+ * Set to 'q' for using 'react-native-quick-base64' module, with input as ArrayBuffer. Experimental.
+ */
+export const PARAM_IMPLEMENTATION_OPTION_B64 = 's';
+
+/**
+ * Library to use for CRC32.
+ * Set to 'n' for using png-metadata implementation.
+ * Set to 't' for using 'turbo-crc32' module.
+ */
+export const PARAM_IMPLEMENTATION_OPTION_CRC32 = 'n';
+
+/**
+ * Format for the wrapped image artifact as returned by WrapPicture()
+ * Experimental.
+ * 'base64' works.
+ * 'utf8' corrupts data because it is not compatible with arbitrary binary data.
+*/
+export const PARAM_IMPLEMENTATION_ARTIFACT_FORMAT = 'base64';

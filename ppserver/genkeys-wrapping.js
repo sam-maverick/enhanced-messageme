@@ -11,7 +11,7 @@ if (!fs.existsSync('./secrets/wrapping/')){
   
 const keyPair = crypto.generateKeyPairSync(
     'rsa', {
-        modulusLength: 2048,
+        modulusLength: 4096,
         publicKeyEncoding: {
             type: 'spki',
             format: 'pem',

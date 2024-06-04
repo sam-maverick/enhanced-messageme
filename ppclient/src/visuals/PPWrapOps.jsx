@@ -37,6 +37,7 @@ import { HeaderBackButton } from "@react-navigation/elements";
 
 import { styles, LoadingComponent } from './myVisualsLibrary.jsx';
 import { 
+    ToHexString,
     EncodeFromB64ToBinary, 
     EncodeFromBinaryToB64, 
     EncodeFromB64ToUTF8,
@@ -61,7 +62,7 @@ import { PPEnrollmentComponent } from './PPEnrollment.jsx';
 import { PPFinishedComponent } from './PPFinished.jsx';
 import { CountdownComponent } from './Countdown.jsx';
 
-import { PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS } from '../parameters.js';
+import { PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT } from '../parameters.js';
 
 import { WrapPicture, UnwrapPicture } from '../cryptography/wrapops.js';
 
@@ -529,19 +530,23 @@ export const PPWrapOpsComponent = (props) => {
                 if (Platform.OS === 'android') {
                     LogMe(1, 'Writing '+urlParams.fileUri);
                     // https://stackoverflow.com/questions/46278019/how-do-i-read-file-with-content-uri-in-react-native-on-android
-                    await WriteMyFileStream(urlParams.fileUri, 'base64', false, wrappedPrivatePictureContents);
+                    await WriteMyFileStream(urlParams.fileUri, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT, false, wrappedPrivatePictureContents);
     
                     LogMe(1, 'Written');
                     if (PARAM_DEBUG_MODE)  { setWrappedImageFromSourceUri({uri: urlParams.fileUri}); }
                     LogMe(1, 'UI updated');
     
                 } else {
-                    callbackURL.searchParams.append('fileContents', SafeUrlEncodeForB64(wrappedPrivatePictureContents));
+                    callbackURL.searchParams.append('fileContents', SafeUrlEncodeForB64(
+                        ( PARAM_IMPLEMENTATION_ARTIFACT_FORMAT==='base64' ? wrappedPrivatePictureContents : await EncodeFromBinaryToB64(wrappedPrivatePictureContents) )
+                    ));
                 }
     
-                LogMe(2, '----- wrappedPrivatePictureContents: '+wrappedPrivatePictureContents);
+                LogMe(2, '----- wrappedPrivatePictureContents: ' + await ToHexString(wrappedPrivatePictureContents));
                 LogMe(1,'wrappedPrivatePictureContents length: '+wrappedPrivatePictureContents.length);
-                if (PARAM_DEBUG_MODE)  { setWrappedImageData({ uri: 'data:image/' + fileExt + ';base64,' + wrappedPrivatePictureContents}); }
+                if (PARAM_DEBUG_MODE)  { setWrappedImageData({ uri: 'data:image/' + fileExt + ';base64,' + 
+                    ( PARAM_IMPLEMENTATION_ARTIFACT_FORMAT==='base64' ? wrappedPrivatePictureContents : await EncodeFromBinaryToB64(wrappedPrivatePictureContents) )
+                }); }
                 
                 // Work done. Go back to the messaging app
                 callbackURL.searchParams.append('result', 'success');  

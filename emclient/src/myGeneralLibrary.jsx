@@ -18,11 +18,15 @@ import storage from './storage/storageApi.js';
 
 
 let LogMeUsername = false;
-
+const startDate = Date.now();
 
 
 export function UpdateLogMeUsername (theusername) {
     LogMeUsername = theusername;
+}
+
+export function LogSys(libname, level, message) {
+    LogMe (level, libname+' '+message);
 }
 
 export function LogMe(level, message) {
@@ -31,7 +35,12 @@ export function LogMe(level, message) {
         if (! LogMeUsername === false) {
             usernameHeader = '['+LogMeUsername+']: ';
         }
-        console.log('(msmclient) '+usernameHeader + message);
+        let HRspan = FromTimeSpanToHumanReadableMs(Date.now() - startDate);
+        const difflen = 3 - HRspan.length;
+        if (difflen>0) {
+          HRspan = ' '.repeat(difflen) + HRspan;
+        }
+        console.log(HRspan + ' (msmclient) '+usernameHeader + message);
     }
 }
 
@@ -77,7 +86,13 @@ export async function InitialisationActions() {
     }
 }
 
-
+export function FromTimeSpanToHumanReadableMs(lapseMs) {
+    const unitspart = Math.floor(lapseMs/1000);
+    const decimalpart = lapseMs - unitspart*1000;
+    const numofleadingzeros = 3;
+    const paddeddecimalpart = "0".repeat(numofleadingzeros).substring(0, numofleadingzeros - decimalpart.toString().length) + decimalpart;
+    return (unitspart + '.' + paddeddecimalpart);
+}
 
 export async function  EraseLocalData() {
     LogMe(1, 'EraseLocalData()');

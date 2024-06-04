@@ -88,4 +88,17 @@ export const PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY = 'pt.lasige.safex.enh
  */
 export const PARAM_PP__PPCLIENT_ANDROID_NAME = 'pt.lasige.safex.ppclient';
 
+/**
+ * How JPEG private pictures are detected
+ * 'l' for piexifjs.load
+ * 'd' for custom function, more efficient
+ */
+export const PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR = 'd';
+
+/**
+ * How files are loaded
+ * 'b' for base-64 string, with 'expo-file-system' module
+ * 'a' for ArrayBuffer, with the 'react-native-filereader' module
+ */
+export const PARAM_IMPLEMENTATION_FILE_HANDLING = 'b';
 

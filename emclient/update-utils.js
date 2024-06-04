@@ -2,13 +2,14 @@ import { Buffer } from 'buffer';
 import { Alert } from 'react-native';
 import Crypto from 'react-native-quick-crypto';
 import { PARAM_PP__CHARSET_AUTH, PARAM_LOGGING_LEVEL } from './update-parameters';
+import {LogSys as lsys} from './src/myGeneralLibrary';
+import * as RNQB64 from 'react-native-quick-base64';
 
 const LIBN = '(emclient) (update-utils.js)';
 
-export function LogSys(libname, level, message) {
-  if (level <= PARAM_LOGGING_LEVEL) {
-      console.log(libname+' '+message);
-  }
+
+export function LogSys (a,b,c) {
+  lsys(a,b,c);
 }
 
 export function SafeUrlEncodeForB64 (s) {  // s is supposed to be in base64 format
@@ -26,6 +27,28 @@ export function SafeUrlDecodeForB64 (s) {  //
   .replaceAll('_','/')
   .replaceAll('.','=')
   ;  // reverse URL-safe formatting for base64
+}
+
+export async function ReadFileAsArrayBuffer(file) {
+  LogSys(LIBN, 1,'ReadFileAsArrayBuffer() called');
+
+  return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        LogSys(LIBN, 1,'ReadFileAsArrayBuffer() onload event');
+        resolve(event.target.result);
+      };
+
+      reader.onerror = (err) => {
+        LogSys(LIBN, 1,'ReadFileAsArrayBuffer() error event');
+        reject(err);
+      };
+
+      reader.readAsArrayBuffer(file);
+      LogSys(LIBN, 1,'ReadFileAsArrayBuffer() prepared');
+
+  });
 }
 
 export function IsValidImageExtensionAndContentType (myextension) {
@@ -54,6 +77,11 @@ export function EncodeFromB64ToUTF8 (str) {
 export function EncodeFromUTF8ToB64 (str) {
     LogSys(LIBN, 1,'EncodeFromUTF8ToB64() called');
     return Buffer.from(str, 'utf8').toString('base64');
+}
+
+export async function EncodeFromArrayBufferToB64 (ab) {  //*
+  LogMe(1,'EncodeFromArrayBufferToB64() called');
+  return RNQB64.btoa_ab(ab);
 }
 
 export const AsyncAlert = async (message) => new Promise((resolve) => {

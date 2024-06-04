@@ -6,9 +6,11 @@ import { StyleSheet, Button, Text, TextInput, View, SafeAreaView, Alert, Platfor
 
 import * as FileSystem from 'expo-file-system';
 import * as RNQB64 from 'react-native-quick-base64';
+import * as base64 from 'base-64';
+import * as utf8 from 'utf8'; 
 import { Asset } from 'expo-asset';
 
-import { PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO, PARAM_B64impl } from './parameters.js';
+import { PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO } from './parameters.js';
 
 
 import storage from './storage/storageApi.js';
@@ -16,6 +18,7 @@ import storage from './storage/storageApi.js';
 const Buffer = require('buffer').Buffer;
 
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import { encode } from 'punycode';
 
 
 // NOTE: When changes are made to files that do not contain components, these changes are not pulled to running apps in real time. You need to re-launch the app to force a re-download.
@@ -51,6 +54,26 @@ export function FromTimeSpanToHumanReadableString(lapseMs) {
     }  
 }
 
+export function FromTimeSpanToHumanReadableMs(lapseMs) {
+  const unitspart = Math.floor(lapseMs/1000);
+  const decimalpart = lapseMs - unitspart*1000;
+  const numofleadingzeros = 3;
+  const paddeddecimalpart = "0".repeat(numofleadingzeros).substring(0, numofleadingzeros - decimalpart.toString().length) + decimalpart;
+  return (unitspart + '.' + paddeddecimalpart);
+}
+
+
+export async function ToHexString (str) {
+  var output;
+  for (var i=0; i<str.length; i++) {
+    output = output + str.charCodeAt(i) + '-';
+    if (i>100) {
+      output = output + '!!';
+      break;
+    }
+  }
+  return output;
+}
 
 export async function ReadMyFileStream (path, mode) {
   LogMe(1,'ReadMyFileStream: Called');
@@ -153,18 +176,28 @@ export async function EncodeFromStringToB64 (str) {  //*
   return RNQB64.btoa(str);
 }
 
+export async function EncodeFromArrayBufferToB64 (ab) {  //*
+  LogMe(1,'EncodeFromArrayBufferToB64() called');
+  return RNQB64.btoa_ab(ab);
+}
+
 export async function EncodeFromB64ToBinary (str) {  // Affected by caveat: https://nodejs.org/api/crypto.html#using-strings-as-inputs-to-cryptographic-apis
   LogMe(1,'EncodeFromB64ToBinary() called');
+  /*
   return Buffer.from(str, 'base64').toString('binary');  // Returns a String
+  */
+  return await base64.decode(str);
 }
 
 export async function EncodeFromBinaryToB64 (str) {
   LogMe(1,'EncodeFromBinaryToB64() called');
+  /*
   LogMe(1,'EncodeFromBinaryToB64(): buffering');
   const buffervalue = Buffer.from(str, 'binary');
   LogMe(1,'EncodeFromBinaryToB64(): toString');
   return buffervalue.toString('base64');  // Returns a String
-  
+  */
+  return await base64.encode(str);
   // Don't do that - it doesn't work!
   //return str.toString('base64');  // Returns a String
 }
@@ -191,7 +224,7 @@ export function LogMe(level, message) {
         if (! LogMeUsername === false) {
             usernameHeader = '['+LogMeUsername+']: ';
         }
-        let HRspan = FromTimeSpanToHumanReadableString(Date.now() - startDate);
+        let HRspan = FromTimeSpanToHumanReadableMs(Date.now() - startDate);
         const difflen = 3 - HRspan.length;
         if (difflen>0) {
           HRspan = ' '.repeat(difflen) + HRspan;

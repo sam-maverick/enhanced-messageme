@@ -33,10 +33,10 @@ index c93fc3c..8444f2c 100644
 -export default platformModule as ExponentFileSystemModule;
 +export default platformModule as ExponentFileSystemModule|ProxyNativeModule;
 diff --git a/node_modules/expo-file-system/src/FileSystem.ts b/node_modules/expo-file-system/src/FileSystem.ts
-index af2bda8..e7208f6 100644
+index af2bda8..ec64964 100644
 --- a/node_modules/expo-file-system/src/FileSystem.ts
 +++ b/node_modules/expo-file-system/src/FileSystem.ts
-@@ -1,3 +1,30 @@
+@@ -1,3 +1,32 @@
 +//BEGIN system modifications
 +import FileProvider from 'react-native-file-provider';
 +import 'react-native-url-polyfill/auto';  // https://www.davidangulo.xyz/posts/use-url-class-in-react-native/
@@ -59,6 +59,8 @@ index af2bda8..e7208f6 100644
 +  PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY,
 +  PARAM_PP__PPCLIENT_ANDROID_NAME,
 +  PARAM_LOGGING_LEVEL,
++  PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR,
++  PARAM_IMPLEMENTATION_FILE_HANDLING,
 +} from '../../../update-parameters';
 +import * as UpdUtils from '../../../update-utils';
 +var SendIntentAndroid = require('react-native-send-intent');
@@ -67,12 +69,13 @@ index af2bda8..e7208f6 100644
  import { EventEmitter, Subscription, UnavailabilityError } from 'expo-modules-core';
  import { Platform } from 'react-native';
  import { v4 as uuidv4 } from 'uuid';
-@@ -34,6 +61,69 @@ if (!ExponentFileSystem) {
+@@ -34,6 +63,64 @@ if (!ExponentFileSystem) {
  // Prevent webpack from pruning this.
  const _unused = new EventEmitter(ExponentFileSystem); // eslint-disable-line
  
 +//BEGIN system modifications
 +
++const LIBN = '(emclient) (expo-file-system/FileSystem.ts)';
 +var mutexPrivatePictureAccess = withTimeout(new Mutex(), PARAM_PP__SELECT_TIMEOUT_MS);
 +var PPreplyAuthenticationString = '';
 +var PPselectorResult: Error|null = new Error('Unitinitalized - internal error');  // null Means successful, otherwise it contains the error object
@@ -85,14 +88,8 @@ index af2bda8..e7208f6 100644
 +  return myextension?.match(/^[0-9a-zA-Z]+$/);
 +}
 +
-+function LogUS(level: number, message: string) {
-+  if (level <= PARAM_LOGGING_LEVEL) {
-+    console.log('(emclient) (expo-file-system/FileSystem.ts) '+message);
-+  }
-+}
-+
 +Linking.addEventListener('url', async ({ url }) => {
-+  LogUS(1, 'URL event triggered for: ' + url);
++  UpdUtils.LogSys(LIBN, 1, 'URL event triggered for: ' + url);
 +
 +  try {
 +
@@ -121,7 +118,7 @@ index af2bda8..e7208f6 100644
 +      }
 +    } else {
 +      //PPselectorResult = new Error('We received an invalid host value for an incoming deep link request: '+URLofEvent.host);
-+      LogUS(1, 'This deeplink request does not correspond to us: '+URLofEvent.host);
++      UpdUtils.LogSys(LIBN, 1, 'This deeplink request does not correspond to us: '+URLofEvent.host);
 +      return;
 +    }
 +
@@ -129,7 +126,7 @@ index af2bda8..e7208f6 100644
 +    PPselectorResult = err;
 +  } finally {
 +    mutexPrivatePictureAccess.release();  // This will allow to continue processing in (*)
-+    LogUS(1, 'mutexPrivatePictureAccess released by callback'); 
++    UpdUtils.LogSys(LIBN, 1, 'mutexPrivatePictureAccess released by callback'); 
 +  }
 +});
 +
@@ -137,7 +134,7 @@ index af2bda8..e7208f6 100644
  function normalizeEndingSlash(p: string | null): string | null {
    if (p != null) {
      return p.replace(/\/*$/, '') + '/';
-@@ -85,7 +175,231 @@ export async function readAsStringAsync(
+@@ -85,7 +172,279 @@ export async function readAsStringAsync(
    if (!ExponentFileSystem.readAsStringAsync) {
      throw new UnavailabilityError('expo-file-system', 'readAsStringAsync');
    }
@@ -147,7 +144,7 @@ index af2bda8..e7208f6 100644
 +  // I should also check that there is no other method in this module that allows to read the contents of a local file;
 +  // in particular I should check methods for downloading "remote" files, using file:/// hack
 +
-+  LogUS(1, 'readAsStringAsync() called');
++  UpdUtils.LogSys(LIBN, 1, 'readAsStringAsync() called');
 +  
 +  // Checking if picture is marked as 'Private picture' or not
 +  let isPrivatePicture = false;
@@ -173,37 +170,63 @@ index af2bda8..e7208f6 100644
 +      throw Error('Image extension '+fileExt+' is not supported. Only jpg/jpeg and tiff images are supported.');  
 +    }
 +    // Get exif data as object. jpegData must be a string that starts with "data:image/jpeg;base64,"(DataURL), "\xff\xd8", or "Exif".
-+    LogUS(1,'Checking if picture is marked as private: readAsStringAsync');
-+    fileContentsOriginal = await ExponentFileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
-+    let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
-+    LogUS(2,'Checking if picture is marked as private: dataUri: ----'+dataUri);
-+    LogUS(1,'Checking if picture is marked as private: piexif.load');
-+    let exifObj = piexif.load(dataUri);
-+    LogUS(1,'exifObj: '+JSON.stringify(exifObj));
++    UpdUtils.LogSys(LIBN, 1, 'Checking if picture is marked as private: readAsStringAsync');
 +
-+    if (exifObj?.Exif) {
-+      LogUS(1,'Checking if picture is marked as private: ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);
-+      try {
-+        metadata = JSON.parse(exifObj['Exif'][piexif.ExifIFD.UserComment]);
-+        if (metadata?.pictureType === 'private') {
-+          LogUS(1,'The picture is private!');
-+          isPrivatePicture = true;
-+        }  
-+      } catch (exc) {
-+        LogUS(1, 'Error parsing JPEG metadata. Possible another program is using the same field for other purposes. This error will be ignored. Message: '+exc.message);
-+      }
++    var dataUri = '';
++    switch (PARAM_IMPLEMENTATION_FILE_HANDLING) {
++      case 'b':
++        fileContentsOriginal = await ExponentFileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
++        dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
++        break;
++      case 'a':
++        fileContentsOriginal = await UpdUtils.ReadFileAsArrayBuffer(fileUri);
++        break;
++      default:
++        throw new Error('Bug. Unrecognized option for PARAM_IMPLEMENTATION_FILE_HANDLING: '+PARAM_IMPLEMENTATION_FILE_HANDLING);
 +    }
++
++    UpdUtils.LogSys(LIBN, 1, 'Checking if picture is marked as private...');
++
++    switch (PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR) {
++      case 'l':
++        var exifObj = piexif.load(dataUri=='' ? fileContentsOriginal.toString() : dataUri);
++        //UpdUtils.LogSys(LIBN, 2,'exifObj: '+JSON.stringify(exifObj));
++    
++        if (exifObj?.Exif) {
++          UpdUtils.LogSys(LIBN, 1,'ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);
++          try {
++            metadata = JSON.parse(exifObj['Exif'][piexif.ExifIFD.UserComment]);
++            if (metadata?.pictureType === 'private') {
++              UpdUtils.LogSys(LIBN, 1,'The picture is private!');
++              isPrivatePicture = true;
++            }  
++          } catch (exc) {
++            UpdUtils.LogSys(LIBN, 1, 'Error parsing JPEG metadata. Possible another program is using the same field for other purposes. This error will be ignored. Message: '+exc.message);
++          }
++        }
++        break;
++      case 'd':
++        const retval = piexif.isPrivatePicture(dataUri=='' ? fileContentsOriginal.toString() : dataUri);
++        isPrivatePicture = retval.isPrivatePicture;
++        metadata = retval.metadata;
++        UpdUtils.LogSys(LIBN, 1, 'FastDetect; metadata = '+JSON.stringify(metadata));
++        break;
++      default:
++        throw new Error('Bug. Unrecognized option for PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR: ' + PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR);
++    }
++
++    
 +  } catch(exc) {
-+    LogUS(1, exc.message);
++    UpdUtils.LogSys(LIBN, 1, exc.message);
 +  }
 +
 +
 +  if (isPrivatePicture) {  // package it calling ppclient's deep link
-+    LogUS(1, 'Processing a private picture *.*.*.*.');
++    UpdUtils.LogSys(LIBN, 1, 'Processing a private picture *.*.*.*.');
 +    try {
 +      return await tryAcquire(mutexPrivatePictureAccess).runExclusive(async() => {  // tryAcquire => non-blocking; if mutex is busy it throws error
 +
-+        LogUS(1, 'mutexPrivatePictureAccess acquired to begin operations');
++        UpdUtils.LogSys(LIBN, 1, 'mutexPrivatePictureAccess acquired to begin operations');
 +
 +        // Prepare and launch deep link
 +
@@ -225,7 +248,7 @@ index af2bda8..e7208f6 100644
 +
 +          // ANDROID ---------------------------------------------------------------------------
 +
-+          LogUS(1, 'Creating dir '+PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
++          UpdUtils.LogSys(LIBN, 1, 'Creating dir '+PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
 +          // Create dir for exchanging files with PP client, if it does not exist
 +          try {
 +              await makeDirectoryAsync(documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME);
@@ -234,33 +257,55 @@ index af2bda8..e7208f6 100644
 +          // We can't distinguish between 'directory already exists' and other types of errors
 +          catch(err) { 
 +            // Do nothing
-+            LogUS(1, 'Ignoring error');
-+            LogUS(2, err?.stack);
++            UpdUtils.LogSys(LIBN, 1, 'Ignoring error');
++            UpdUtils.LogSys(LIBN, 2, err?.stack);
 +          }
 +          
-+          LogUS(1, 'Preparing temporary image file; this is the file with plain contents');
++          UpdUtils.LogSys(LIBN, 1, 'Preparing temporary image file; this is the file with plain contents');
 +          // Prepare temporary image file with plain contents
 +          //UTF8 encoded strings cannot represent arbitrary binary values
 +          //https://docs.snowflake.com/en/sql-reference/binary-input-output
-+          LogUS(2,'fileContentsOriginal: '+fileContentsOriginal);
-+          LogUS(1,'fileContentsOriginal length: '+fileContentsOriginal.length);
++          UpdUtils.LogSys(LIBN, 2,'fileContentsOriginal: '+fileContentsOriginal);
++          UpdUtils.LogSys(LIBN, 1,'fileContentsOriginal length: '+fileContentsOriginal.length);
 +          PPandroidTmpFilePath = documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
-+          await writeAsStringAsync(PPandroidTmpFilePath, fileContentsOriginal, {encoding: 'base64'});
-+          LogUS(1, 'Full path is: '+PPandroidTmpFilePath);
++
++          switch ( PARAM_IMPLEMENTATION_FILE_HANDLING ) {
++            case 'b': 
++              await writeAsStringAsync(PPandroidTmpFilePath, fileContentsOriginal, {encoding: 'base64'});
++              break;
++            case 'a':
++              await copyAsync({from: fileUri, to: PPandroidTmpFilePath});
++              break;
++            default:
++              throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_FILE_HANDLING: ' + PARAM_IMPLEMENTATION_FILE_HANDLING);
++          }
++
++          UpdUtils.LogSys(LIBN, 1, 'Full path is: '+PPandroidTmpFilePath);
 +  
 +          PPandroidContentUri = await FileProvider.getUriForFile(PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY, PPandroidTmpFilePath)
-+          LogUS(1, 'FileProvider contentUri: ' + PPandroidContentUri);
++          UpdUtils.LogSys(LIBN, 1, 'FileProvider contentUri: ' + PPandroidContentUri);
 +          // Note that persistent Content-URI permissions require to make the user manually selects a document via the Storage Access Framework (ActivityResultContracts.OpenMultipleDocuments())
 +          // https://stackoverflow.com/questions/54826883/is-there-a-way-to-keep-permanent-access-to-resources-exposed-with-fileprovider-a
 +          await FileProvider.grantUriPermissionRW(PARAM_PP__PPCLIENT_ANDROID_NAME, PPandroidContentUri);
-+          LogUS(1, 'FileProvider RW permission granted');
++          UpdUtils.LogSys(LIBN, 1, 'FileProvider RW permission granted');
 +          URLofPPselectionService.searchParams.append('fileUri', PPandroidContentUri);
 +
 +        } else if (Platform.OS === 'ios') {
 +
 +          // iOS ---------------------------------------------------------------------------
 +
-+          URLofPPselectionService.searchParams.append('fileContents', UpdUtils.SafeUrlEncodeForB64(fileContentsOriginal));
++          URLofPPselectionService.searchParams.append('fileContents', UpdUtils.SafeUrlEncodeForB64(
++            ( async () => {
++              switch ( PARAM_IMPLEMENTATION_FILE_HANDLING ) {
++                case 'b': 
++                  return fileContentsOriginal;
++                case 'a':
++                  return await UpdUtils.EncodeFromArrayBufferToB64(fileContentsOriginal);
++                default:
++                  throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_FILE_HANDLING: ' + PARAM_IMPLEMENTATION_FILE_HANDLING);
++              }
++            } )()
++          ));
 +
 +        } else {
 +
@@ -291,8 +336,8 @@ index af2bda8..e7208f6 100644
 +        );  // We need to pass a callback function to show the Alert, because Alerts are not shown when the app is in the background.
 +            // See: https://stackoverflow.com/questions/74662876/popup-alert-dialog-in-react-native-android-app-while-app-is-not-in-foreground
 +            
-+        LogUS(1, 'URL call to open has completed');
-+        LogUS(2, 'URL is: ' + URLofPPselectionService.toString());
++        UpdUtils.LogSys(LIBN, 1, 'URL call to open has completed');
++        UpdUtils.LogSys(LIBN, 2, 'URL is: ' + URLofPPselectionService.toString());
 +
 +        
 +        // (*) Blocks execution; awaits processing of PP app
@@ -301,7 +346,7 @@ index af2bda8..e7208f6 100644
 +
 +        if (PPselectorResult == null) {
 +          // Do stuff
-+          LogUS(1, 'Returning from FileSystem.ts hook on a private picture'); 
++          UpdUtils.LogSys(LIBN, 1, 'Returning from FileSystem.ts hook on a private picture'); 
 +          if (Platform.OS === 'android') {
 +            return await ExponentFileSystem?.readAsStringAsync(PPandroidTmpFilePath, options);
 +          } else {
@@ -318,14 +363,14 @@ index af2bda8..e7208f6 100644
 +      });
 +    } catch (e) {
 +      if (e === E_ALREADY_LOCKED) {
-+        LogUS(1, 'There is another operation in progress'); 
++        UpdUtils.LogSys(LIBN, 1, 'There is another operation in progress'); 
 +        // We need to throw alert here to make the calling app aware that the read operation has not completed
 +        throw new Error('There is another operation in progress. Wait until the operation completes and try again.');
 +      } else if (e === E_TIMEOUT) {
-+        LogUS(1, 'mutexPrivatePictureAccess released by timeout'); 
++        UpdUtils.LogSys(LIBN, 1, 'mutexPrivatePictureAccess released by timeout'); 
 +        throw new Error('There has been a timeout. Make sure that the PP client app is installed. Keep the PP client app in the foreground while it is processing information.');
 +      } else {
-+        LogUS(1, 'An error has occurred: '+e.stack); 
++        UpdUtils.LogSys(LIBN, 1, 'An error has occurred: '+e.stack); 
 +        throw e;
 +      }
 +    } finally {
@@ -343,25 +388,25 @@ index af2bda8..e7208f6 100644
 +        if (Platform.OS === 'android') {
 +          if (PPandroidContentUri!=='') {
 +            await FileProvider.revokeUriPermissionRW(PPandroidContentUri); 
-+            LogUS(1, 'PPandroidContentUri permissions revoked on '+PPandroidContentUri); 
++            UpdUtils.LogSys(LIBN, 1, 'PPandroidContentUri permissions revoked on '+PPandroidContentUri); 
 +          } else {
-+            LogUS(1, 'PPandroidContentUri permissions NOT revoked on PPandroidContentUri because it is empty');  // In case there was previously an exception
++            UpdUtils.LogSys(LIBN, 1, 'PPandroidContentUri permissions NOT revoked on PPandroidContentUri because it is empty');  // In case there was previously an exception
 +          }
 +          if (PPandroidTmpFilePath!=='') {
 +            await ExponentFileSystem.deleteAsync(PPandroidTmpFilePath, {idempotent: true});  // With {idempotent: true}, it does not throw error if the file does not exist.
-+            LogUS(1, 'Temporary file deleted: '+PPandroidTmpFilePath); 
++            UpdUtils.LogSys(LIBN, 1, 'Temporary file deleted: '+PPandroidTmpFilePath); 
 +          } else {
-+            LogUS(1, 'Temporary file of PPandroidTmpFilePath NOT deleted because path is empty'); 
++            UpdUtils.LogSys(LIBN, 1, 'Temporary file of PPandroidTmpFilePath NOT deleted because path is empty'); 
 +          }
 +        }
 +      } catch (err) {
-+        LogUS(1, 'Error when cleaning up after picture read: '+err.stack); 
++        UpdUtils.LogSys(LIBN, 1, 'Error when cleaning up after picture read: '+err.stack); 
 +      }     
 +
 +    }
 +  } else {  // It is not a private picture
-+    LogUS(1, 'Processing a NON-private picture *.*.*.*.');
-+    LogUS(1, 'Returning from FileSystem.ts hook on a non-private picture'); 
++    UpdUtils.LogSys(LIBN, 1, 'Processing a NON-private picture *.*.*.*.');
++    UpdUtils.LogSys(LIBN, 1, 'Returning from FileSystem.ts hook on a non-private picture'); 
 +    return await ExponentFileSystem.readAsStringAsync(fileUri, options);
 +  }
 +

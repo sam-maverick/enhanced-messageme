@@ -1,6 +1,6 @@
 {
   "name": "emclient",
-  "version": "2.3.112",
+  "version": "2.3.125",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "node ./update-system.js",
@@ -36,8 +36,10 @@
     "react": "18.2.0",
     "react-native": "0.72.10",
     "react-native-app-link": "^1.0.1",
+    "react-native-blob-util": "^0.19.9",
     "react-native-elements": "^3.4.3",
     "react-native-file-provider": "^1.1.0",
+    "react-native-filereader": "^1.0.6",
     "react-native-gifted-chat": "^2.4.0",
     "react-native-quick-base64": "^2.0.8",
     "react-native-quick-crypto": "^0.6.1",

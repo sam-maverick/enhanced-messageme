@@ -1,6 +1,6 @@
 {
   "name": "ppclient",
-  "version": "2.3.223",
+  "version": "2.3.240",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "patch-package",
@@ -24,6 +24,7 @@
     "@types/react": "~18.2.46",
     "app-integrity-android-standard": "^1.45.0",
     "async-mutex": "^0.5.0",
+    "base-64": "^1.0.0",
     "cipher-base": "^1.0.4",
     "expo": "^49.0.21",
     "expo-app-integrity": "^0.3.0",
@@ -61,7 +62,9 @@
     "react-native-uuid": "^2.0.1",
     "react-native-vector-icons": "^10.0.3",
     "semserver": "^1.0.0",
-    "typescript": "^5.1.3"
+    "turbo-crc32": "^1.0.1",
+    "typescript": "^5.1.3",
+    "utf8": "^3.0.0"
   },
   "private": true,
   "devDependencies": {
