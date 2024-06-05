@@ -19,14 +19,7 @@ if (PARAM_TEST_MODE) {
     console.log();
     console.log('\x1b[31m%s\x1b[0m', '!!!!!!  WARNING  ----  WARNING  ---- WARNING  !!!!!!');    
     console.log();
-    console.log();
-    console.log('\x1b[31m%s\x1b[0m', '!!!!!!  WARNING  ----  WARNING  ---- WARNING  !!!!!!');    
-    console.log();
-    console.log();
-    console.log('\x1b[31m%s\x1b[0m', '!!!!!!  WARNING  ----  WARNING  ---- WARNING  !!!!!!');    
-    console.log();
     console.log('\x1b[31m%s\x1b[0m', 'PARAM_TEST_MODE has been set to true. This means that this PP server will accept all attestation requests without verifying them.');
-    console.log();
     console.log('\x1b[31m%s\x1b[0m', 'Use this option only in test/dev/integration environments. Do not use in production!!');
     console.log();
 }

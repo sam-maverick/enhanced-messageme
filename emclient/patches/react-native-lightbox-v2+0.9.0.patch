@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-lightbox-v2/dist/Lightbox.js b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-index 68a2f83..9a4bfc8 100644
+index 68a2f83..8838b57 100644
 --- a/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 +++ b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 @@ -2,6 +2,98 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
@@ -22,7 +22,7 @@ index 68a2f83..9a4bfc8 100644
 +    PARAM_PP__SERVICE_IOSAPPID,
 +    PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
 +    PARAM_PP__SERVICE_PLAYSTOREID,
-+  } from '../../../update-parameters';
++  } from '../../../os_update/update-parameters';
 +import FileProvider from 'react-native-file-provider';
 +import 'react-native-url-polyfill/auto';  // https://www.davidangulo.xyz/posts/use-url-class-in-react-native/
 +import Crypto from 'react-native-quick-crypto';
@@ -33,7 +33,7 @@ index 68a2f83..9a4bfc8 100644
 +import { Platform } from 'react-native';
 +import { v4 as uuidv4 } from 'uuid';
 +import * as FileSystem from 'expo-file-system';
-+import * as UpdUtils from '../../../update-utils';
++import * as UpdUtils from '../../../os_update/update-utils';
 +
 +const LIBN = '(emclient) (react-native-lightbox-v2/Lightbox.js)';
 +const SendIntentAndroid = require('react-native-send-intent');

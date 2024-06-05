@@ -2,8 +2,9 @@ import { Buffer } from 'buffer';
 import { Alert } from 'react-native';
 import Crypto from 'react-native-quick-crypto';
 import { PARAM_PP__CHARSET_AUTH, PARAM_LOGGING_LEVEL } from './update-parameters';
-import {LogSys as lsys} from './src/myGeneralLibrary';
+import {LogSys as lsys} from '../src/myGeneralLibrary';
 import * as RNQB64 from 'react-native-quick-base64';
+//import FileReader from 'react-native-filereader';
 
 const LIBN = '(emclient) (update-utils.js)';
 
@@ -30,7 +31,7 @@ export function SafeUrlDecodeForB64 (s) {  //
 }
 
 export async function ReadFileAsArrayBuffer(file) {
-  LogSys(LIBN, 1,'ReadFileAsArrayBuffer() called');
+  LogSys(LIBN, 1,'ReadFileAsArrayBuffer() called on '+file);
 
   return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -45,6 +46,9 @@ export async function ReadFileAsArrayBuffer(file) {
         reject(err);
       };
 
+      // ERROR: reader.readAsArrayBuffer() only accepts Blob or File
+      // File objects are collected when the user manually selects a file, so it is out of our scope here
+      // See: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
       reader.readAsArrayBuffer(file);
       LogSys(LIBN, 1,'ReadFileAsArrayBuffer() prepared');
 

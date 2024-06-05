@@ -445,7 +445,6 @@ export const PrivateChatComponent = props => {
                 try {
                     let resFileRead = await FileSystem.readAsStringAsync(resAssets[0].uri, {encoding: 'base64'}); // Read image contents
                     LogMe(1, 'Asset file: ' + resAssets[0].uri); 
-                    LogMe(2, '----resAssets[0].uri: ' + resFileRead); 
                     LogMe(1, '   ' + await FileSystem.getInfoAsync(resAssets[0].uri, {size: true}).size + ' bytes');
 
                     // We assume that the extension coincides with the ISO content-type

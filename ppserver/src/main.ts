@@ -5,24 +5,47 @@ import * as bodyParser from 'body-parser';
 import { AppModule } from './app.module';
 import ConnectDB from './middleware/database/index';
 
-import { PARAM_API_PORT, PP_PLATFORM_NICKNAME } from './parameters';
+import { PARAM_API_PORT, PP_PLATFORM_NICKNAME, PARAM_HTTPS_ENABLED } from './parameters';
 
 import * as fs from 'fs';
 
-
 async function bootstart() {
 
-    const httpsOptions = {
-        key: fs.readFileSync('./secrets/https/srv/srv_priv.key'),
-        cert: fs.readFileSync('./secrets/https/srv/srv_cert.cer'),
-    };
+    if ( ! PARAM_HTTPS_ENABLED) {
+        console.log();
+        console.log('\x1b[31m%s\x1b[0m', '!!!!!!  WARNING  ----  WARNING  ---- WARNING  !!!!!!');    
+        console.log();
+        console.log('\x1b[31m%s\x1b[0m', 'PARAM_HTTPS_ENABLED has been set to false.');
+        console.log();
+    }
+
+    const httpsOptions = (
+        PARAM_HTTPS_ENABLED 
+        ? 
+        {
+            key: fs.readFileSync('./secrets/https/srv/srv_priv.key'),
+            cert: fs.readFileSync('./secrets/https/srv/srv_cert.cer'),
+        }
+        :
+        {}
+    );
 
     await ConnectDB();
 
-    const app = await NestFactory.create(AppModule, { 
-        cors: true, 
-        httpsOptions: httpsOptions,  // Comment this line to change to http accordingly to your environment
-    });
+    const server_options = (
+        PARAM_HTTPS_ENABLED
+        ?
+        { 
+            cors: true, 
+            httpsOptions: httpsOptions,
+        }
+        :
+        { 
+            cors: true, 
+        }
+    );
+
+    const app = await NestFactory.create(AppModule, server_options);
     
     app.use(bodyParser.json({limit: '100mb'}));
     app.use(bodyParser.urlencoded({limit: '100mb', extended: true}));

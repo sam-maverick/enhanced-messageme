@@ -90,15 +90,39 @@ export const PARAM_PP__PPCLIENT_ANDROID_NAME = 'pt.lasige.safex.ppclient';
 
 /**
  * How JPEG private pictures are detected
- * 'l' for piexifjs.load
- * 'd' for custom function, more efficient
+ * 'l' for piexifjs.load.
+ * 'd' for custom function, more efficient.
  */
 export const PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR = 'd';
 
 /**
  * How files are loaded
- * 'b' for base-64 string, with 'expo-file-system' module
- * 'a' for ArrayBuffer, with the 'react-native-filereader' module
+ * 'b' for base-64 string, with 'expo-file-system' module.
+ * 'a' for ArrayBuffer, with the FileReader Android native module; however:
+ *    reader.readAsArrayBuffer() only accepts Blob or File
+ *    File objects are collected when the user manually selects a file, so it is out of our scope here
+ *    See: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
+ * Experimental - do not use.
  */
-export const PARAM_IMPLEMENTATION_FILE_HANDLING = 'b';
+export const PARAM_IMPLEMENTATION_FILE_READWRITE = 'b';
+
+/**
+ * How files are copied
+ * 'b' for base-64 string, with 'expo-file-system' module writeAsStringAsync().
+ * 'c' for copyAsync(), with 'expo-file-system' module.
+ */
+export const PARAM_IMPLEMENTATION_FILE_COPY = 'c';
+
+/**
+ * 'n' for none.
+ * 'y' for deduplication technique.
+ */
+export const PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION = 'n';
+
+/**
+ * 'n' for normal processing.
+ * 'y' When piexif.js is called, it checks if it is a PNG picture by reading the first bytes, 
+ * and if so, it determines it is a non-private picture because private pictures are JPEG by definition.
+ */
+export const PARAM_IMPLEMENTATION_PNG_FASTCHECK_NONPRIVATE = 'y';
 

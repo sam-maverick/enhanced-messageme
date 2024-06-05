@@ -35,7 +35,7 @@
     "name": "enhmessageme",
     "slug": "enhmessageme",
     "scheme": "enhmsm",
-    "version": "2.3.125",
+    "version": "2.3.139",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -66,9 +66,9 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "CAMERA",
-        "WRITE_EXTERNAL_STORAGE",
-        "CAMERA_ROLL"
+        "android.permission.CAMERA",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA_ROLL"
       ],
       "package": "pt.lasige.safex.enhmessageme",
       "versionCode": 205

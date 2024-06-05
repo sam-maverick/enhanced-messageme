@@ -6,6 +6,11 @@
  */
 export const PARAM_TEST_MODE = true;
 
+/**
+ * Set to true for https; false for http
+ */
+export const PARAM_HTTPS_ENABLED = true;
+
 //     END OF DANGER ZONE
 
 

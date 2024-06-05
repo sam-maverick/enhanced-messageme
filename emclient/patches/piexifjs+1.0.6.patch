@@ -1,18 +1,19 @@
 diff --git a/node_modules/piexifjs/piexif.js b/node_modules/piexifjs/piexif.js
-index d0b9c85..3f32b47 100644
+index d0b9c85..cecdd79 100644
 --- a/node_modules/piexifjs/piexif.js
 +++ b/node_modules/piexifjs/piexif.js
-@@ -23,6 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+@@ -23,6 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
  
-+import * as UpdUtils from '../../update-utils';
++import * as UpdUtils from '../../os_update/update-utils';
++import { PARAM_IMPLEMENTATION_PNG_FASTCHECK_NONPRIVATE } from '../../os_update/update-parameters';
 +const LIBN = '(emclient) (piexif.js) ';
 +
  (function () {
      "use strict";
      var that = {};
-@@ -77,6 +80,87 @@ SOFTWARE.
+@@ -77,6 +81,115 @@ SOFTWARE.
      };
  
  
@@ -25,6 +26,34 @@ index d0b9c85..3f32b47 100644
 +            } else if (data.slice(0, 23) == "data:image/jpeg;base64," || data.slice(0, 22) == "data:image/jpg;base64,") {
 +                UpdUtils.LogSys(LIBN, 1, 'splitting');
 +                const splittedpart = data.split(",")[1];
++
++                if (PARAM_IMPLEMENTATION_PNG_FASTCHECK_NONPRIVATE==='y') {
++                    UpdUtils.LogSys(LIBN, 1, 'PNG_FASTCHECK started');   
++                    if (splittedpart.length>=24) {
++                        const PNG_signature = String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);  // 8 bytes
++                        // For simplicity about BASE64 processing of padding, we take a number of bits that is a common multiple of 8 and 4, 
++                        // i.e. divisible by 24. This means that the number of bytes of the data is multiple of 3.
++                        // In other words, if the input bytes is multiple of 3, we will not need "="/"==" padding for the BASE64 string
++UpdUtils.LogSys(LIBN, 1, 'PNG_signature/hex: '+PNG_signature.toString(16));   
++                        let file_sig = atob(splittedpart.substring(0, 25));  // 9 bytes of data == 9*8/3 = 24 characters in BASE64
++UpdUtils.LogSys(LIBN, 1, 'splittedpart.substring(0, 25): '+splittedpart.substring(0, 25));   
++UpdUtils.LogSys(LIBN, 1, 'atob(splittedpart.substring(0, 25): *'+atob(splittedpart.substring(0, 25).toString(16))+'*');   
++UpdUtils.LogSys(LIBN, 1, 'atob(splittedpart.substring(0, 25). length: '+atob(splittedpart.substring(0, 25).length));
++                        // file_sig is expected to be 9 bytes here
++                        file_sig = file_sig.substring(0, 9); // We eliminate last byte, so we have the first 8 bites. Now we can compare
++UpdUtils.LogSys(LIBN, 1, 'file_sig: *'+file_sig.toString(16)+'*');   
++UpdUtils.LogSys(LIBN, 1, 'PNG_signature length: '+PNG_signature.length);
++                        if (file_sig == PNG_signature) {
++                            UpdUtils.LogSys(LIBN, 1, 'PNG detected');   
++                            return {isPrivatePicture: false, metadata: {}};
++                        } else {
++                            UpdUtils.LogSys(LIBN, 1, 'PNG not detected; we continue normal processing');   
++                        }
++                    } else {
++                        UpdUtils.LogSys(LIBN, 1, 'Tiny file; PNG_FASTCHECK skipped');                           
++                    }
++                }
++
 +                UpdUtils.LogSys(LIBN, 1, 'atob');
 +                input_data = atob(splittedpart);
 +                UpdUtils.LogSys(LIBN, 1, 'done');
@@ -100,7 +129,7 @@ index d0b9c85..3f32b47 100644
      that.load = function (data) {
          var input_data;
          if (typeof (data) == "string") {
-@@ -529,6 +613,58 @@ SOFTWARE.
+@@ -529,6 +642,58 @@ SOFTWARE.
              return ifd_dict;
          },
  
