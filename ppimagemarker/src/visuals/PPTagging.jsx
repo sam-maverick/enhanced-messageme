@@ -6,8 +6,11 @@ import * as FileSystem from 'expo-file-system';
 import uuid from 'react-native-uuid';
 
 import RadioGroup from 'react-native-radio-buttons-group';
+
 import { ImagePicker, Album, Asset } from 'expo-image-multiple-picker';
 import * as ExpoImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
+
 import * as piexif from 'piexifjs';
 import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 
@@ -53,6 +56,8 @@ export const PPTaggingComponent = (props) => {
     const [album, setAlbum] = useState();
     //const [assets, setAssets] = useState<Asset[]>([]);
     const [assets, setAssets] = useState();
+
+    const [status, requestPermission] = MediaLibrary.usePermissions();
 
     // Privacy policies
     const [selectionViewOnce, setSelectionViewOnce] = useState();
@@ -184,6 +189,33 @@ export const PPTaggingComponent = (props) => {
             // Warning: Despite not being formally an asynchronous function, setState is performed asynchronously
             // except if we access the state directly without its 'set' function and the value is a {} object:
 
+            // Doint this in ComponentRefresh(); doesn't work
+            LogMe(1, 'Requesting user permissions');
+
+            let permsEIP = await ExpoImagePicker.requestMediaLibraryPermissionsAsync(); 
+            LogMe(1, 'Result is: permsEIP='+JSON.stringify(permsEIP));
+            if (permsEIP.granted) {
+                LogMe(1, 'EIP perms granted');
+            } else {
+                LogMe(1, 'EIP perms not granted');
+                await AsyncAlert('The system indicates that you did not grant privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
+            }    
+
+            let permsML = await requestPermission();
+            LogMe(1, 'Result is: permsML='+JSON.stringify(permsML));
+            if (permsML.granted) {
+                LogMe(1, 'ML perms granted');
+            } else {
+                LogMe(1, 'ML perms not granted');
+                await AsyncAlert('The system indicates that you did not grant privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
+            }    
+
+            if (permsEIP.granted && permsML.granted) {
+                setImagePermissionsGranted(true);       
+            }
+
+            LogMe(1, 'Refreshing PPTagging Component - completed');
+
         }
 
         didMount();  // If we want useEffect to be asynchronous, we have to define didMount as async and call it right after
@@ -204,6 +236,8 @@ export const PPTaggingComponent = (props) => {
             //initStatus({ key:'updated'}); //update with rendering
             // This will reach only on the first time the scren is loaded
 
+            LogMe(1, 'on ComponentRefresh(), propsState.AccountData.firstrun: '+propsState.AccountData.firstrun);
+
             if (propsState.AccountData.firstrun) {
 
                 await AsyncAlert(PARAM_WELCOME_MESSAGE);
@@ -223,17 +257,7 @@ export const PPTaggingComponent = (props) => {
                 setPropsState(cloneOfProps);    
             }
 
-
-            LogMe(1, 'calling ExpoImagePicker.requestMediaLibraryPermissionsAsync()');
-            let perms = await ExpoImagePicker.requestMediaLibraryPermissionsAsync(); 
-            LogMe(1, 'ExpoImagePicker.requestMediaLibraryPermissionsAsync() result is: perms='+JSON.stringify(perms));
-            if (perms.granted) {
-                setImagePermissionsGranted(true);       
-            } else {
-                await AsyncAlert('The system indicates that you did not grant any privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
-            }    
-
-            LogMe(1, 'Refreshing PPTagging Component - completed');
+        
         }
     }
 

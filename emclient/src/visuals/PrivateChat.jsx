@@ -26,7 +26,7 @@ import * as FileSystem from 'expo-file-system';
 
 
 import { styles } from './myVisualsLibrary.jsx';
-import { ErrorAlert, LogMe, InfoMessage, IsValidImageExtensionAndContentType } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, InfoMessage, IsValidImageExtensionAndContentType, AsyncAlert } from '../myGeneralLibrary.jsx';
 import { TabsComponent } from './Tabs.jsx';
 
 import storage from '../storage/storageApi.js';
@@ -399,27 +399,34 @@ export const PrivateChatComponent = props => {
     };
 
     async function pickImage() {
-        LogMe(1, 'pickImage() called');                       
-        const statusPhotoGallery = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        const statusCamera = await ImagePicker.requestCameraPermissionsAsync();
+        LogMe(1, 'pickImage() called');                        
 
         let imgURI = null;
-        const hasPermissionGranted = (statusPhotoGallery.granted & statusCamera.granted);
+
+        LogMe(1, 'Requesting user permissions');
+
+        const statusPhotoGallery = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        //const statusCamera = await ImagePicker.requestCameraPermissionsAsync();
+
+        const hasPermissionGranted = (statusPhotoGallery.granted /*& statusCamera.granted*/);
         LogMe(1, 'statusPhotoGallery is: ' + statusPhotoGallery.granted);                       
-        LogMe(1, 'statusCamera is: ' + statusCamera.granted);                       
+        //LogMe(1, 'statusCamera is: ' + statusCamera.granted);                       
 
-        if(!hasPermissionGranted) {
-            ErrorAlert('Permissions not granted');
+        if(hasPermissionGranted) {
+            LogMe(1, 'IP permissions granted');
+        } else {
+            LogMe(1, 'IP permissions not granted');
+            await AsyncAlert('The system indicates that you did not grant privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
             return null;
-        }
-
+        } 
+        
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: false,
             quality: PARAM_IMAGE_PICKER_QUALITY,
         });
 
-        if (!result.canceled) {
+        if ((!result.canceled) && (result?.assets)) {
             LogMe(1, 'pickImage() not cancelled');                       
             imgURI = result.assets;
         }

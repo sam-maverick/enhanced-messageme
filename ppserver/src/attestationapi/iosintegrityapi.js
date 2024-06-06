@@ -35,15 +35,18 @@ export async function CheckAppAttestation(token, nonce_truth, keyId) {
                     // Return error to app.
                     // It should not use the generated keys for assertion.
                     LogMe(1, 'iOS attestation failed: '+result.errorMessage);
-                    return {status: "fail", message: result.errorMessage, publicKeyPem: '', receipt: ''};
+                    return {status: 'fail', message: result.errorMessage, publicKeyPem: '', receipt: ''};
                 } else {
+
+                    // Note: Attestations do not contain security metrics
+                    // https://developer.apple.com/documentation/devicecheck/assessing-fraud-risk
                 
                     // Return success to app.
                     // It can use the generated keys for request assertion.
                     LogMe(1, 'iOS attestation succeeded.');
                     LogMe(2, 'Public key: '+result.publicKeyPem);
                     return {
-                        status: "success", 
+                        status: 'success', 
                         message: 'Attestation warmup successful.', 
                         publicKeyPem: result.publicKeyPem,
                         receipt: result.receipt,
@@ -53,9 +56,9 @@ export async function CheckAppAttestation(token, nonce_truth, keyId) {
         } catch(e)  {
             LogMe(1, e);
             if (PARAM_LOGGING_LEVEL>=2) {
-                return {status: "error", message: e.message, publicKeyPem: '', receipt: ''};
+                return {status: 'error', message: e.message, publicKeyPem: '', receipt: ''};
             } else {
-                return {status: "error", message: 'An exception has occurred when processing the attestation of the token. Check server logs.', publicKeyPem: '', receipt: ''};
+                return {status: 'error', message: 'An exception has occurred when processing the attestation of the token. Check server logs.', publicKeyPem: '', receipt: ''};
             }
         }
 
@@ -89,26 +92,33 @@ export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, ios
         if ('verifyError' in result) {
             // Request cannot be trusted!
             // Fail request from app (e.g. return HTTP 401 equivalent)
-            LogMe(1, 'iOS assertion failed: '+result.errorMessage);
-            return {status: "fail", message: result.errorMessage, iosSignCount: 0};
+            LogMe(1, 'iOS assertion failed: '+result.verifyError);
+            return {status: 'fail', message: result.verifyError, iosSignCount: undefined};
         }
 
-        // Check that signCount > persisted value and update.
-        if (result.signCount <= iosSignCount) {
+        // Check that signCount >= persisted value.
+        if (result.signCount < iosSignCount) {
             // Request cannot be trusted!
             // Fail request from app (e.g. return HTTP 401 equivalent)
-            LogMe(1, 'iOS signCount check failed: '+result.errorMessage);
-            return {status: "fail", message: result.errorMessage, iosSignCount: 0};
+            LogMe(1, 'iOS signCount check failed: '+'Inconsistency; signCount is below its last seen value');
+            return {status: 'fail', message: 'Inconsistency; signCount is below the last seen value', iosSignCount: undefined};
+        // Check that signCount <= persisted value + MAX_ALLOWED_IOS_SIGNCOUNT_GAP
+        } else if ((result.signCount - iosSignCount) > process.env.MAX_ALLOWED_IOS_SIGNCOUNT_GAP) {
+            // Request cannot be trusted!
+            // Fail request from app (e.g. return HTTP 401 equivalent)
+            LogMe(1, 'iOS signCount check failed: '+'Security issue; signCount exceeds the last seen value by too far, which might indicate an attack');
+            return {status: 'fail', message: 'Security issue; signCount exceeds the last seen value by too far', iosSignCount: undefined};
+        } else {
+            // Otherwise request can be trusted and continue processing as usual.
+            return {status: 'success', message: 'Assertion successful.', iosSignCount: result.signCount};
         }
-        return {status: "success", message: 'Assertion successful.', iosSignCount: result.signCount};
 
-    // Otherwise request can be trusted and continue processing as usual.
     } catch(e)  {
         LogMe(1, e);
         if (PARAM_LOGGING_LEVEL>=2) {
-            return {status: "error", message: e.message, iosSignCount: 0};
+            return {status: 'error', message: e.message, iosSignCount: undefined};
         } else {
-            return {status: "error", message: 'An exception has occurred when processing the assertion of the token. Check server logs.', iosSignCount: 0};
+            return {status: 'error', message: 'An exception has occurred when processing the assertion of the token. Check server logs.', iosSignCount: undefined};
         }
     }
 

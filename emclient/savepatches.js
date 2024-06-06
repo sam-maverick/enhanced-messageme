@@ -18,3 +18,4 @@ exec('npx patch-package react-native-send-intent --exclude "^dummy\\$" --include
 exec('npx patch-package expo-file-system --exclude "^dummy\\$" --include "^tsconfig\\\\.json\\$|^package\\\\.json\\$|^src/"');
 exec('npx patch-package react-native-lightbox-v2 --exclude "^dummy\\$" --include "^dist/"');
 exec('npx patch-package piexifjs --exclude "^dummy\\$" --include "^piexif\\.js$"');
+//exec('npx patch-package expo-media-library --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$"');

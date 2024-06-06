@@ -5,6 +5,9 @@
         "./plugins/android-manifest-fileprovider-definitions.js"
       ],
       [
+        "./plugins/android-manifest-requestLegacyExternalStorage.js"
+      ],
+      [
         "./plugins/jvm-memory.js"
       ],
       [
@@ -35,7 +38,7 @@
     "name": "enhmessageme",
     "slug": "enhmessageme",
     "scheme": "enhmsm",
-    "version": "2.3.139",
+    "version": "2.22.139",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -54,7 +57,8 @@
         "LSApplicationQueriesSchemes": [
           "pripro"
         ],
-        "NSCameraUsageDescription": "This app uses the camera to let users share images in private chats.",
+        "NSPhotoLibraryUsageDescription": "This app uses the library to let users share images in private chats.",
+        "NSPhotoLibraryAddUsageDescription": "This app uses the library to let users share images in private chats.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
@@ -66,12 +70,13 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.CAMERA_ROLL"
+        "android.permission.CAMERA_ROLL",
+        "android.permission.READ_MEDIA_IMAGES"
       ],
       "package": "pt.lasige.safex.enhmessageme",
-      "versionCode": 205
+      "versionCode": 222
     },
     "web": {
       "favicon": "./assets/favicon.png"

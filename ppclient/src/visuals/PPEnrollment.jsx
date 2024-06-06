@@ -200,6 +200,9 @@ export const PPEnrollmentComponent = (props) => {
             // ANDROID ------------------------------------------------------------------------------
 
             if (Platform.OS === 'android') {
+
+                await AsyncAlert('Please go to the app settings in the system configuration and make sure that the Privacy Provider permission is granted for the ppclient app before continuing. Once verified, hit `Ok` to continue.', 'WARING');
+        
                 await DoWarmup(setAndroidWarmupStandardStatus, function () {})
                 .then( async (resultWarmup) => {
                 

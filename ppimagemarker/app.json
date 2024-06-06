@@ -5,9 +5,20 @@
         "./plugins/jvm-memory.js"
       ],
       [
+        "./plugins/android-manifest-requestLegacyExternalStorage.js"
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your contacts in private chats."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
         }
       ],
       [
@@ -27,7 +38,7 @@
     "name": "ppimagemarker",
     "slug": "ppimagemarker",
     "scheme": "ppimagemarker",
-    "version": "2.3.11",
+    "version": "2.12.11",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -43,10 +54,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "pt.lasige.safex.ppimagemarker",
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to let users share images in private chats.",
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        }
+        "NSPhotoLibraryUsageDescription": "This app uses the library to let users share images in private chats.",
+        "NSPhotoLibraryAddUsageDescription": "This app uses the library to let users share images in private chats."
       }
     },
     "android": {
@@ -55,15 +64,14 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA_ROLL",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.READ_MEDIA_IMAGES"
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.ACCESS_MEDIA_LOCATION"
       ],
       "package": "pt.lasige.safex.ppimagemarker",
-      "versionCode": 283
+      "versionCode": 291
     },
     "web": {
       "favicon": "./assets/favicon.png"

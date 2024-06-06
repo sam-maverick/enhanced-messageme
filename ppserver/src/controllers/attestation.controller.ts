@@ -285,7 +285,7 @@ export class AttestationController {
                 // Note: We do not attest device type (iPad, iPhone, Mac, ...)
                 // Looks like Macs are not supported anyway. See: https://developer.apple.com/forums/thread/682488
     
-                // Save publicKey and receipt for this device (sample code).
+                // Save publicKey and signCount for this device (sample code).
                 const updateResult = await DevicesModel.updateOne(
                     {cookie: req.body.cookie},
                     {
@@ -313,7 +313,7 @@ export class AttestationController {
                     resultOperation = {
                         status: 'success', 
                         message: 'Assertion successful.', 
-                        iosSignCount: 999999999,
+                        iosSignCount: deviceObject.iosSignCount + 1,
                     };
                 } else {    
                     resultOperation = await CheckAppAssertion(
@@ -346,7 +346,7 @@ export class AttestationController {
                 // Note: We do not attest device type (iPad, iPhone, Mac, ...)
                 // Looks like Macs are not supported anyway. See: https://developer.apple.com/forums/thread/682488
     
-                // Save publicKey and receipt for this device (sample code).
+                // Save publicKey and signCount for this device (sample code).
                 const updateResult = await DevicesModel.updateOne(
                     {cookie: req.body.cookie},
                     {iosSignCount: resultOperation.iosSignCount}

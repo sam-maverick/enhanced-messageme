@@ -103,9 +103,10 @@ if (artifactname === 'ppclient') {
   }
 }
 
-echo('Stopping any current app execution on the phone');
-myExec(`adb shell am force-stop ${appname}`);
-
+if (process.argv[2] !== 'aab') {
+  echo('Stopping any current app execution on the phone');
+  myExec(`adb shell am force-stop ${appname}`);
+}
 
 echo('Incrementing version: ' + process.argv[3]);
 myExec(`yarn config set version-git-tag false`);
