@@ -2355,10 +2355,10 @@ anymatch@^3.0.3:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-app-integrity-android-standard@^1.45.0:
-  version "1.45.0"
-  resolved "https://registry.yarnpkg.com/app-integrity-android-standard/-/app-integrity-android-standard-1.45.0.tgz#0d2f673539dadbfea053f5a3c6fc4021087297e7"
-  integrity sha512-UPBT/XO/i5CDrSOmrZKjMaHw1VLjL9/KiwtAjMCfKGXPtEyIdnDLMWOxJh47KCoixhNpU0xfOFnbDdZsZodU9w==
+app-integrity-android-standard@^1.46.0:
+  version "1.46.0"
+  resolved "https://registry.yarnpkg.com/app-integrity-android-standard/-/app-integrity-android-standard-1.46.0.tgz#961ad095482e8adb84a04a33561f9656f3c972e1"
+  integrity sha512-KhU08SIvZ3kZRpAIDtMoKdDOrBBo50tMAIfw6pkHrhTXgipN2pBSham72f8IBF9uXu+RKuHQl/s/d+Uoxue9ag==
 
 appdirsjs@^1.2.4:
   version "1.2.7"
