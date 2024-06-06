@@ -127,11 +127,15 @@ export const PPTaggingComponent = (props) => {
 
                 if (assets[i].albumId == privateAlbumID.key) {  // The picture is in the PrivatePics album
                     LogMe(1,'ExecuteTheMarking(): processing a picture that is in PrivatePics');
-                    await FileSystem.writeAsStringAsync(
-                        assets[i].uri,
-                        base64ContentsWithInsertedMetadata,
-                        {encoding: 'base64'}
-                    );    
+                    try {
+                        await FileSystem.writeAsStringAsync(
+                            assets[i].uri,
+                            base64ContentsWithInsertedMetadata,
+                            {encoding: 'base64'}
+                        );       
+                    } catch (err) {
+                        throw new Error('Error overwriting to an image file. This may happen if you marked the image with an app version deployed before migrating to a different type of workflow (bare/APK/AAB). Details: '+err.message);
+                    }
                 } else {  // The picture is NOT in the PrivatePics album
                     LogMe(1,'ExecuteTheMarking(): processing a picture that is NOT in PrivatePics');
                     let ImagePathTmp = FileSystem.documentDirectory + PARAM_PRIVATE_PICTURES_TMP_DIRNAME + '/' + uuid.v4() + '.' + fileExt;
@@ -145,7 +149,6 @@ export const PPTaggingComponent = (props) => {
     
                 }
     
-    
                 //await WriteMyFileStream(imageInCameraRoll.uri+'.temp.jpg', 'base64', false, base64ContentsWithInsertedMetadata);    
                 /*
                 await FileSystem.writeAsStringAsync(
@@ -158,7 +161,7 @@ export const PPTaggingComponent = (props) => {
             }
                 
         } catch (err){
-            ErrorAlert('Error: '+err.message, err);
+            ErrorAlert('Error while marking picture(s)', err);
         } finally {
             try {
                 if (assets[i].albumId == privateAlbumID.key) {
@@ -167,7 +170,7 @@ export const PPTaggingComponent = (props) => {
                     await FileSystem.deleteAsync(ImagePathTmp, {idempotent: true});
                 }
             } catch (err) {
-                //ErrorAlert('Error: '+err.message, err);
+                //ignored
             } finally {
                 setAssets([]);
                 setOpen(true);

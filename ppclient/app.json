@@ -32,7 +32,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro",
-    "version": "2.10.240",
+    "version": "2.11.243",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -63,7 +63,7 @@
         "pt.lasige.safex.permission.PRIVACY_PROVIDER"
       ],
       "package": "pt.lasige.safex.ppclient",
-      "versionCode": 332
+      "versionCode": 336
     },
     "web": {
       "favicon": "./assets/favicon.png"

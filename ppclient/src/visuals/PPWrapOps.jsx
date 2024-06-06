@@ -530,6 +530,7 @@ export const PPWrapOpsComponent = (props) => {
                 if (Platform.OS === 'android') {
                     LogMe(1, 'Writing '+urlParams.fileUri);
                     // https://stackoverflow.com/questions/46278019/how-do-i-read-file-with-content-uri-in-react-native-on-android
+    
                     await WriteMyFileStream(urlParams.fileUri, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT, false, wrappedPrivatePictureContents);
     
                     LogMe(1, 'Written');
