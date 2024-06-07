@@ -449,12 +449,12 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       }
     } )();
     
-    //https://en.wikipedia.org/wiki/PNG
+    //See: https://en.wikipedia.org/wiki/PNG
     list.push(newchunk1);
 
     // Not necessary:
     //var newchunk2 = png.createChunk("ppPt", "Wrapped private picture");
-    //https://en.wikipedia.org/wiki/PNG
+    //// See: https://en.wikipedia.org/wiki/PNG
     //list.push(newchunk2);
 
     list.push(iend);

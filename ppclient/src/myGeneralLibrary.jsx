@@ -144,7 +144,7 @@ export async function WriteMyFileStream (path, mode, append, data) {
 
 
 export function SafeUrlEncodeForB64 (s) {  // s is supposed to be in base64 format
-  //https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
+  //Inspired in: https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
   return s
   .replaceAll('+','-')
   .replaceAll('/','_')

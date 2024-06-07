@@ -1,6 +1,6 @@
 // Do not import custom libraries from here
 
-// https://github.com/sunnylqm/react-native-storage
+// See: https://github.com/sunnylqm/react-native-storage
 
 import Storage from 'react-native-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';

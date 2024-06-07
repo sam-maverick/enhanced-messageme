@@ -30,7 +30,7 @@ export const PPFinishedComponent = (props) => {
             // Do stuff
             LogMe(1, 'useEffect of PPFinished invocation');  
 
-            // https://stackoverflow.com/questions/38558200/react-setstate-not-updating-immediately
+            // See: https://stackoverflow.com/questions/38558200/react-setstate-not-updating-immediately
             // Warning: Despite not being formally an asynchronous function, setState is performed asynchronously
             // except if we access the state directly without its 'set' function and the value is a {} object:
 

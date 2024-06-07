@@ -238,8 +238,8 @@ export const PPWrapOpsComponent = (props) => {
                     ErrorAlert('Error when processing request', e);
                 }
             } finally {
-                // There is no need for releasing:
-                // https://www.npmjs.com/package/async-mutex
+                // There is no need for releasing.
+                // See: https://www.npmjs.com/package/async-mutex
                 // Once the promise is resolved or rejected (or immediately after execution if an immediate value was returned), the mutex is released. runExclusive returns a promise that adopts the state of the function result.
             }
 
@@ -529,7 +529,7 @@ export const PPWrapOpsComponent = (props) => {
     
                 if (Platform.OS === 'android') {
                     LogMe(1, 'Writing '+urlParams.fileUri);
-                    // https://stackoverflow.com/questions/46278019/how-do-i-read-file-with-content-uri-in-react-native-on-android
+                    // See: https://stackoverflow.com/questions/46278019/how-do-i-read-file-with-content-uri-in-react-native-on-android
     
                     await WriteMyFileStream(urlParams.fileUri, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT, false, wrappedPrivatePictureContents);
     

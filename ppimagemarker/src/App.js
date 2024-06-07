@@ -1,4 +1,4 @@
-//https://github.com/charpeni/react-native-url-polyfill#readme
+//See: https://github.com/charpeni/react-native-url-polyfill#readme
 import 'react-native-url-polyfill/auto';
 
 import { StatusBar } from 'expo-status-bar';
