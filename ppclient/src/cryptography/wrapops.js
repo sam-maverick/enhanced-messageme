@@ -28,7 +28,7 @@ import {
   PARAM_IMPLEMENTATION_ARTIFACT_FORMAT,
 } from '../parameters.js';
 
-import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer, ApiSubmitTwoAttestationTokensToServer } from '../network/networkApi.js';
+import { ApiGetNonceFromServer, ApiSubmitAttestationTokensToServer } from '../network/networkApi.js';
 
 import * as AppIntegrity from '../integrity/integrityapis.js';
 
@@ -44,16 +44,16 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
   // GET NONCE(S)
 
   let apiresgetnonce1 = undefined;        
-  let apiresgetnonce2 = undefined;        
+  //#*#let apiresgetnonce2 = undefined;        
   try {
     if (Platform.OS === 'android') {
 
-      LogMe(1, 'Doing Android warmup');
-      await AppIntegrity.DoWarmup(function () {}, function () {});
-      LogMe(1, 'Done doing Android warmup');
+      //#*#LogMe(1, 'Doing Android warmup');
+      //#*#await AppIntegrity.DoWarmup(function () {}, function () {});
+      //#*#LogMe(1, 'Done doing Android warmup');
       
       apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
-      apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
+      //#*#apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
     } else {  // ios
         apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'ios', 'assertion');
     }
@@ -71,11 +71,11 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
       LogMe(1, msg + apiresgetnonce1.resultMessage);
       return Promise.reject({message: msg + apiresgetnonce1.resultMessage});
     }
-    if ( ! apiresgetnonce2.isSuccessful) {
-      const msg = 'Application error when requesting android-standard nonce to the PP server. ';
-      LogMe(1, msg + apiresgetnonce2.resultMessage);
-      return Promise.reject({message: msg + apiresgetnonce2.resultMessage});
-    }
+    //#*#if ( ! apiresgetnonce2.isSuccessful) {
+    //#*#  const msg = 'Application error when requesting android-standard nonce to the PP server. ';
+    //#*#  LogMe(1, msg + apiresgetnonce2.resultMessage);
+    //#*#  return Promise.reject({message: msg + apiresgetnonce2.resultMessage});
+    //#*#}
   } else {  // ios
     if ( ! apiresgetnonce1.isSuccessful) {
       const msg = 'Application error when requesting ios-assertion nonce to the PP server. ';
@@ -89,7 +89,7 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
   // GET TOKEN(S) FROM ATTESTATION API
 
   let attestationobject1 = undefined;
-  let attestationobject2 = undefined;
+  //#*#let attestationobject2 = undefined;
 
   if (Platform.OS === 'android') {
     try {
@@ -97,11 +97,11 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
     } catch(error) {
       return Promise.reject({message: 'Coult not prepare Android Classic attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
     }
-    try {
-      attestationobject2 = await AppIntegrity.AndroidStandardRequest(apiresgetnonce2.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());
-    } catch(error) {
-      return Promise.reject({message: 'Coult not prepare Android Standard attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
-    }  
+    //#*#try {
+    //#*#  attestationobject2 = await AppIntegrity.AndroidStandardRequest(apiresgetnonce2.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());
+    //#*#} catch(error) {
+    //#*#  return Promise.reject({message: 'Coult not prepare Android Standard attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
+    //#*#}  
   } else {  // ios
     // We skip attestation because we can assume it has been done, as the device needs to achieve enrollment to reach this point
     try {
@@ -120,25 +120,35 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
 
   try {
     if (Platform.OS === 'android') {
-      apiressubmitobject = await ApiSubmitTwoAttestationTokensToServer(
+      apiressubmitobject = await ApiSubmitAttestationTokensToServer(
         'PPWrapOps', 
         myPPEcookie, 
         Platform.OS, 
         Platform.Version, 
-        'classic', 
-        attestationobject1,
-        'standard',
-        attestationobject2,
+        [
+          {
+            requestType: 'classic',
+            token: attestationobject1,
+          },
+          //#*#{
+          //#*#  requestType: 'standard',
+          //#*#  token: attestationobject2
+          //#*#},
+        ],
         requestDataObject,
       );
     } else {  // ios
-      apiressubmitobject = await ApiSubmitAttestationTokenToServer(
+      apiressubmitobject = await ApiSubmitAttestationTokensToServer(
         'PPWrapOps', 
         myPPEcookie, 
         Platform.OS, 
         Platform.Version, 
-        'assertion', 
-        attestationobject1,
+        [
+          {
+            requestType: 'assertion',
+            token: attestationobject1,
+          },
+        ],
         requestDataObject,
       );
     }

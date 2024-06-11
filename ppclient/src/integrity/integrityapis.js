@@ -7,7 +7,7 @@ import storage from '../storage/storageApi.js';
 
 import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_IOS_KEY_IDENTIFIER } from '../parameters.js';
 
-import { ApiGetNonceFromServer, ApiSubmitAttestationTokenToServer } from '../network/networkApi.js';
+import { ApiGetNonceFromServer, ApiSubmitAttestationTokensToServer } from '../network/networkApi.js';
 
 import { Platform } from 'react-native';
 
@@ -162,7 +162,7 @@ export async function CheckIntegrity(environment, keyIdentifier, someProps, save
           LogMe(1, 'Received attestation token from library API layer');
           LogMe(2, 'Token is: '+JSON.stringify(attestationTokenObject));
           //console.log(JSON.stringify(attestationTokenObject));
-          return ApiSubmitAttestationTokenToServer(environment, apiresgetnonce.cookie, Platform.OS, Platform.Version, RequestType, attestationTokenObject)
+          return ApiSubmitAttestationTokensToServer(environment, apiresgetnonce.cookie, Platform.OS, Platform.Version, [{requestType: RequestType, token: attestationTokenObject}], undefined)
           .then(async (apiressubmitobject) => {
 
               if ( ! apiressubmitobject.isSuccessful) {

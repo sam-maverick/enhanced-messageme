@@ -12,33 +12,9 @@ const POST_HEADERS = {
 };
 
 
-export async function ApiSubmitAttestationTokenToServer(environment, cookie, platformType, platformVersion, requestType, token, requestDataObject) {
+export async function ApiSubmitAttestationTokensToServer(environment, cookie, platformType, platformVersion, tokensArray, requestDataObject) {
 
-    LogMe(1, 'API: ApiSubmitAttestationTokenToServer');
-
-    return fetch(`${PARAM_SERVER_API_URL}/attestations/submitAttestationTokenToServer`, {
-        ...POST_HEADERS,
-        body: JSON.stringify({
-            cookie: cookie, 
-            environment: environment, 
-            platformVersion: platformVersion, 
-            platformType: platformType, 
-            subrequests: [{
-                requestType: requestType, 
-                token: token,
-            }],
-            requestDataObject: requestDataObject,
-        }),
-    })
-    .then((res) => res.json())
-    .then((res) => res)
-
-}
-
-
-export async function ApiSubmitTwoAttestationTokensToServer(environment, cookie, platformType, platformVersion, requestType1, token1, requestType2, token2, requestDataObject) {
-
-    LogMe(1, 'API: ApiSubmitAttestationTokenToServer');
+    LogMe(1, 'API: ApiSubmitAttestationTokensToServer');
 
     return fetch(`${PARAM_SERVER_API_URL}/attestations/submitAttestationTokenToServer`, {
         ...POST_HEADERS,
@@ -47,13 +23,7 @@ export async function ApiSubmitTwoAttestationTokensToServer(environment, cookie,
             environment: environment, 
             platformVersion: platformVersion, 
             platformType: platformType, 
-            subrequests: [{
-                requestType: requestType1, 
-                token: token1,
-            },{
-                requestType: requestType2, 
-                token: token2,
-            }],
+            subrequests: tokensArray,
             requestDataObject: requestDataObject,
         }),
     })
