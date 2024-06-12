@@ -33,6 +33,7 @@ import { ApiGetNonceFromServer, ApiSubmitAttestationTokensToServer } from '../ne
 import * as AppIntegrity from '../integrity/integrityapis.js';
 
 
+var warmupDone = false;
 
 
 // We assume that Platform.OS has already been checked to be compatible
@@ -48,12 +49,17 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
   try {
     if (Platform.OS === 'android') {
 
-      //#*#LogMe(1, 'Doing Android warmup');
-      //#*#await AppIntegrity.DoWarmup(function () {}, function () {});
-      //#*#LogMe(1, 'Done doing Android warmup');
+      if (warmupDone) {
+        LogMe(1, 'Android warmup was already done before');
+      } else {
+        LogMe(1, 'Doing Android warmup');
+        await AppIntegrity.DoWarmup(function () {}, function () {});
+        LogMe(1, 'Done doing Android warmup');
+        warmupDone = true;
+      }
       
-      apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
-      //#*#apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
+      apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
+      //#*#apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
     } else {  // ios
         apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'ios', 'assertion');
     }
@@ -67,12 +73,12 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
   // Check for server-side application errors
   if (Platform.OS === 'android') {
     if ( ! apiresgetnonce1.isSuccessful) {
-      const msg = 'Application error when requesting android-classic nonce to the PP server. ';
+      const msg = 'Application error when requesting android-standard nonce to the PP server. ';
       LogMe(1, msg + apiresgetnonce1.resultMessage);
       return Promise.reject({message: msg + apiresgetnonce1.resultMessage});
     }
     //#*#if ( ! apiresgetnonce2.isSuccessful) {
-    //#*#  const msg = 'Application error when requesting android-standard nonce to the PP server. ';
+    //#*#  const msg = 'Application error when requesting android-classic nonce to the PP server. ';
     //#*#  LogMe(1, msg + apiresgetnonce2.resultMessage);
     //#*#  return Promise.reject({message: msg + apiresgetnonce2.resultMessage});
     //#*#}
@@ -93,15 +99,15 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
 
   if (Platform.OS === 'android') {
     try {
-      attestationobject1 = await AppIntegrity.AndroidClassicRequest(apiresgetnonce1.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER);
+      attestationobject1 = await AppIntegrity.AndroidStandardRequest(apiresgetnonce1.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());
     } catch(error) {
-      return Promise.reject({message: 'Coult not prepare Android Classic attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
-    }
+      return Promise.reject({message: 'Coult not prepare Android Standard attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
+    }  
     //#*#try {
-    //#*#  attestationobject2 = await AppIntegrity.AndroidStandardRequest(apiresgetnonce2.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());
+    //#*#  attestationobject2 = await AppIntegrity.AndroidClassicRequest(apiresgetnonce2.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER);
     //#*#} catch(error) {
-    //#*#  return Promise.reject({message: 'Coult not prepare Android Standard attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
-    //#*#}  
+    //#*#  return Promise.reject({message: 'Coult not prepare Android Classic attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
+    //#*#}
   } else {  // ios
     // We skip attestation because we can assume it has been done, as the device needs to achieve enrollment to reach this point
     try {
@@ -127,12 +133,12 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
         Platform.Version, 
         [
           {
-            requestType: 'classic',
-            token: attestationobject1,
+            requestType: 'standard',
+            token: attestationobject1
           },
           //#*#{
-          //#*#  requestType: 'standard',
-          //#*#  token: attestationobject2
+          //#*#  requestType: 'classic',
+          //#*#  token: attestationobject2,
           //#*#},
         ],
         requestDataObject,

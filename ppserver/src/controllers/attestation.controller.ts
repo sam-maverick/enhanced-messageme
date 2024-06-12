@@ -146,7 +146,7 @@ export class AttestationController {
     //Specific checks for PPWrapOps
     if(req.body.environment === 'PPWrapOps') {
         if (req.body.platformType === 'android') {
-        // Check that there are 2 subrequests and that they are diverse (we already checked that they correspond to either classic or standard attestation, so if they are diverse, they are one of each)
+        //#*#// Check that there are 2 subrequests and that they are diverse (we already checked that they correspond to either classic or standard attestation, so if they are diverse, they are one of each)
             if (req.body.subrequests.length != 1) {//#*#
                 return {isSuccessful: false, resultMessage: 'PPWrapOps failed. For android, a request can only contain a subrequest.'};//#*#
             }//#*#
@@ -156,6 +156,9 @@ export class AttestationController {
             //#*#if (req.body.subrequests[0].requestType == req.body.subrequests[1].requestType) {
             //#*#    return {isSuccessful: false, resultMessage: 'PPWrapOps failed. Each of the subrequests must have a different requestType (one standard, and one classic).'};
             //#*#}
+            if (req.body.subrequests[0].requestType != 'standard') {//#*#
+                return {isSuccessful: false, resultMessage: 'PPWrapOps failed. For android, the subrequest must be of standard type.'};//#*#
+            }//#*#
         } else if (req.body.platformType === 'ios') {
             if (req.body.subrequests.length != 1) {
                 return {isSuccessful: false, resultMessage: 'PPWrapOps failed. For ios, a request can only contain a subrequest.'};
