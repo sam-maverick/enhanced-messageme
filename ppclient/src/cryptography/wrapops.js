@@ -26,6 +26,7 @@ import {
   PARAM_IMPLEMENTATION_OPTION_B64,
   PARAM_IMPLEMENTATION_OPTION_PNG,
   PARAM_IMPLEMENTATION_ARTIFACT_FORMAT,
+  PP_PLATFORM_NICKNAME,
 } from '../parameters.js';
 
 import { ApiGetNonceFromServer, ApiSubmitAttestationTokensToServer } from '../network/networkApi.js';
@@ -33,7 +34,7 @@ import { ApiGetNonceFromServer, ApiSubmitAttestationTokensToServer } from '../ne
 import * as AppIntegrity from '../integrity/integrityapis.js';
 
 
-var warmupDone = false;
+//--var warmupDone = false;
 
 
 // We assume that Platform.OS has already been checked to be compatible
@@ -49,14 +50,15 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
   try {
     if (Platform.OS === 'android') {
 
-      if (warmupDone) {
-        LogMe(1, 'Android warmup was already done before');
-      } else {
+      //--//Even if we did warmup at startup, we need to do it now; otherwise the PP server will give a 'request too old', as it checks the freshness.
+      //--if (warmupDone) {
+      //--  LogMe(1, 'Android warmup was already done before');
+      //--} else {
         LogMe(1, 'Doing Android warmup');
         await AppIntegrity.DoWarmup(function () {}, function () {});
-        LogMe(1, 'Done doing Android warmup');
-        warmupDone = true;
-      }
+      //--  LogMe(1, 'Done doing Android warmup');
+      //--  warmupDone = true;
+      //--}
       
       apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
       //#*#apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
@@ -454,6 +456,7 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
      * I think it is because '' yields a string object, whereas "" yields a string object
      */
     //var newchunk1 = png.createChunkTyped(new String("ppPp"), ppPlainPictureObjectStr);
+    // This is for ppPp
     var newchunk1 = ( () => {
       switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
         case 's': 
@@ -464,9 +467,23 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
           throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
       }
     } )();
-    
+
+    // This is for ppPq
+    var newchunk2 = ( () => {
+      switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
+        case 's': 
+          return png.createChunk("ppPq", PP_PLATFORM_NICKNAME);
+        case 'b':
+          return png.createChunkTyped("ppPq", PP_PLATFORM_NICKNAME);
+        default:
+          throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
+      }
+    } )();
+
     //See: https://en.wikipedia.org/wiki/PNG
-    list.push(newchunk1);
+    list.push(newchunk1);  // Add our payload
+    list.push(newchunk2);  // Tag with our PP platform nickname, for the recipient to know which PP platform to use to unwrap the picure
+
 
     // Not necessary:
     //var newchunk2 = png.createChunk("ppPt", "Wrapped private picture");

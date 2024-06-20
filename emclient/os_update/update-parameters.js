@@ -23,11 +23,31 @@ export const PARAM_PP__SELECT_TIMEOUT_MS = 60*1000;
  */
 export const PARAM_PP__DISPLAY_TIMEOUT_MS = 1*1000;
 
+/**
+ * The nickname idetifying the PP platform that will be used to wrap pictures.
+ * This must correspond with the PP_PLATFORM_NICKNAME of your ppclient of choice.
+ */
+export const PARAM_PP__PLATFORM_NICKNAME_WRAPPING = "gen";
+
+/**
+ * The nicknames of accepted PP platforms for unwrapping pictures.
+ */
+export const PARAM_PP__PLATFORM_NICKNAME_UNWRAPPING_LIST = [
+    "gen",
+    "droid",
+    "ios",
+];
 
 /** 
- * URL for accessing the ppclient's screen for wrapping a private picture. With trailing /
+ * URL parts for wrapping and unwrapping pictures. 
  */
-export const PARAM_PP__SERVICE_WRAP_BASE_URL = 'pripro://wrapoperation/';
+export const PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART1 = 'pripro-';
+export const PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART2 = '://wrapoperation/';  // With trailing /
+
+/** 
+ * URL for accessing the ppclient's screen for unwrapping a private picture. You should not need to touch this.
+ */
+export const PARAM_PP__SERVICE_WRAP_BASE_URL = PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART1 + PARAM_PP__PLATFORM_NICKNAME_WRAPPING + PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART2;
 
 /** 
  * PP app name

@@ -16,17 +16,13 @@ export const PARAM_HTTPS_ENABLED = true;
 
 
 /**
- * A nickname idetifying your PP platform.
+ * A nickname idetifying your PP platform. This is the PP platform that you own.
  * Maximum 5 characters!!!!
- * Examples: ios, droid, gen
+ * 
+ * NOTE: THIS PARAMETER IS NOT NECESSARY HERE
+ * 
  */
-
-export const PP_PLATFORM_NICKNAME = "gen";
-
-/**
- * A name idetifying your PP platform.
- */
-export const PP_PLATFORM_NAME = "generic";
+//export const PP_PLATFORM_NICKNAME = "gen";
 
 
 export const PARAM_API_PORT = 3020;

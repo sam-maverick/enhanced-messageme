@@ -14,10 +14,27 @@ export const PARAM_DEBUG_MODE = true;
 export const PARAM_SHOW_EXTRA_INFO = false;
 
 /**
- * The name identifiers of the PP platform
+ * A nickname identifying your PP platform. This is the PP platform that you own.
+ * This has implications in the deep link structure, the DNS naming, and optionally the app name.
+ * 
+ * We strongly recommend a maximum of 5 characters. This is because you may want to use this as part of the 
+ * Android/iOS app name (as in my.domain.ppclient-gen), which has length limitations.
+ * Note that rfc2396 does not establish a length limit for the scheme part of URIs, and '-' is allowed.
+ * 
+ * Suggested examples: 'ios', 'droid', 'gen'.
+ * gen stands for Generic, droid stands for Android, and ios stands for iOS.
+ * 
+ * If you use a different PP nickname from the suggested ones, you will need to add it to the 
+ * PARAM_PP__PLATFORM_NICKNAME_UNWRAPPING_LIST parameter of update-parameters.js of your emclient.
+ * 
+ * Whenever you change your PP nickname, you must:
+ * - update the scheme in app.json with pripro-<nickname>
+ * - run the genkeys-https-commands.txt commands in your ppserver. Generating a new CA is not needed; only the 
+ *   part of generating a server certificate is required.
+ * - update PARAM_PP__PLATFORM_NICKNAME_WRAPPING in update-parameters.js in your emclient if you want it to use 
+ *   this PP platform for wrapping pictures, from now on.
  */
 export const PP_PLATFORM_NICKNAME = "gen";
-export const PP_PLATFORM_NAME = "generic";
 
 
 export const PARAM_SERVER_API_URL = 
@@ -42,7 +59,7 @@ export const PARAM_IOS_KEY_IDENTIFIER = {
  };
 
 // The custom scheme of our app, in lowercase
-export const PARAM_OUR_SCHEME = 'pripro';
+export const PARAM_OUR_SCHEME = 'pripro-' + PP_PLATFORM_NICKNAME;
 
 /** 
  * ppimagemarker app name

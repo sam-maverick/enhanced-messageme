@@ -5,7 +5,7 @@ import * as bodyParser from 'body-parser';
 import { AppModule } from './app.module';
 import ConnectDB from './middleware/database/index';
 
-import { PARAM_API_PORT, PP_PLATFORM_NICKNAME, PARAM_HTTPS_ENABLED } from './parameters';
+import { PARAM_API_PORT, PARAM_HTTPS_ENABLED } from './parameters';
 
 import * as fs from 'fs';
 

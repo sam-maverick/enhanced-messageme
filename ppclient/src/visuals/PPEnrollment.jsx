@@ -201,7 +201,7 @@ export const PPEnrollmentComponent = (props) => {
 
             if (Platform.OS === 'android') {
 
-                await AsyncAlert('Please go to the app settings in the system configuration and make sure that the Privacy Provider permission is granted for the ppclient app before continuing. Once verified, hit `Ok` to continue.', 'WARING');
+                await AsyncAlert('Please go now to the app settings in the system configuration and make sure that the Privacy Provider permission is granted for the ppclient app before continuing. Once verified, hit `Ok` to continue.', 'WARNING');
         
                 await DoWarmup(setAndroidWarmupStandardStatus, function () {})
                 .then( async (resultWarmup) => {
@@ -463,15 +463,11 @@ export const PPEnrollmentComponent = (props) => {
         return(
             <View>
                 <View style={styles.leftleft}>
-                    <Text>1. Mark as 'private' the pictures you want to protect, using the <Text style={styles.link} onPress={OpenImageMarkerApp}>ppimagemarker app</Text>.</Text>
+                    <Text>1. Mark as 'private' the pictures you want to protect, using the <Text style={styles.link} onPress={OpenImageMarkerApp}>ppimagemarker app</Text>, and establish their privacy policies.</Text>
                 </View>
                 <Text/>
                 <View style={styles.leftleft}>
-                    <Text>2. Go to the <Text style={styles.link} onPress={OpenSettingsTab}>Settings tab</Text> and configure your privacy policies.</Text>
-                </View>
-                <Text/>
-                <View style={styles.leftleft}>
-                    <Text>3. In your messaging app, pictures shared from the PrivatePics album will be protected by the Privacy Provider.</Text>
+                    <Text>2. In your messaging app, pictures shared from the PrivatePics album will be protected by your Privacy Provider.</Text>
                 </View>
             </View>
         );

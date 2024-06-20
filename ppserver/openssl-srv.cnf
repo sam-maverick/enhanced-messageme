@@ -101,7 +101,7 @@ req_extensions = v3_req # The extensions to add to a certificate request
 #organizationalUnitName		= Organizational Unit Name
 #organizationalUnitName_default	= Unspecified
 
-commonName			= Common Name (use ppserver-<ppnickname>.localnet)
+commonName			= Common Name (use ppserver-<ppnickname>.localnet where <ppnickname> is the PP_PLATFORM_NICKNAME you configured in parameters.js of your ppclient)
 commonName_max			= 64
 commonName_default		= ppserver-gen.localnet
 

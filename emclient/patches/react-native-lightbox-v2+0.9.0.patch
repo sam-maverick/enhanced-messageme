@@ -1,8 +1,8 @@
 diff --git a/node_modules/react-native-lightbox-v2/dist/Lightbox.js b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-index 68a2f83..8838b57 100644
+index 68a2f83..3aee487 100644
 --- a/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 +++ b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-@@ -2,6 +2,98 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
+@@ -2,6 +2,100 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
  import { Animated, TouchableHighlight, View, } from "react-native";
  import LightboxOverlay from "./LightboxOverlay";
  import { useNextTick } from "./hooks";
@@ -12,6 +12,8 @@ index 68a2f83..8838b57 100644
 +    PARAM_PP__DISPLAY_TIMEOUT_MS,
 +    PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME,
 +    PARAM_PP__SERVICE_WRAP_BASE_URL,
++    PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART1,
++    PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART2,
 +    PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY,
 +    PARAM_PP__PPCLIENT_ANDROID_NAME,
 +    PARAM_PP__APP_TMP_FOLDER_NAME,
@@ -101,7 +103,7 @@ index 68a2f83..8838b57 100644
  const noop = () => { };
  const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false, disabled = false, renderContent, renderHeader, didOpen = noop, onOpen = noop, willClose = noop, onClose = noop, onLongPress = noop, onLayout = noop, springConfig = { tension: 30, friction: 7 }, backgroundColor = "black", underlayColor, style, dragDismissThreshold = 150, children, modalProps = {}, ...rest }) => {
      const layoutOpacity = useRef(new Animated.Value(1));
-@@ -31,8 +123,198 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
+@@ -31,8 +125,215 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
              callback({ width, height, x: px, y: py });
          });
      };
@@ -113,6 +115,7 @@ index 68a2f83..8838b57 100644
 +
 +        // Checking if picture is a wrapped private picture or not
 +        let isWrappedPrivatePicture = false;
++        let PPplatformNickname = false;
 +        let contentsInsideEnvelope = false;
 +        let fileContentsOriginal;
 +        try {
@@ -128,8 +131,12 @@ index 68a2f83..8838b57 100644
 +            list.forEach(function (arrayItem) {
 +                if (arrayItem?.type === 'ppPp' && arrayItem?.data) {
 +                    UpdUtils.LogSys(LIBN, 1, 'Found ppPp chunk');
++                    contentsInsideEnvelope = JSON.parse(arrayItem.data);  // This holds the payload
++                }
++                if (arrayItem?.type === 'ppPq' && arrayItem?.data) {
++                    UpdUtils.LogSys(LIBN, 1, 'Found ppPq chunk');
 +                    isWrappedPrivatePicture = true;
-+                    contentsInsideEnvelope = JSON.parse(arrayItem.data);
++                    PPplatformNickname = arrayItem.data;  // This holds the PP platform nickname
 +                }
 +            });
 +
@@ -137,11 +144,19 @@ index 68a2f83..8838b57 100644
 +            UpdUtils.LogSys(LIBN, 1, 'Catched exception while checking if picture is a wrapped private picture or not: ' + exc.message);
 +        }
 +
-+        if (isWrappedPrivatePicture) {  // check if the file is a wrapped private picture, and if so unwrap it calling ppclient's deep link
++        if (isWrappedPrivatePicture) {  // check if the file is a wrapped private picture, and if so unwrap it calling its deep link
 +            UpdUtils.LogSys(LIBN, 1, 'Processing the display of a wrapped private picture');
 +            try {
 +                await tryAcquire(mutexPrivatePictureDisplay).runExclusive(async() => {  // tryAcquire => non-blocking; if mutex is busy it throws error
 +            
++                    if (PPplatformNickname===false) {
++                        throw Error('Found a ppPq chunk without a ppPp chunk.');
++                    }
++
++                    if ( ! PARAM_PP__PLATFORM_NICKNAME_UNWRAPPING_LIST.includes(PPplatformNickname)) {
++                        throw Error('The ppPq chunk indicates a PP platform nickname that is not in our allowed list.');
++                    }
++
 +                    UpdUtils.LogSys(LIBN, 1, 'mutexPrivatePictureDisplay acquired to begin operations');
 +
 +                    const documentDirectory = normalizeEndingSlash(FileSystem.documentDirectory);
@@ -149,7 +164,11 @@ index 68a2f83..8838b57 100644
 +                    // Prepare and launch deep link
 +            
 +                    // NOTE: Deep link params are only available in the EAS build
-+                    let URLofPPselectionService = new URL(PARAM_PP__SERVICE_WRAP_BASE_URL);
++                    let URLofPPselectionService = new URL(
++                        PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART1+
++                        PPplatformNickname+
++                        PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART2
++                    );
 +                    URLofPPselectionService.searchParams.append('callbackURL', PARAM_PP__APP_URL_SCHEME+'://'+PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME+'/');
 +                    PPreplyAuthenticationString = UpdUtils.GenerateRandomString(PARAM_PP__LENGTH_AUTH);
 +                    URLofPPselectionService.searchParams.append('authToken', PPreplyAuthenticationString);
