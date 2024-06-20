@@ -6,7 +6,7 @@ import * as Device from 'expo-device';
 
 // When set to true, the PP client app will wrap and attempt to unwrap private pictures even when not enrolled.
 // Useful when running the app from APK loaded via adb, and to check that protections work regardless of app logic.
-export const PARAM_DEBUG_MODE = true;
+export const PARAM_DEBUG_MODE = false;
 
 /** 
  * Show developer info in PPSettings tab

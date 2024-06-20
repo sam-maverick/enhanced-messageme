@@ -28,6 +28,6 @@ export const PARAM_IMAGES_DIRNAME = 'chatHistoryPictures';  // You shouldn't nee
 // Console logging. 0=disabled, 1=normal logging, 2=verbose debugging
 // NOTE: Setting this to anything other than 0 may significantly impact performance
 // NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
-// See: https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
+// Check: https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
 export const PARAM_LOGGING_LEVEL = 1;  // Change accordingly to your preference
 

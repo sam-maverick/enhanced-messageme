@@ -224,7 +224,7 @@ Edit the configuration files according to your needs and your environment:
 
 `ppimagemarker/src/parameters.js`
 
-You must also change the name, slug, package and bundleIdentifier of `ppclient/app.json` if you want to upload the app in the Android or Apple app repositories.
+You must also change the name, slug, package and bundleIdentifier of `ppclient/app.json`, and the PARAM_PP\__SERVICE_PLAYSTOREID and  PARAM_PP__SERVICE_IOSAPPID parameters in `emclient/os_update/update-parameters.js` if you want to upload the app in the Android or Apple app repositories.
 
 # 5. Installing MongoDB
 

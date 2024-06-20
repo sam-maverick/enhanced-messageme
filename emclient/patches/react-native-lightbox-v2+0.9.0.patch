@@ -1,8 +1,8 @@
 diff --git a/node_modules/react-native-lightbox-v2/dist/Lightbox.js b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-index 68a2f83..3aee487 100644
+index 68a2f83..61ae8c6 100644
 --- a/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 +++ b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-@@ -2,6 +2,100 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
+@@ -2,6 +2,101 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
  import { Animated, TouchableHighlight, View, } from "react-native";
  import LightboxOverlay from "./LightboxOverlay";
  import { useNextTick } from "./hooks";
@@ -14,6 +14,7 @@ index 68a2f83..3aee487 100644
 +    PARAM_PP__SERVICE_WRAP_BASE_URL,
 +    PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART1,
 +    PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART2,
++    PARAM_PP__PLATFORM_NICKNAME_UNWRAPPING_LIST,
 +    PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY,
 +    PARAM_PP__PPCLIENT_ANDROID_NAME,
 +    PARAM_PP__APP_TMP_FOLDER_NAME,
@@ -103,7 +104,7 @@ index 68a2f83..3aee487 100644
  const noop = () => { };
  const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false, disabled = false, renderContent, renderHeader, didOpen = noop, onOpen = noop, willClose = noop, onClose = noop, onLongPress = noop, onLayout = noop, springConfig = { tension: 30, friction: 7 }, backgroundColor = "black", underlayColor, style, dragDismissThreshold = 150, children, modalProps = {}, ...rest }) => {
      const layoutOpacity = useRef(new Animated.Value(1));
-@@ -31,8 +125,215 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
+@@ -31,8 +126,215 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
              callback({ width, height, x: px, y: py });
          });
      };
