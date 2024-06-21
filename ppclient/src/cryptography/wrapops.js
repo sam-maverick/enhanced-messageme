@@ -48,7 +48,18 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
   let apiresgetnonce1 = undefined;        
   //#*#let apiresgetnonce2 = undefined;        
   try {
+
+    /**
+     * Getting the nonce from the server also acts as a server connection test. If it fails, it will propagate the error, 
+     * and no warmup/attestation/assertion operations will be performed. Note that we request the nonce *before* the warmup, 
+     * in Android. This is necessary to avoid increasing security metrics when a user repeatedly attempts to open a private
+     * picture when there are network issues, as this could potentially cause false positives.
+     */
+
     if (Platform.OS === 'android') {
+      
+      apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
+      //#*#apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
 
       //--//Even if we did warmup at startup, we need to do it now; otherwise the PP server will give a 'request too old', as it checks the freshness.
       //--if (warmupDone) {
@@ -59,14 +70,12 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
       //--  LogMe(1, 'Done doing Android warmup');
       //--  warmupDone = true;
       //--}
-      
-      apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
-      //#*#apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
+
     } else {  // ios
         apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'ios', 'assertion');
     }
   } catch(error) {
-      const msg = 'Error when requesting nonce to the PP server. ';
+      const msg = 'Error when requesting nonce to the PP server or when warming up. ';
       LogMe(1, msg + error.stack);  // Network error
       return Promise.reject({message: msg + error.message});
   }
