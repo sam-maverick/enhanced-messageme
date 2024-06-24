@@ -166,9 +166,7 @@ You should now be fine to use Expo.
 
 # 3. Installing Node.js modules
 
-*NOTE: Do not use npm in ppclient nor in emclient !! Use yarn only!! This is because the resolutions directive in package.json is not supported in npm. We need that directive to fix the issue `cannot read property 'slice' of undefined` of react-native-quick-crypto. See https://github.com/margelo/react-native-quick-crypto/issues/242 for more info.*
-
-*NOTE: Do not use yarn in ppimagemarker. Use npm! Otherwise there is an issue with the image picker - it never finished loading in the UI.*
+*NOTE: Do not use npm in ppclient nor in emclient !! Use yarn only!! This is because the 'resolutions' directive in package.json is not supported in npm. We need that directive to fix the issue `cannot read property 'slice' of undefined` of react-native-quick-crypto. See https://github.com/margelo/react-native-quick-crypto/issues/242 for more info.*
 
 From the `emclient/` folder,
 
@@ -185,7 +183,7 @@ yarn install
 From the `ppimagemarker/` folder,
 
 ```
-npm install
+yarn install
 ```
 
 From the `emserver/` folder,
