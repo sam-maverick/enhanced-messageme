@@ -10,7 +10,9 @@ function myExec(command) {
 }
 
 // Clear screen
-myExec('clear');
+if (process.argv[2] !== 'ios') {
+  myExec('clear');
+}
 
 echo('NODE_PATH=' + env.NODE_PATH);
 echo('EAS_NO_VCS=' + env.EAS_NO_VCS);
@@ -38,8 +40,8 @@ if (process.argv[2] === 'bare' && artifactname === 'ppimagemarker') {
   exit(1);
 }*/
 
-if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'bare') {
-  echo('The first parameter is the build type, and must be either \'apk\', \'aab\', or \'bare\'.');
+if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'bare' && process.argv[2] !== 'ios') {
+  echo('The first parameter is the build type, and must be either \'apk\', \'aab\', \'ios\' or \'bare\'.');
   exit(1);
 }
 if (process.argv[3] !== 'major' && process.argv[3] !== 'minor' && process.argv[3] !== 'patch') {
@@ -52,13 +54,15 @@ echo('Running build: ' + process.argv[2] + ' on ' + appname);
 
 
 // For the user to check connected devices on-screen
-echo('Connected and recognized devices to the the ADB service:');
-myExec('adb devices');
-env.RESULT = error();
-if (env.RESULT.toString() !== 'null') {
-  echo('Aborting on ' + env.RESULT + ', command failed:');
-  echo('adb devices ...');
-  exit(1);
+if (process.argv[2] !== 'ios') {
+  echo('Connected and recognized devices to the the ADB service:');
+  myExec('adb devices');
+  env.RESULT = error();
+  if (env.RESULT.toString() !== 'null') {
+    echo('Aborting on ' + env.RESULT + ', command failed:');
+    echo('adb devices ...');
+    exit(1);
+  }
 }
 
 if (artifactname === 'ppclient') {
@@ -103,7 +107,7 @@ if (artifactname === 'ppclient') {
   }
 }
 
-if (process.argv[2] !== 'aab') {
+if (process.argv[2] !== 'aab' && process.argv[2] !== 'ios') {
   echo('Stopping any current app execution on the phone');
   myExec(`adb shell am force-stop ${appname}`);
 }
@@ -164,6 +168,15 @@ if (artifactname === 'ppclient') {
 
 
 echo('Running the build!');
+if (process.argv[2] === 'ios') {
+  myExec('eas build -p ios --profile preview --local');
+  env.RESULT = error();
+  if (env.RESULT.toString() !== 'null') {
+    echo('Aborting on ' + env.RESULT + ', command failed:');
+    echo('eas build ...');
+    exit(1);
+  }
+}
 if (process.argv[2] === 'aab') {
   myExec('eas build -p android --profile previewaab --local');
   env.RESULT = error();
