@@ -326,7 +326,7 @@ To prepare your environment for development builds, follow the steps explained i
 
 You will need a MacOS computer to compile the app for iOS.
 
-Following the [guide](https://docs.expo.dev/build-reference/local-builds/), you first need to install fastlane:
+According to this [guide](https://docs.expo.dev/build-reference/local-builds/), you first need to install fastlane:
 
 ```
 brew install fastlane
