@@ -128,9 +128,9 @@ require('./increment_version_app_json.js')(process.argv[3]);
 
 
 echo('Deleting android folder');
-rm('-r', './android/');
+rm('-rf', './android/');
 echo('Deleting ios folder');
-rm('-r', './ios/');
+rm('-rf', './ios/');
 
 
 echo('Prebuild cleanup');
@@ -169,7 +169,7 @@ if (artifactname === 'ppclient') {
 
 echo('Running the build!');
 if (process.argv[2] === 'ios') {
-  myExec('eas build -p ios --profile preview --local');
+  myExec('eas build -p ios --profile previewnosim --local');
   env.RESULT = error();
   if (env.RESULT.toString() !== 'null') {
     echo('Aborting on ' + env.RESULT + ', command failed:');

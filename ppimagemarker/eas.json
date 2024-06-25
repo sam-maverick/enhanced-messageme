@@ -12,6 +12,13 @@
         "buildConfiguration": "Debug"
       }
     },
+    "previewnosim": {
+      "ios": {
+        "simulator": false
+      },
+      "distribution": "internal",
+      "autoIncrement": true
+    },
     "preview": {
       "distribution": "internal",
       "autoIncrement": true

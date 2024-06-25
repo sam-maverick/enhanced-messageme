@@ -322,7 +322,21 @@ eas login
 
 To prepare your environment for development builds, follow the steps explained in the '<u>Install with adb</u>' section of the [Expo Go 'Build APKs for Android Emulators and devices' guide](https://docs.expo.dev/build-reference/apk/#install-with-adb).
 
-# 8. Deploying the apps
+# 8. Preparing the tools for the EAS build for iOS
+
+You will need a MacOS computer to compile the app for iOS.
+
+Following the [guide](https://docs.expo.dev/build-reference/local-builds/), you first need to install fastlane:
+
+```
+brew install fastlane
+```
+
+According to [this guide](https://docs.expo.dev/build/setup/), "*If you have not generated a provisioning profile and/or distribution certificate yet, you can let EAS CLI take care of that for you by signing into your Apple Developer Program account and following the prompts.*"
+
+When you try to build for the first time, you should be asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build).
+
+# 9. Deploying the apps
 
 ##### You will need to perform the steps below from the ppclient, ppimagemarker and emclient folders, separately:
 
@@ -338,17 +352,23 @@ For the development build, connect the phone to the computer and run:
 node ./build.js bare patch nosavepatches
 ```
 
-To generate the APK or AAB files for the production builds, run either:
+To generate the Android APK or AAB files for the production builds, run either:
 
 ```
 node ./build.js apk patch nosavepatches
 node ./build.js aab patch nosavepatches
 ```
 
-# 9. Acknowledgements
+To compile for iOS,
+
+`node ./build.js ios patch nosavepatches`
+
+[This guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories.
+
+# 10. Acknowledgements
 
 The project that gave rise to these results received the support of a fellowship from ”la Caixa” Foundation (ID 100010434). The fellowship code is LCF/BQ/DI22/11940036. This work was also supported by FCT through the LASIGE Research Unit (UIDB/00408/2020 and UIDP/00408/2020).
 
-# 10. License
+# 11. License
 
 This work is licensed under CC BY 4.0. See [LICENSE](LICENSE) for more details.

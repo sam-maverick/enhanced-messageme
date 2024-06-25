@@ -16,6 +16,13 @@
       "distribution": "internal",
       "autoIncrement": true
     },
+    "previewnosim": {
+      "ios": {
+        "simulator": false
+      },
+      "distribution": "internal",
+      "autoIncrement": true
+    },
     "previewaab": {
       "distribution": "internal",
       "autoIncrement": true,
