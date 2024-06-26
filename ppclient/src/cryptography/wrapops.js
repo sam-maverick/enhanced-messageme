@@ -39,9 +39,9 @@ import * as AppIntegrity from '../integrity/integrityapis.js';
 
 // We assume that Platform.OS has already been checked to be compatible
 export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
-  LogMe(1, 'RequestToDecryptThings() called');
+  LogMe(0, 'RequestToDecryptThings() called');
   LogMe(2, 'requestDataObject:'+JSON.stringify(requestDataObject));
-  LogMe(1, 'Requesting token(s) from server');
+  LogMe(0, 'Requesting token(s) from server');
 
   // GET NONCE(S)
 
@@ -58,21 +58,26 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
 
     if (Platform.OS === 'android') {
       
+      LogMe(0, 'Obtaining nonce from server');
       apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'standard');
+      LogMe(0, 'Nonce obtained');
       //#*#apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
 
       //--//Even if we did warmup at startup, we need to do it now; otherwise the PP server will give a 'request too old', as it checks the freshness.
       //--if (warmupDone) {
       //--  LogMe(1, 'Android warmup was already done before');
       //--} else {
-        LogMe(1, 'Doing Android warmup');
+        LogMe(0, 'Doing Android warmup');
         await AppIntegrity.DoWarmup(function () {}, function () {});
+        LogMe(0, 'Android warmup done');
       //--  LogMe(1, 'Done doing Android warmup');
       //--  warmupDone = true;
       //--}
 
     } else {  // ios
-        apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'ios', 'assertion');
+      LogMe(0, 'Obtaining nonce from server');
+      apiresgetnonce1 = await ApiGetNonceFromServer(myPPEcookie, 'ios', 'assertion');
+      LogMe(0, 'Nonce obtained');
     }
   } catch(error) {
       const msg = 'Error when requesting nonce to the PP server or when warming up. ';
@@ -110,7 +115,9 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
 
   if (Platform.OS === 'android') {
     try {
+      LogMe(0, 'Obtaining attestation token from API');
       attestationobject1 = await AppIntegrity.AndroidStandardRequest(apiresgetnonce1.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());
+      LogMe(0, 'Attestation token obtained');
     } catch(error) {
       return Promise.reject({message: 'Coult not prepare Android Standard attestation object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
     }  
@@ -122,7 +129,9 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
   } else {  // ios
     // We skip attestation because we can assume it has been done, as the device needs to achieve enrollment to reach this point
     try {
+      LogMe(0, 'Obtaining assertion token from API');
       attestationobject1 = await AppIntegrity.iosAppAssertRequest(PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, apiresgetnonce1.nonce);
+      LogMe(0, 'Assertion token obtained');
     } catch(error) {
       return Promise.reject({message: 'Coult not prepare iOS assertion object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
     }          
@@ -130,8 +139,8 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
 
   // SUBMIT TOKEN(S) TO OUR PP SERVER
 
-  LogMe(1, 'Submitting token(s) to PP server');
-  LogMe(1,'cookie:'+myPPEcookie);
+  LogMe(0, 'Submitting token(s) to PP server');
+  LogMe(1, 'cookie:'+myPPEcookie);
 
   let apiressubmitobject = undefined;
 
@@ -197,14 +206,14 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
 // It returns an object
 // In case of error/failure, it throws an Error. It is up to the calling code to catch it.
 export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
-  LogMe(1, 'UnwrapPicture() called');
+  LogMe(0, 'UnwrapPicture() called');
 
   // Unwrap (steganographically)
 
   let ppPpChunkFound = false;
   let ppPpChunkContents = {};
 
-  LogMe(1, 'Parsing PNG metadata');
+  LogMe(0, 'Parsing PNG metadata');
   let list = await ( async () => {
     switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
       case 's': 
@@ -251,6 +260,8 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
     throw new Error('ppPp chunk was not found or it did not contain data');
   } else {
 
+    LogMe(0, 'Metadata from PNG extracted');
+
     // Unwrap cryptographically
 
     // We assume that the device is already enrolled (it must be checked and it is checked by PPWrapOps.jsx)
@@ -266,7 +277,6 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       };
     } else {
       // STAGE3 & STAGE2
-      LogMe(1, 'UnwrapPicture(): Requesting PP server');
 
       // Make request to the PP server to decrypt stuff
       let replyObjectFromServer = await RequestToDecryptThings(
@@ -287,7 +297,7 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       LogMe(2, 'replyDataObjectFromServer: '+JSON.stringify(replyObjectFromServer));
 
       //STAGE1
-      LogMe(1, 'UnwrapPicture(): STAGE1');
+      LogMe(0, 'UnwrapPicture(): STAGE1');
       /*
       // Since the key is not a human password but random bits, we do not need to pbkdfify
       const pbkdf_algorithm = await EncodeFromB64ToBinary(ppPpChunkContents.stage1.pbkdf_algorithm).toString();
@@ -301,9 +311,13 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
         await EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.key_b64), 
         await EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.iv_b64)
       );
+      LogMe(0, 'UnwrapPicture(): STAGE1: writing');
       await cipher1.write(await EncodeFromB64ToBuffer(ppPpChunkContents.ciphertext));
+      LogMe(0, 'UnwrapPicture(): STAGE1: written');
       await cipher1.end();
+      LogMe(0, 'UnwrapPicture(): STAGE1: reading');
       const decrypted_picture = await cipher1.read();
+      LogMe(0, 'UnwrapPicture(): STAGE1: read');
 
       // Return the results
       returnObject = {
@@ -316,7 +330,7 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
     replyObjectFromServer = undefined;
     gc();  // Call garbage collector
 
-    LogMe(1, 'UnwrapPicture(): Finished');
+    LogMe(0, 'UnwrapPicture(): Finished');
     return returnObject;
   }
 }
@@ -327,7 +341,7 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
 // plainPicture is a picture content in base64 formatted String
 // It returns a base64 formatted String
 export async function WrapPicture (plainPicture, fileExt, myAccountData, privacyPoliciesObj) {
-    LogMe(1, 'WrapPicture() called');
+    LogMe(0, 'WrapPicture() called');
 
     // Wrap cryptographically
 
@@ -342,6 +356,7 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       });  
     } else {
       // STAGE1
+      LogMe(0, 'WrapPicture(): STAGE1');
       /*
       // Since the key is not a human password but random bits, we do not need to pbkdfify
       const pbkdf_algorithm = PARAM_PP__CRYPTO.stage1.pbkdf_algorithm;
@@ -353,43 +368,55 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       const stage1_key = Crypto.randomBytes(32);
       const stage1_iv = Crypto.randomBytes(16);
       const cipher1 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage1.encryption_algorithm, stage1_key, stage1_iv);
-      LogMe(1, 'WrapPicture(): STAGE1.5');
+      LogMe(0, 'WrapPicture(): STAGE1: writing');
       await cipher1.write(plainPicture);
-      LogMe(1, 'WrapPicture(): STAGE1.6');
+      LogMe(0, 'WrapPicture(): STAGE1: written');
       await cipher1.end();
+      LogMe(0, 'WrapPicture(): STAGE1: reading');
       const ciphertext_picture = await cipher1.read();
+      LogMe(0, 'WrapPicture(): STAGE1: read');
  
       // STAGE2
       LogMe(1, 'WrapPicture(): STAGE2');
       const stage2_key = Crypto.randomBytes(32);
       const stage2_iv = Crypto.randomBytes(16);
       const cipher2 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
+      LogMe(0, 'WrapPicture(): STAGE2: writing');
       await cipher2.write(JSON.stringify({
         encryption_algorithm: PARAM_PP__CRYPTO.stage1.encryption_algorithm,
         iv_b64: await EncodeFromArrayBufferToB64(stage1_iv.buffer),
         key_b64: await EncodeFromArrayBufferToB64(stage1_key.buffer),
       }));  // stage1 data
+      LogMe(0, 'WrapPicture(): STAGE2: written');
       await cipher2.end();
+      LogMe(0, 'WrapPicture(): STAGE2: reading');
       const ciphertext_stage1 = await cipher2.read();
+      LogMe(0, 'WrapPicture(): STAGE2: read');
 
       const myPictureId = Crypto.randomBytes(32);
       const cipher2b = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
+      LogMe(0, 'WrapPicture(): STAGE2b: writing');
       await cipher2b.write(JSON.stringify({
         privacyPolicies: privacyPoliciesObj,
         pictureId: await EncodeFromArrayBufferToB64(myPictureId.buffer),  // This must be kept secret from the recipient
       }));
+      LogMe(0, 'WrapPicture(): STAGE2b: written');
       await cipher2b.end();
+      LogMe(0, 'WrapPicture(): STAGE2b: reading');
       const ciphertext_to_server_data = await cipher2b.read();
+      LogMe(0, 'WrapPicture(): STAGE2b: read');
       LogMe(1, 'Encoded pictureId=' + await EncodeFromArrayBufferToB64(myPictureId.buffer));
 
       // STAGE3
       LogMe(1, 'WrapPicture(): STAGE3');
       const provider_pubkey = await EncodeFromB64ToBinary(require('../../bundled_files/json/rsa-pubkey-wrapping-ppclient.pem.json').data);
 
+      LogMe(0, 'WrapPicture(): STAGE3: publicEncrypt-ing');
       const encrypted_stage2_key = Crypto.publicEncrypt(
         Buffer.from(provider_pubkey), 
         stage2_key
       );
+      LogMe(0, 'WrapPicture(): STAGE3: publicEncrypt-ed');
 
       // Pack contents
 
@@ -431,11 +458,11 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
     //var sb64 = await FileSystem.readAsStringAsync(require('../../assets/custom/base_image_for_wrapping.png'), {encoding: 'base64'});
     //var s = await EncodeFromB64ToBinary(await LoadBaseImageAssetFileB64());
 
-    LogMe(1, 'WrapPicture(): Packaging metadata');
+    LogMe(0, 'WrapPicture(): Packaging metadata');
     const basedata = require('../../bundled_files/json/base_image_for_wrapping.png.json').data;
 
     // split
-    LogMe(1, 'WrapPicture(): splitChunk');
+    LogMe(0, 'WrapPicture(): splitChunk: Started');
     var list = await ( async () => {
       switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
         case 's': 
@@ -452,12 +479,14 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
           throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
       }
     } )();
+    LogMe(0, 'WrapPicture(): splitChunk: Finished');
     
     // append
-    LogMe(1, 'WrapPicture(): pop');
+    LogMe(0, 'WrapPicture(): pop: Started');
     var iend = list.pop(); // remove IEND
+    LogMe(0, 'WrapPicture(): pop: Finished');
 
-    LogMe(1, 'WrapPicture(): createChunk');
+    LogMe(0, 'WrapPicture(): ppPp createChunk: Started');
     /**
      * WARNING:
      * For png.createChunk(), you must use `new String('...')` for String literals!
@@ -476,8 +505,10 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
           throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
       }
     } )();
+    LogMe(0, 'WrapPicture(): ppPp createChunk: Finished');
 
     // This is for ppPq
+    LogMe(0, 'WrapPicture(): ppPq createChunk: Started');
     var newchunk2 = ( () => {
       switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
         case 's': 
@@ -488,11 +519,12 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
           throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
       }
     } )();
+    LogMe(0, 'WrapPicture(): ppPq createChunk: Finished');
 
     //See: https://en.wikipedia.org/wiki/PNG
+    LogMe(0, 'WrapPicture(): Pushing chunks');
     list.push(newchunk1);  // Add our payload
     list.push(newchunk2);  // Tag with our PP platform nickname, for the recipient to know which PP platform to use to unwrap the picure
-
 
     // Not necessary:
     //var newchunk2 = png.createChunk("ppPt", "Wrapped private picture");
@@ -500,6 +532,7 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
     //list.push(newchunk2);
 
     list.push(iend);
+    LogMe(0, 'WrapPicture(): Chunks pushed');
 
     LogMe(1, 'Printing list');
     for (i in list) {
@@ -508,7 +541,7 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
     }
 
     // join
-    LogMe(1, 'WrapPicture(): joinChunk');
+    LogMe(0, 'WrapPicture(): joinChunk: Started');
     var newpng = ( () => {
       switch ( PARAM_IMPLEMENTATION_OPTION_PNG ) {
         case 's': 
@@ -519,6 +552,7 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
           throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_OPTION_PNG: ' + PARAM_IMPLEMENTATION_OPTION_PNG);
       }
     } )();
+    LogMe(0, 'WrapPicture(): joinChunk: Finished');
     
     // save to file
     //fs.writeFileSync(outfile, newpng, 'binary');
@@ -545,7 +579,7 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
 
     LogMe(1, 'WrapPicture(): newpng_B64 end B64 encoding');
 
-    LogMe(1, 'WrapPicture(): Finished');
+    LogMe(0, 'WrapPicture(): Finished');
 
     return newpng_retval;
     

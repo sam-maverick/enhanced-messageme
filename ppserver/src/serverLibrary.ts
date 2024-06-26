@@ -2,13 +2,28 @@ import { PARAM_CHARSET_TOKENS, PARAM_LOGGING_LEVEL } from './parameters';
 
 import * as crypto from "crypto";
 
+const startDate = Date.now();
+
+
+export function FromTimeSpanToHumanReadableMs(lapseMs) {
+    const unitspart = Math.floor(lapseMs/1000);
+    const decimalpart = lapseMs - unitspart*1000;
+    const numofleadingzeros = 3;
+    const paddeddecimalpart = "0".repeat(numofleadingzeros).substring(0, numofleadingzeros - decimalpart.toString().length) + decimalpart;
+    return (unitspart + '.' + paddeddecimalpart);
+  }
+  
 
 export function LogMe(level: number, message: string) {
     if (level <= PARAM_LOGGING_LEVEL) {
-        console.log(message);
+        let HRspan = FromTimeSpanToHumanReadableMs(Date.now() - startDate);
+        const difflen = 3 - HRspan.length;
+        if (difflen>0) {
+          HRspan = ' '.repeat(difflen) + HRspan;
+        }
+        console.log(HRspan + ' (ppserver) '+ message);
     }
 }
-
 
 export function EncodeFromB64ToBuffer (str: string) {
     LogMe(1,'EncodeFromB64ToBuffer() called');

@@ -88,7 +88,7 @@ export class AttestationController {
   @Post('/submitAttestationTokenToServer')
   async submitAttestationTokenToServer(@Req() req) {
 
-    LogMe(1, 'Controller: attestations/submitAttestationTokenToServer');
+    LogMe(0, 'Controller: attestations/submitAttestationTokenToServer: Starting');
 
     LogMe(2, 'Request contents:');
     LogMe(2, JSON.stringify(req.body));
@@ -175,6 +175,8 @@ export class AttestationController {
     let i = 0;
 
     while (i < req.body.subrequests.length) {
+
+        LogMe(0, 'Processing subrequest #'+i+' ['+String(req.body?.subrequests[i]?.requestType)+']');
 
         const advicemsg = '\n\nUpdate your system and your PP client app, check that your device is not rooted/jailbroken, enable all security protections, and make sure you downloaded the app from the official store. Then try again.'; 
 
@@ -375,6 +377,8 @@ export class AttestationController {
         }
 
         i++;  // Check next subrequest
+
+        LogMe(0, 'Subrequest processed');
     }
     
     // All subrequests were successful
@@ -447,6 +451,7 @@ export class AttestationController {
             }
 
             // Success
+            LogMe(0, 'Controller: attestations/submitAttestationTokenToServer: Finished');
             return {
                 isSuccessful: true,
                 resultMessage: 'Successful',
@@ -474,7 +479,7 @@ export class AttestationController {
     @Post('/getNonceFromServer')
     async getNonceFromServer(@Req() req) {
 
-        LogMe(1, 'Controller: attestations/getNonceFromServer');
+        LogMe(0, 'Controller: attestations/getNonceFromServer: Starting');
 
         let resultVerifyRequest = checkRequestPlatformAndType(req.body.platformType, req.body.requestType);
         if ( ! resultVerifyRequest.result) {
@@ -557,6 +562,7 @@ export class AttestationController {
                 );
 
             if(updateResult) {
+                LogMe(0, 'Controller: attestations/getNonceFromServer: Finished');
                 return {
                     isSuccessful: true,
                     resultMessage: 'Nonce created successfully onto existing cookie.',

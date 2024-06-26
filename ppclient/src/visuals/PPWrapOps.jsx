@@ -220,6 +220,7 @@ export const PPWrapOpsComponent = (props) => {
         }
 
         if (props.route.path !== 'consumed') {
+            LogMe(0, 'Processing request in PPWrapOps.jsx');
             props.route.path = 'consumed';
 
             try {
@@ -241,6 +242,7 @@ export const PPWrapOpsComponent = (props) => {
                 // There is no need for releasing.
                 // See: https://www.npmjs.com/package/async-mutex
                 // Once the promise is resolved or rejected (or immediately after execution if an immediate value was returned), the mutex is released. runExclusive returns a promise that adopts the state of the function result.
+                LogMe(0, 'Finishing request in PPWrapOps.jsx');
             }
 
         }
@@ -435,7 +437,7 @@ export const PPWrapOpsComponent = (props) => {
 
         if (urlParams?.operationName === 'wrap') {
             try {
-                LogMe(1, '--------- DO STUFF: wrap ------------');
+                LogMe(0, '--------- DO STUFF: wrap ------------');
                 setOperationTitle('Wrapping your private picture...');
                 setScreenToShow('wrapop');
                 var_screenToShow='wrapop';
@@ -486,7 +488,7 @@ export const PPWrapOpsComponent = (props) => {
 
                     LogMe(1, 'Received Uri: '+urlParams.fileUri);
                     if (PARAM_DEBUG_MODE)  { setReceivedPlainImageFromSourceUri({uri: urlParams.fileUri}); }
-                    LogMe(1, 'Reading '+urlParams.fileUri);
+                    LogMe(0, 'Reading file');
     
                     // Neither RNFS ir FileSystem work because of
                     // https://docs.expo.dev/versions/latest/sdk/filesystem/#supported-uri-schemes
@@ -502,7 +504,7 @@ export const PPWrapOpsComponent = (props) => {
 
                     plainPrivatePictureContents = await ReadMyFileStream(urlParams.fileUri, 'base64');
                                         
-                    LogMe(1, 'Read');
+                    LogMe(0, 'File read');
                 } else {
                     plainPrivatePictureContents = SafeUrlDecodeForB64(urlParams.fileContents);
                 }
@@ -522,18 +524,16 @@ export const PPWrapOpsComponent = (props) => {
                 LogMe(1, 'plainPrivatePictureContents length: '+plainPrivatePictureContents.length);
                 if (PARAM_DEBUG_MODE)  { setReceivedPlainImageAsRead({uri: 'data:image/' + fileExt + ';base64,' + plainPrivatePictureContents}); }
     
-                LogMe(1, 'Wrapping');
                 wrappedPrivatePictureContents = await WrapPicture(plainPrivatePictureContents, fileExt, accountData.key, privacyPolicies);  // Do the magic on the picture
                 fileExt = 'png';
-                LogMe(1, 'Wrapped');
     
                 if (Platform.OS === 'android') {
-                    LogMe(1, 'Writing '+urlParams.fileUri);
+                    LogMe(0, 'Writing file');
                     // See: https://stackoverflow.com/questions/46278019/how-do-i-read-file-with-content-uri-in-react-native-on-android
     
                     await WriteMyFileStream(urlParams.fileUri, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT, false, wrappedPrivatePictureContents);
     
-                    LogMe(1, 'Written');
+                    LogMe(0, 'File written');
                     if (PARAM_DEBUG_MODE)  { setWrappedImageFromSourceUri({uri: urlParams.fileUri}); }
                     LogMe(1, 'UI updated');
     
@@ -543,7 +543,7 @@ export const PPWrapOpsComponent = (props) => {
                     ));
                 }
     
-                LogMe(2, '----- wrappedPrivatePictureContents: ' + await ToHexString(wrappedPrivatePictureContents));
+                //LogMe(2, '----- wrappedPrivatePictureContents: ' + await ToHexString(wrappedPrivatePictureContents));
                 LogMe(1,'wrappedPrivatePictureContents length: '+wrappedPrivatePictureContents.length);
                 if (PARAM_DEBUG_MODE)  { setWrappedImageData({ uri: 'data:image/' + fileExt + ';base64,' + 
                     ( PARAM_IMPLEMENTATION_ARTIFACT_FORMAT==='base64' ? wrappedPrivatePictureContents : await EncodeFromBinaryToB64(wrappedPrivatePictureContents) )
@@ -564,12 +564,13 @@ export const PPWrapOpsComponent = (props) => {
                 await ErrorAlertAsync(errormsg+' Press Ok to come back to your messaging app.', err);
                 setScreenToShow('jobcompleted');
                 var_screenToShow='jobcompleted';  
+                LogMe(1,'Finished processing; calling callback deeplink to return to the messaging app');
                 Linking.openURL(callbackURL.toString());    
             }
 
         } else if (urlParams?.operationName === 'unwrap') {
 
-            LogMe(1, '--------- DO STUFF: unwrap ------------');
+            LogMe(0, '--------- DO STUFF: unwrap ------------');
             setOperationTitle('Unwrapping your private picture...');
             setScreenToShow('unwrapop');
             var_screenToShow='unwrapop';
@@ -589,7 +590,7 @@ export const PPWrapOpsComponent = (props) => {
                     }
 
                     LogMe(1, 'Received Uri: '+urlParams.fileUri);
-                    LogMe(1, 'Reading '+urlParams.fileUri);
+                    LogMe(1, 'Reading file');
 
                     // Neither RNFS ir FileSystem work because of
                     // https://docs.expo.dev/versions/latest/sdk/filesystem/#supported-uri-schemes
@@ -600,7 +601,7 @@ export const PPWrapOpsComponent = (props) => {
 
                     wrappedPrivatePictureContents = await ReadMyFileStream(urlParams.fileUri, 'base64');
 
-                    LogMe(1, 'Read');
+                    LogMe(1, 'File read');
                 } else {
                     wrappedPrivatePictureContents = SafeUrlDecodeForB64(urlParams.fileContents);
                 }
@@ -653,13 +654,14 @@ export const PPWrapOpsComponent = (props) => {
 
                 setReturnFunction((previous) => {
                     return async () => {
-                        LogMe(1, 'returnFunction() called');
+                        LogMe(0, 'returnFunction() called');
                         callbackURL.searchParams.append('result', 'success');  
                         unwrappedDataObject = undefined;
                         LogMe(1, 'calling ClearWorkingData() on returnFunction() before Linking.openURL()');
                         await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});
                         setScreenToShow('jobcompleted');
                         var_screenToShow='jobcompleted';
+                        LogMe(0, 'Passing control back to the messaging app via deep link');
                         Linking.openURL(callbackURL.toString());  
                     }
                 });

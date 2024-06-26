@@ -33,7 +33,7 @@ index c93fc3c..8444f2c 100644
 -export default platformModule as ExponentFileSystemModule;
 +export default platformModule as ExponentFileSystemModule|ProxyNativeModule;
 diff --git a/node_modules/expo-file-system/src/FileSystem.ts b/node_modules/expo-file-system/src/FileSystem.ts
-index af2bda8..6dd1a64 100644
+index af2bda8..7ed5df1 100644
 --- a/node_modules/expo-file-system/src/FileSystem.ts
 +++ b/node_modules/expo-file-system/src/FileSystem.ts
 @@ -1,3 +1,35 @@
@@ -72,7 +72,7 @@ index af2bda8..6dd1a64 100644
  import { EventEmitter, Subscription, UnavailabilityError } from 'expo-modules-core';
  import { Platform } from 'react-native';
  import { v4 as uuidv4 } from 'uuid';
-@@ -34,6 +66,64 @@ if (!ExponentFileSystem) {
+@@ -34,6 +66,65 @@ if (!ExponentFileSystem) {
  // Prevent webpack from pruning this.
  const _unused = new EventEmitter(ExponentFileSystem); // eslint-disable-line
  
@@ -101,6 +101,7 @@ index af2bda8..6dd1a64 100644
 +    const URLofEvent = new URL(url);  // https://developer.mozilla.org/en-US/docs/Web/API/URL
 +
 +    if (URLofEvent.hostname === PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME) {
++      UpdUtils.LogSys(LIBN, 0, 'Control is returned to messaging app');
 +      if (URLofEvent.searchParams.get('authToken') === PPreplyAuthenticationString) {
 +        // Authentication successful
 +        if (URLofEvent.searchParams.get('result') !== 'success') {
@@ -137,7 +138,7 @@ index af2bda8..6dd1a64 100644
  function normalizeEndingSlash(p: string | null): string | null {
    if (p != null) {
      return p.replace(/\/*$/, '') + '/';
-@@ -85,7 +175,298 @@ export async function readAsStringAsync(
+@@ -85,7 +176,312 @@ export async function readAsStringAsync(
    if (!ExponentFileSystem.readAsStringAsync) {
      throw new UnavailabilityError('expo-file-system', 'readAsStringAsync');
    }
@@ -147,8 +148,8 @@ index af2bda8..6dd1a64 100644
 +  // I should also check that there is no other method in this module that allows to read the contents of a local file;
 +  // in particular I should check methods for downloading "remote" files, using file:/// hack
 +
-+  UpdUtils.LogSys(LIBN, 1, 'readAsStringAsync() called');
-+  
++  UpdUtils.LogSys(LIBN, 0, 'readAsStringAsync() called');
++
 +  // Checking if picture is marked as 'Private picture' or not
 +  let isPrivatePicture = false;
 +  let fileContentsOriginalB64 = '';
@@ -174,7 +175,7 @@ index af2bda8..6dd1a64 100644
 +      throw Error('Image extension '+fileExt+' is not supported. Only jpg/jpeg and tiff images are supported.');  
 +    }
 +    // Get exif data as object. jpegData must be a string that starts with "data:image/jpeg;base64,"(DataURL), "\xff\xd8", or "Exif".
-+    UpdUtils.LogSys(LIBN, 1, 'Loading file');
++    UpdUtils.LogSys(LIBN, 0, 'Reading file');
 +
 +    var dataUri = '';
 +    switch (PARAM_IMPLEMENTATION_FILE_READWRITE) {
@@ -204,7 +205,8 @@ index af2bda8..6dd1a64 100644
 +        throw new Error('Bug. Unrecognized option for PARAM_IMPLEMENTATION_FILE_READWRITE: '+PARAM_IMPLEMENTATION_FILE_READWRITE);
 +    }
 +
-+    UpdUtils.LogSys(LIBN, 1, 'Checking if picture is marked as private');
++    UpdUtils.LogSys(LIBN, 0, 'File loaded');
++    UpdUtils.LogSys(LIBN, 0, 'Checking if picture is marked as private');
 +
 +    switch (PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR) {
 +      case 'd':
@@ -235,7 +237,7 @@ index af2bda8..6dd1a64 100644
 +      default:
 +        throw new Error('Bug. Unrecognized option for PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR: ' + PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR);
 +    }
-+
++    UpdUtils.LogSys(LIBN, 0, 'Check done');
 +    
 +  } catch(exc) {
 +    UpdUtils.LogSys(LIBN, 1, exc.message);
@@ -243,7 +245,7 @@ index af2bda8..6dd1a64 100644
 +
 +
 +  if (isPrivatePicture) {  // package it calling ppclient's deep link
-+    UpdUtils.LogSys(LIBN, 1, 'Processing a private picture *.*.*.*.');
++    UpdUtils.LogSys(LIBN, 0, 'Processing a private picture *.*.*.*.');
 +    try {
 +      return await tryAcquire(mutexPrivatePictureAccess).runExclusive(async() => {  // tryAcquire => non-blocking; if mutex is busy it throws error
 +
@@ -290,7 +292,7 @@ index af2bda8..6dd1a64 100644
 +          UpdUtils.LogSys(LIBN, 1, 'fileContentsOriginalB64 length: '+fileContentsOriginalB64.length);
 +          PPandroidTmpFilePath = documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
 +
-+          UpdUtils.LogSys(LIBN, 1, 'Writing tmp file');
++          UpdUtils.LogSys(LIBN, 0, 'Writing tmp file');
 +          switch ( PARAM_IMPLEMENTATION_FILE_COPY ) {
 +            case 'b': 
 +              await writeAsStringAsync(PPandroidTmpFilePath, fileContentsOriginalB64, {encoding: 'base64'});
@@ -301,7 +303,7 @@ index af2bda8..6dd1a64 100644
 +            default:
 +              throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_FILE_COPY: ' + PARAM_IMPLEMENTATION_FILE_COPY);
 +          }
-+          UpdUtils.LogSys(LIBN, 1, 'Tmp file written');
++          UpdUtils.LogSys(LIBN, 0, 'Tmp file written');
 +          UpdUtils.LogSys(LIBN, 1, 'Full path is: '+PPandroidTmpFilePath);
 +  
 +          PPandroidContentUri = await FileProvider.getUriForFile(PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY, PPandroidTmpFilePath)
@@ -346,6 +348,8 @@ index af2bda8..6dd1a64 100644
 +        );
 +        */    
 +    
++        UpdUtils.LogSys(LIBN, 0, 'URL call to open is about to be triggered');
++
 +        await AppLink.maybeOpenURL(
 +          URLofPPselectionService.toString(), 
 +          { 
@@ -358,26 +362,32 @@ index af2bda8..6dd1a64 100644
 +        );  // We need to pass a callback function to show the Alert, because Alerts are not shown when the app is in the background.
 +            // See: https://stackoverflow.com/questions/74662876/popup-alert-dialog-in-react-native-android-app-while-app-is-not-in-foreground
 +            
-+        UpdUtils.LogSys(LIBN, 1, 'URL call to open has completed');
++        UpdUtils.LogSys(LIBN, 0, 'URL call to open has completed');
 +        UpdUtils.LogSys(LIBN, 2, 'URL is: ' + URLofPPselectionService.toString());
 +
 +        
 +        // (*) Blocks execution; awaits processing of PP app
 +        await mutexPrivatePictureAccess.acquire();
++        UpdUtils.LogSys(LIBN, 0, 'Execution is resumed');
 +
 +
 +        if (PPselectorResult == null) {
 +          // Do stuff
 +          UpdUtils.LogSys(LIBN, 1, 'Returning from FileSystem.ts hook on a private picture'); 
++          let retcontents;
++          UpdUtils.LogSys(LIBN, 0, 'Reading file');
 +          if (Platform.OS === 'android') {
-+            return await ExponentFileSystem?.readAsStringAsync(PPandroidTmpFilePath, options);
++            retcontents = await ExponentFileSystem?.readAsStringAsync(PPandroidTmpFilePath, options);
 +          } else {
 +            if (options.encoding == 'base64') {
-+              return UpdUtils.SafeUrlDecodeForB64(PPiosFileContents);
++              retcontents = await UpdUtils.SafeUrlDecodeForB64(PPiosFileContents);
 +            } else {
-+              return UpdUtils.SafeUrlDecodeForB64(UpdUtils.EncodeFromB64ToUTF8(PPiosFileContents));
++              retcontents = await UpdUtils.SafeUrlDecodeForB64(UpdUtils.EncodeFromB64ToUTF8(PPiosFileContents));
 +            } 
 +          }
++          UpdUtils.LogSys(LIBN, 0, 'File loaded');
++          UpdUtils.LogSys(LIBN, 0, 'Returning');
++          return retcontents;
 +        } else {
 +          throw PPselectorResult;
 +        }
@@ -396,6 +406,7 @@ index af2bda8..6dd1a64 100644
 +        throw e;
 +      }
 +    } finally {
++      UpdUtils.LogSys(LIBN, 0, 'Finally clause');
 +      // NOTE: if we do
 +      //  const mutexRelease = await mutexPrivatePictureAccess.acquire();
 +      // then,
@@ -424,12 +435,16 @@ index af2bda8..6dd1a64 100644
 +      } catch (err) {
 +        UpdUtils.LogSys(LIBN, 1, 'Error when cleaning up after picture read: '+err.stack); 
 +      }     
++      UpdUtils.LogSys(LIBN, 0, 'End of: Finally clause');
 +
 +    }
 +  } else {  // It is not a private picture
-+    UpdUtils.LogSys(LIBN, 1, 'Processing a NON-private picture *.*.*.*.');
-+    UpdUtils.LogSys(LIBN, 1, 'Returning from FileSystem.ts hook on a non-private picture'); 
-+    return await ExponentFileSystem.readAsStringAsync(fileUri, options);
++    UpdUtils.LogSys(LIBN, 0, 'Processing a NON-private picture *.*.*.*.');
++    UpdUtils.LogSys(LIBN, 0, 'Reading file');
++    let retvalnonprivate = await ExponentFileSystem.readAsStringAsync(fileUri, options);
++    UpdUtils.LogSys(LIBN, 0, 'File loaded');
++    UpdUtils.LogSys(LIBN, 0, 'Returning');
++    return retvalnonprivate;
 +  }
 +
 +

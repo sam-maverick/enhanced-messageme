@@ -145,71 +145,93 @@ export async function WriteMyFileStream (path, mode, append, data) {
 
 export function SafeUrlEncodeForB64 (s) {  // s is supposed to be in base64 format
   //Inspired in: https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
-  return s
+  LogMe(0,'SafeUrlEncodeForB64() called');
+  retval = s
   .replaceAll('+','-')
   .replaceAll('/','_')
   .replaceAll('=','.')
   ;
+  LogMe(0,'SafeUrlEncodeForB64() finished');
+  return retval;
 }
 
 export function SafeUrlDecodeForB64 (s) {  //
-  return s
+  LogMe(0,'SafeUrlDecodeForB64() called');
+  retval = s
   .replaceAll('-','+')
   .replaceAll('_','/')
   .replaceAll('.','=')
   ;  // reverse URL-safe formatting for base64
+  LogMe(0,'SafeUrlDecodeForB64() finished');
+  return retval;
 }
 
 
 export async function EncodeFromB64ToBuffer (str) {
-  LogMe(1,'EncodeFromB64ToBuffer() called');
-  return Buffer.from(str, 'base64');  // Returns a Buffer
+  LogMe(0,'EncodeFromB64ToBuffer() called');
+  retval = Buffer.from(str, 'base64');
+  LogMe(0,'EncodeFromB64ToBuffer() finished');
+  return retval;  // Returns a Buffer
 }
 
 export async function EncodeFromBufferToB64 (buff) {
-  LogMe(1,'EncodeFromBufferToB64() called');
-  return buff.toString('base64');
+  LogMe(0,'EncodeFromBufferToB64() called');
+  retval = buff.toString('base64');
+  LogMe(0,'EncodeFromBufferToB64() finished');
+  return retval;
 }
 
 export async function EncodeFromStringToB64 (str) {  //*
-  LogMe(1,'EncodeFromStringToB64() called');
-  return RNQB64.btoa(str);
+  LogMe(0,'EncodeFromStringToB64() called');
+  retval = RNQB64.btoa(str);
+  LogMe(0,'EncodeFromStringToB64() finished');
+  return retval;
 }
 
 export async function EncodeFromArrayBufferToB64 (ab) {  //*
-  LogMe(1,'EncodeFromArrayBufferToB64() called');
-  return RNQB64.btoa_ab(ab);
+  LogMe(0,'EncodeFromArrayBufferToB64() called');
+  retval = RNQB64.btoa_ab(ab);
+  LogMe(0,'EncodeFromArrayBufferToB64() finished');
+  return retval;
 }
 
 export async function EncodeFromB64ToBinary (str) {  // Affected by caveat: https://nodejs.org/api/crypto.html#using-strings-as-inputs-to-cryptographic-apis
-  LogMe(1,'EncodeFromB64ToBinary() called');
+  LogMe(0,'EncodeFromB64ToBinary() called');
   /*
   return Buffer.from(str, 'base64').toString('binary');  // Returns a String
   */
-  return await base64.decode(str);
+  retval = await base64.decode(str);
+  LogMe(0,'EncodeFromB64ToBinary() finished');
+  return retval;
 }
 
 export async function EncodeFromBinaryToB64 (str) {
-  LogMe(1,'EncodeFromBinaryToB64() called');
+  LogMe(0,'EncodeFromBinaryToB64() called');
   /*
   LogMe(1,'EncodeFromBinaryToB64(): buffering');
   const buffervalue = Buffer.from(str, 'binary');
   LogMe(1,'EncodeFromBinaryToB64(): toString');
   return buffervalue.toString('base64');  // Returns a String
   */
-  return await base64.encode(str);
+  retval = await base64.encode(str);
+  LogMe(0,'EncodeFromBinaryToB64() finished');
+  return retval;
   // Don't do that - it doesn't work!
   //return str.toString('base64');  // Returns a String
 }
 
 export async function EncodeFromB64ToUTF8 (str) {
-  LogMe(1,'EncodeFromB64ToUTF8() called');
-  return Buffer.from(str, 'base64').toString('utf8');  // Returns a String
+  LogMe(0,'EncodeFromB64ToUTF8() called');
+  retval = Buffer.from(str, 'base64').toString('utf8');
+  LogMe(0,'EncodeFromB64ToUTF8() finished');
+  return retval;  // Returns a String
 }
 
 export async function EncodeFromUTF8ToB64 (str) {
-  LogMe(1,'EncodeFromUTF8ToB64() called');
-  return Buffer.from(str, 'utf8').toString('base64');  // Returns a String
+  LogMe(0,'EncodeFromUTF8ToB64() called');
+  retval = Buffer.from(str, 'utf8').toString('base64');
+  LogMe(0,'EncodeFromUTF8ToB64() finished');
+  return retval;  // Returns a String
 }
 
 

@@ -31,12 +31,13 @@ export const PARAM_API_PORT = 3020;
 export const PARAM_DATABASE_URL = "mongodb://127.0.0.1:27017/ppmessagemedb";
 
 /**
- * Console logging. 0=disabled, 1=normal logging, 2=verbose debugging
+ * Console logging.
+ * -1= disabled, 0=performance metrics, 1=normal logging, 2=verbose debugging
  * NOTE: Setting this to anything other than 0 may significantly impact performance
  * IMPORTANT NOTE: Setting this to 2 bridges error messages directly from libraries (such as the spic-library-custom),
  * which can potentially contain sensitive data.
  */
-export const PARAM_LOGGING_LEVEL = 2;    // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 0;    // Change accordingly to your preference
 
 /**
  * According to https://developer.android.com/google/play/integrity/classic

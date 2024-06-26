@@ -11,35 +11,42 @@ import { PARAM_LOGGING_LEVEL } from '../parameters';
  */
 export async function CheckPlayIntegrity(token, nonce_truth, checkMode, requestType) {
 
-        let attestcheckerlibrary = await import('server-side-app-integrity-check');
+    LogMe(0, 'CheckPlayIntegrity(): Started');
 
-        // get decrypted token
-        let decryptedToken = undefined;
-        try {
-            decryptedToken = await attestcheckerlibrary.decryptPlayIntegrity(token, checkMode);
-        } catch(e)  {
-            LogMe(1, e);
-            if (PARAM_LOGGING_LEVEL>=2) {
-                return {status: "error", message: e.message};
-            } else {
-                return {status: "error", message: 'An exception has occurred when processing the token. Contact support for them to check server logs.'};
-            }
+    let attestcheckerlibrary = await import('server-side-app-integrity-check');
+
+    // get decrypted token
+    let decryptedToken = undefined;
+    try {
+        LogMe(0, 'CheckPlayIntegrity(): Decrypting token');
+        decryptedToken = await attestcheckerlibrary.decryptPlayIntegrity(token, checkMode);
+        LogMe(0, 'CheckPlayIntegrity(): Token decrypted');
+    } catch(e)  {
+        LogMe(1, e);
+        if (PARAM_LOGGING_LEVEL>=2) {
+            return {status: "error", message: e.message};
+        } else {
+            return {status: "error", message: 'An exception has occurred when processing the token. Contact support for them to check server logs.'};
         }
+    }
 
-        LogMe(2, 'Decrypted token is: '+JSON.stringify(decryptedToken));
+    LogMe(2, 'Decrypted token is: '+JSON.stringify(decryptedToken));
 
-        let attestationresult = undefined;
-        try {
-            attestationresult = attestcheckerlibrary.verifyPlayIntegrity(decryptedToken, nonce_truth, requestType);
-        } catch(e)  {
-            LogMe(1, e);
-            if (PARAM_LOGGING_LEVEL>=2) {
-                return {status: "error", message: e.message};
-            } else {
-                return {status: "error", message: 'An exception has occurred when processing the token. Contact support for them to check server logs.'};
-            }
+    let attestationresult = undefined;
+    try {
+        LogMe(0, 'CheckPlayIntegrity(): Verifying token');
+        attestationresult = attestcheckerlibrary.verifyPlayIntegrity(decryptedToken, nonce_truth, requestType);
+        LogMe(0, 'CheckPlayIntegrity(): Token verified');
+    } catch(e)  {
+        LogMe(1, e);
+        if (PARAM_LOGGING_LEVEL>=2) {
+            return {status: "error", message: e.message};
+        } else {
+            return {status: "error", message: 'An exception has occurred when processing the token. Contact support for them to check server logs.'};
         }
+    }
 
-        // send attestation result
-        return attestationresult;
+    // send attestation result
+    LogMe(0, 'CheckPlayIntegrity(): Finished');
+    return attestationresult;
 }

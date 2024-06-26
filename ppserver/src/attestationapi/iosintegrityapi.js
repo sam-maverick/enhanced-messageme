@@ -14,53 +14,53 @@ import { verifyAttestation, verifyAssertion } from 'appattest-checker-node';
  */
 export async function CheckAppAttestation(token, nonce_truth, keyId) {
 
-        LogMe(1, 'Called CheckAppAttestation');
-        LogMe(2, '  Token is: '+JSON.stringify(token));
-        LogMe(2, '  Nonce_truth: '+nonce_truth);
-        LogMe(2, '  KeyId: '+keyId);
+    LogMe(1, 'Called CheckAppAttestation');
+    LogMe(2, '  Token is: '+JSON.stringify(token));
+    LogMe(2, '  Nonce_truth: '+nonce_truth);
+    LogMe(2, '  KeyId: '+keyId);
 
-        try {
+    try {
 
-                const result = await verifyAttestation(
-                    {
-                      appId: IOS_TEAM_ID + '.' + IOS_BUNDLE_ID,
-                      developmentEnv: IOS_IS_DEVELOPMENT_ENVIRONMENT,
-                    },  // appInfo
-                    keyId,
-                    nonce_truth,
-                    token
-                );
+            const result = await verifyAttestation(
+                {
+                    appId: IOS_TEAM_ID + '.' + IOS_BUNDLE_ID,
+                    developmentEnv: IOS_IS_DEVELOPMENT_ENVIRONMENT,
+                },  // appInfo
+                keyId,
+                nonce_truth,
+                token
+            );
 
-                if ('verifyError' in result) {
-                    // Return error to app.
-                    // It should not use the generated keys for assertion.
-                    LogMe(1, 'iOS attestation failed: '+result.errorMessage);
-                    return {status: 'fail', message: result.errorMessage, publicKeyPem: '', receipt: ''};
-                } else {
-
-                    // Note: Attestations do not contain security metrics
-                    // https://developer.apple.com/documentation/devicecheck/assessing-fraud-risk
-                
-                    // Return success to app.
-                    // It can use the generated keys for request assertion.
-                    LogMe(1, 'iOS attestation succeeded.');
-                    LogMe(2, 'Public key: '+result.publicKeyPem);
-                    return {
-                        status: 'success', 
-                        message: 'Attestation warmup successful.', 
-                        publicKeyPem: result.publicKeyPem,
-                        receipt: result.receipt,
-                    };
-                }                  
-
-        } catch(e)  {
-            LogMe(1, e);
-            if (PARAM_LOGGING_LEVEL>=2) {
-                return {status: 'error', message: e.message, publicKeyPem: '', receipt: ''};
+            if ('verifyError' in result) {
+                // Return error to app.
+                // It should not use the generated keys for assertion.
+                LogMe(1, 'iOS attestation failed: '+result.errorMessage);
+                return {status: 'fail', message: result.errorMessage, publicKeyPem: '', receipt: ''};
             } else {
-                return {status: 'error', message: 'An exception has occurred when processing the attestation of the token. Check server logs.', publicKeyPem: '', receipt: ''};
-            }
+
+                // Note: Attestations do not contain security metrics
+                // https://developer.apple.com/documentation/devicecheck/assessing-fraud-risk
+            
+                // Return success to app.
+                // It can use the generated keys for request assertion.
+                LogMe(1, 'iOS attestation succeeded.');
+                LogMe(2, 'Public key: '+result.publicKeyPem);
+                return {
+                    status: 'success', 
+                    message: 'Attestation warmup successful.', 
+                    publicKeyPem: result.publicKeyPem,
+                    receipt: result.receipt,
+                };
+            }                  
+
+    } catch(e)  {
+        LogMe(1, e);
+        if (PARAM_LOGGING_LEVEL>=2) {
+            return {status: 'error', message: e.message, publicKeyPem: '', receipt: ''};
+        } else {
+            return {status: 'error', message: 'An exception has occurred when processing the attestation of the token. Check server logs.', publicKeyPem: '', receipt: ''};
         }
+    }
 
 }
 
@@ -74,7 +74,7 @@ export async function CheckAppAttestation(token, nonce_truth, keyId) {
  */
 export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, iosSignCount) {
 
-    LogMe(1, 'Called CheckAppAssertion');
+    LogMe(0, 'CheckAppAssertion(): Started');
     LogMe(2, '  Token is: '+JSON.stringify(token));
     LogMe(2, '  Nonce_truth: '+nonce_truth);
     LogMe(2, '  record: '+JSON.stringify(record));
@@ -83,12 +83,14 @@ export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, ios
 
         // Check that challenge in request matches challenge issued by server
 
+        LogMe(0, 'CheckAppAssertion(): Verifying assertion');
         const result = await verifyAssertion(
             nonce_truth,
             iosPublicKeyPem,
             IOS_TEAM_ID + '.' + IOS_BUNDLE_ID,
             token
         );
+        LogMe(0, 'CheckAppAssertion(): Assertion verified');
         if ('verifyError' in result) {
             // Request cannot be trusted!
             // Fail request from app (e.g. return HTTP 401 equivalent)
@@ -110,6 +112,7 @@ export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, ios
             return {status: 'fail', message: 'Security issue; signCount exceeds the last seen value by too far', iosSignCount: undefined};
         } else {
             // Otherwise request can be trusted and continue processing as usual.
+            LogMe(0, 'CheckAppAssertion(): Finished');
             return {status: 'success', message: 'Assertion successful.', iosSignCount: result.signCount};
         }
 

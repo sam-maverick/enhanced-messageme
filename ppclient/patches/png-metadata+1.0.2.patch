@@ -1,5 +1,5 @@
 diff --git a/node_modules/png-metadata/lib/png-metadata.js b/node_modules/png-metadata/lib/png-metadata.js
-index 806a95a..dd3092d 100644
+index 806a95a..fb03514 100644
 --- a/node_modules/png-metadata/lib/png-metadata.js
 +++ b/node_modules/png-metadata/lib/png-metadata.js
 @@ -1,10 +1,16 @@
@@ -260,7 +260,7 @@ index 806a95a..dd3092d 100644
  metadata.itos = itos;
  function itos(v, size) {
    var a = [];
-@@ -112,10 +318,48 @@ function ToUInt32(x) {
+@@ -112,10 +318,49 @@ function ToUInt32(x) {
  }
  
  function crc32(str) {
@@ -268,7 +268,7 @@ index 806a95a..dd3092d 100644
 -  var crc = 0 ^ (-1);
 -  for (var i = 0; i < str.length; i++) {
 -    crc = (crc >>> 8) ^ hexTable[(crc ^ str.charCodeAt(i)) & 0xFF];
-+  MyUtils.LogSys(LIBN, 1, 'crc32 called');
++  MyUtils.LogSys(LIBN, 0, 'crc32 called');
 +  switch ( PARAM_IMPLEMENTATION_OPTION_CRC32 ) {
 +    case 'n':
 +      MyUtils.LogSys(LIBN, 1, 'crc32 NI started');
@@ -279,6 +279,7 @@ index 806a95a..dd3092d 100644
 +      }
 +      const retvalni = (crc ^ (-1)) >>> 0;
 +      MyUtils.LogSys(LIBN, 1, 'crc32 NI finished');
++      MyUtils.LogSys(LIBN, 0, 'crc32 ended');
 +      return retvalni;
 +    case 't':
 +      MyUtils.LogSys(LIBN, 1, 'crc32 turbo started');

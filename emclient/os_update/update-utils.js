@@ -15,19 +15,25 @@ export function LogSys (a,b,c) {
 
 export function SafeUrlEncodeForB64 (s) {  // s is supposed to be in base64 format
   //https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
-  return s
+  LogSys(LIBN, 0,'SafeUrlEncodeForB64() called');
+  retval = s
   .replaceAll('+','-')
   .replaceAll('/','_')
   .replaceAll('=','.')
   ;
+  LogSys(LIBN, 0,'SafeUrlEncodeForB64() finished');
+  return retval;
 }
 
 export function SafeUrlDecodeForB64 (s) {  //
-  return s
+  LogSys(LIBN, 0,'SafeUrlDecodeForB64() called');
+  retval = s
   .replaceAll('-','+')
   .replaceAll('_','/')
   .replaceAll('.','=')
   ;  // reverse URL-safe formatting for base64
+  LogSys(LIBN, 0,'SafeUrlDecodeForB64() finished');
+  return retval
 }
 
 export async function ReadFileAsArrayBuffer(file) {
@@ -64,28 +70,38 @@ export function IsValidImageExtensionAndContentType (myextension) {
 }
 
 export function EncodeFromB64ToBinary (str) {
-    LogSys(LIBN, 1,'EncodeFromB64ToBinary() called');
-    return Buffer.from(str, 'base64').toString('binary');
+    LogSys(LIBN, 0,'EncodeFromB64ToBinary() called');
+    retval = Buffer.from(str, 'base64').toString('binary');
+    LogSys(LIBN, 0,'EncodeFromB64ToBinary() finished');
+    return retval;
 }
   
 export function EncodeFromBinaryToB64 (str) {
-    LogSys(LIBN, 1,'EncodeFromBinaryToB64() called');
-    return Buffer.from(str, 'binary').toString('base64');
+    LogSys(LIBN, 0,'EncodeFromBinaryToB64() called');
+    retval = Buffer.from(str, 'binary').toString('base64');
+    LogSys(LIBN, 0,'EncodeFromBinaryToB64() finished');
+    return retval;
 }
   
 export function EncodeFromB64ToUTF8 (str) {
-    LogSys(LIBN, 1,'EncodeFromB64ToUTF8() called');
-    return Buffer.from(str, 'base64').toString('utf8');
+    LogSys(LIBN, 0,'EncodeFromB64ToUTF8() called');
+    retval = Buffer.from(str, 'base64').toString('utf8');
+    LogSys(LIBN, 0,'EncodeFromB64ToUTF8() finished');
+    return retval;
 }
   
 export function EncodeFromUTF8ToB64 (str) {
-    LogSys(LIBN, 1,'EncodeFromUTF8ToB64() called');
-    return Buffer.from(str, 'utf8').toString('base64');
+    LogSys(LIBN, 0,'EncodeFromUTF8ToB64() called');
+    retval = Buffer.from(str, 'utf8').toString('base64');
+    LogSys(LIBN, 0,'EncodeFromUTF8ToB64() finished');
+    return retval;
 }
 
 export async function EncodeFromArrayBufferToB64 (ab) {  //*
-  LogMe(1,'EncodeFromArrayBufferToB64() called');
-  return RNQB64.btoa_ab(ab);
+  LogMe(0,'EncodeFromArrayBufferToB64() called');
+  retval = RNQB64.btoa_ab(ab);
+  LogMe(0,'EncodeFromArrayBufferToB64() finished');
+  return retval;
 }
 
 export const AsyncAlert = async (message) => new Promise((resolve) => {
