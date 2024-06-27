@@ -62,7 +62,7 @@ import { PPEnrollmentComponent } from './PPEnrollment.jsx';
 import { PPFinishedComponent } from './PPFinished.jsx';
 import { CountdownComponent } from './Countdown.jsx';
 
-import { PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT } from '../parameters.js';
+import { PARAM_SCREENSHOTS_ALLOWED, PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT } from '../parameters.js';
 
 import { WrapPicture, UnwrapPicture } from '../cryptography/wrapops.js';
 
@@ -115,7 +115,10 @@ export const PPWrapOpsComponent = (props) => {
             // Do stuff
             LogMe(1, 'useEffect of PPWrapOps invocation');  
   
-            disallowScreenshot(true);
+            if ( ! PARAM_SCREENSHOTS_ALLOWED) {
+                disallowScreenshot(true);
+            }
+            
 
             const subscription = AppState.addEventListener('change', async (nextAppState) => {
                 // NOTE: our AppState events are not triggered when running on the bare workflow

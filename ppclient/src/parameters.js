@@ -4,15 +4,23 @@
 
 import * as Device from 'expo-device';
 
-// When set to true,
-//   - the PP client app will wrap and attempt to unwrap private pictures even when not enrolled.
-//   - the PP client app will attempt to enroll even if on a DEV environment.
-// Useful when running the app from APK loaded via adb, and to check that protections work regardless of app logic.
-export const PARAM_DEBUG_MODE = true;
+/**
+ * When set to true,
+ * - the PP client app will wrap and attempt to unwrap private pictures even when not enrolled.
+ * - the PP client app will attempt to enroll even if on a DEV environment.
+ * Useful when running the app from APK loaded via adb, and to check that protections work regardless of app logic.
+ */ 
+export const PARAM_DEBUG_MODE = false;
+
+/**
+ * The name tells it all.
+ * In a production environment, this should be set to false.
+ */
+export const PARAM_SCREENSHOTS_ALLOWED = false;
 
 /** 
  * Show developer info in PPSettings tab
-*/
+ */
 export const PARAM_SHOW_EXTRA_INFO = false;
 
 /**
@@ -45,12 +53,14 @@ export const PARAM_SERVER_API_URL =
 '.localnet' + 
 ':3020'; // Change port if needed
 
-// Console logging.
-// -1=disabled, 0=performance metrics, 1=normal logging, 2=verbose debugging
-// NOTE: Setting this to anything other than 0 may significantly impact performance
-// NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
-// See:
-// https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
+/**
+ *  Console logging.
+ * -1=disabled, 0=performance metrics, 1=normal logging, 2=verbose debugging
+ * NOTE: Setting this to anything other than 0 may significantly impact performance
+ * NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
+ * See:
+ * https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
+ */
 export const PARAM_LOGGING_LEVEL = 0;  // Change accordingly to your preference
 
 export const PARAM_GOOGLE_CLOUD_PROJECT_NUMBER = 48509944813;

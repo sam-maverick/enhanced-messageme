@@ -5,7 +5,7 @@
 // NOTE: Setting this to anything other than 0 may significantly impact performance
 // NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
 // https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
-export const PARAM_LOGGING_LEVEL = 1;  // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 0;  // Change accordingly to your preference
 
 /**
  * Timeout after which a the private picture selection will give error if no aswer is received from the pp client app.

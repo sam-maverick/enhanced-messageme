@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-lightbox-v2/dist/Lightbox.js b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-index 68a2f83..4f418c8 100644
+index 68a2f83..02d0158 100644
 --- a/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 +++ b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 @@ -2,6 +2,101 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
@@ -193,7 +193,7 @@ index 68a2f83..4f418c8 100644
 +                        UpdUtils.LogSys(LIBN, 1, 'Creating dir '+PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
 +                        // Create dir for exchanging files with PP client, if it does not exist
 +                        try {
-+                            await makeDirectoryAsync(documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME);
++                            await FileSystem.makeDirectoryAsync(documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME);
 +                        }
 +                        // Ignored -- Directory already exists
 +                        // We can't distinguish between 'directory already exists' and other types of errors
@@ -209,8 +209,8 @@ index 68a2f83..4f418c8 100644
 +                        // Prepare temporary image file with wrapped contents
 +                        //UTF8 encoded strings cannot represent arbitrary binary values
 +                        //https://docs.snowflake.com/en/sql-reference/binary-input-output
-+                        PPandroidTmpFilePath = '';
 +                        PPandroidTmpFilePath = documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
++                        UpdUtils.LogSys(LIBN, 1, 'PPandroidTmpFilePath='+PPandroidTmpFilePath);
 +                        /**
 +                         * We need to copy the wrapped image file onto a temporary file in a specific directory. 
 +                         * This is because we have set permissions over what directories can contain files that 

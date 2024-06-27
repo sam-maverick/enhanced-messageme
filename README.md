@@ -365,6 +365,8 @@ To compile for iOS,
 
 [This guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories.
 
+**IMPORTANT: Always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order).**
+
 # 10. Acknowledgements
 
 The project that gave rise to these results received the support of a fellowship from ”la Caixa” Foundation (ID 100010434). The fellowship code is LCF/BQ/DI22/11940036. This work was also supported by FCT through the LASIGE Research Unit (UIDB/00408/2020 and UIDP/00408/2020).
