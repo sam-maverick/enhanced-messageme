@@ -8,9 +8,10 @@ import * as Device from 'expo-device';
  * When set to true,
  * - the PP client app will wrap and attempt to unwrap private pictures even when not enrolled.
  * - the PP client app will attempt to enroll even if on a DEV environment.
- * Useful when running the app from APK loaded via adb, and to check that protections work regardless of app logic.
+ * Useful to check that protections work regardless of app logic, and to allow users to send private pictures even
+ * if their phones are rooted/jailbroken.
  */ 
-export const PARAM_DEBUG_MODE = false;
+export const PARAM_DEBUG_MODE = true;
 
 /**
  * The name tells it all.
