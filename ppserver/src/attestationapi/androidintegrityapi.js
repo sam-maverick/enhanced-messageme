@@ -1,6 +1,12 @@
 import { LogMe } from '../serverLibrary';
 import { PARAM_LOGGING_LEVEL } from '../parameters';
 
+var attestcheckerlibrary;
+
+
+export async function Initialize() {
+    attestcheckerlibrary = await import('server-side-app-integrity-check');
+}
 
 /**
  * Android check Endpoint.
@@ -13,7 +19,7 @@ export async function CheckPlayIntegrity(token, nonce_truth, checkMode, requestT
 
     LogMe(0, 'CheckPlayIntegrity(): Started');
 
-    let attestcheckerlibrary = await import('server-side-app-integrity-check');
+    //var attestcheckerlibrary = await import('server-side-app-integrity-check');
 
     // get decrypted token
     let decryptedToken = undefined;
@@ -22,7 +28,7 @@ export async function CheckPlayIntegrity(token, nonce_truth, checkMode, requestT
         decryptedToken = await attestcheckerlibrary.decryptPlayIntegrity(token, checkMode);
         LogMe(0, 'CheckPlayIntegrity(): Token decrypted');
     } catch(e)  {
-        LogMe(1, e);
+        LogMe(1, e.message);
         if (PARAM_LOGGING_LEVEL>=2) {
             return {status: "error", message: e.message};
         } else {
@@ -38,7 +44,7 @@ export async function CheckPlayIntegrity(token, nonce_truth, checkMode, requestT
         attestationresult = attestcheckerlibrary.verifyPlayIntegrity(decryptedToken, nonce_truth, requestType);
         LogMe(0, 'CheckPlayIntegrity(): Token verified');
     } catch(e)  {
-        LogMe(1, e);
+        LogMe(1, e.message);
         if (PARAM_LOGGING_LEVEL>=2) {
             return {status: "error", message: e.message};
         } else {

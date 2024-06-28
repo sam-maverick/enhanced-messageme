@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import * as bodyParser from 'body-parser';
-
+import * as androidintegrityapi from './attestationapi/androidintegrityapi';
 
 import { AppModule } from './app.module';
 import ConnectDB from './middleware/database/index';
@@ -10,6 +10,8 @@ import { PARAM_API_PORT, PARAM_HTTPS_ENABLED } from './parameters';
 import * as fs from 'fs';
 
 async function bootstart() {
+
+    await androidintegrityapi.Initialize();
 
     if ( ! PARAM_HTTPS_ENABLED) {
         console.log();
