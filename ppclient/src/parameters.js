@@ -7,7 +7,7 @@ import * as Device from 'expo-device';
 /**
  * When set to true,
  * - the PP client app will wrap and attempt to unwrap private pictures even when not enrolled.
- * - the PP client app will attempt to enroll even if on a DEV environment.
+ * - the PP client app will attempt to enroll even if on a DEV environment (e.g., emulator).
  * Useful to check that protections work regardless of app logic, and to allow users to send private pictures even
  * if their phones are rooted/jailbroken.
  */ 
