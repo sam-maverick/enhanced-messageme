@@ -306,11 +306,13 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       const salt = ...
       const key = Crypto.pbkdf2Sync(password, salt, pbkdf_iterations, 32, pbkdf_algorithm);
       */
+      LogMe(0, 'UnwrapPicture(): STAGE1: creating createDecipheriv');
       const cipher1 = Crypto.createDecipheriv(
         replyObjectFromServer.replyDataObject.stage1.encryption_algorithm, 
         await EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.key_b64), 
         await EncodeFromB64ToBuffer(replyObjectFromServer.replyDataObject.stage1.iv_b64)
       );
+      LogMe(0, 'UnwrapPicture(): STAGE1: createDecipheriv created');
       LogMe(0, 'UnwrapPicture(): STAGE1: writing');
       await cipher1.write(await EncodeFromB64ToBuffer(ppPpChunkContents.ciphertext));
       LogMe(0, 'UnwrapPicture(): STAGE1: written');
@@ -367,7 +369,9 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       */
       const stage1_key = Crypto.randomBytes(32);
       const stage1_iv = Crypto.randomBytes(16);
+      LogMe(0, 'UnwrapPicture(): STAGE1: creating createCipheriv');
       const cipher1 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage1.encryption_algorithm, stage1_key, stage1_iv);
+      LogMe(0, 'UnwrapPicture(): STAGE1: createCipheriv created');
       LogMe(0, 'WrapPicture(): STAGE1: writing');
       await cipher1.write(plainPicture);
       LogMe(0, 'WrapPicture(): STAGE1: written');
@@ -380,7 +384,9 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       LogMe(1, 'WrapPicture(): STAGE2');
       const stage2_key = Crypto.randomBytes(32);
       const stage2_iv = Crypto.randomBytes(16);
+      LogMe(0, 'UnwrapPicture(): STAGE2: creating createCipheriv');
       const cipher2 = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
+      LogMe(0, 'UnwrapPicture(): STAGE2: createCipheriv created');
       LogMe(0, 'WrapPicture(): STAGE2: writing');
       await cipher2.write(JSON.stringify({
         encryption_algorithm: PARAM_PP__CRYPTO.stage1.encryption_algorithm,
@@ -394,7 +400,9 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       LogMe(0, 'WrapPicture(): STAGE2: read');
 
       const myPictureId = Crypto.randomBytes(32);
+      LogMe(0, 'UnwrapPicture(): STAGE2b: creating createCipheriv');
       const cipher2b = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
+      LogMe(0, 'UnwrapPicture(): STAGE2b: createCipheriv created');
       LogMe(0, 'WrapPicture(): STAGE2b: writing');
       await cipher2b.write(JSON.stringify({
         privacyPolicies: privacyPoliciesObj,

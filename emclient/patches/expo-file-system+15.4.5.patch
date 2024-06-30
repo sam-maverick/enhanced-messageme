@@ -33,7 +33,7 @@ index c93fc3c..8444f2c 100644
 -export default platformModule as ExponentFileSystemModule;
 +export default platformModule as ExponentFileSystemModule|ProxyNativeModule;
 diff --git a/node_modules/expo-file-system/src/FileSystem.ts b/node_modules/expo-file-system/src/FileSystem.ts
-index af2bda8..8909364 100644
+index af2bda8..d73183f 100644
 --- a/node_modules/expo-file-system/src/FileSystem.ts
 +++ b/node_modules/expo-file-system/src/FileSystem.ts
 @@ -1,3 +1,35 @@
@@ -321,6 +321,7 @@ index af2bda8..8909364 100644
 +
 +          // iOS ---------------------------------------------------------------------------
 +
++          UpdUtils.LogSys(LIBN, 0, 'Preparing URL');
 +          URLofPPselectionService.searchParams.append('fileContents', UpdUtils.SafeUrlEncodeForB64(
 +            ( async () => {
 +              switch ( PARAM_IMPLEMENTATION_FILE_READWRITE ) {
@@ -333,6 +334,7 @@ index af2bda8..8909364 100644
 +              }
 +            } )()
 +          ));
++          UpdUtils.LogSys(LIBN, 0, 'URL prepared');
 +
 +        } else {
 +
@@ -368,11 +370,9 @@ index af2bda8..8909364 100644
 +        UpdUtils.LogSys(LIBN, 0, 'URL call to open has completed');
 +        UpdUtils.LogSys(LIBN, 2, 'URL is: ' + URLofPPselectionService.toString());
 +
-+        
 +        // (*) Blocks execution; awaits processing of PP app
 +        await mutexPrivatePictureAccess.acquire();
 +        UpdUtils.LogSys(LIBN, 0, 'Execution is resumed');
-+
 +
 +        if (PPselectorResult == null) {
 +          // Do stuff

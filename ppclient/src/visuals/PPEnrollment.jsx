@@ -24,7 +24,7 @@ import {
     PARAM_PP__IMAGEMARKER_IOSAPPSTORELOCALE,
     PARAM_PP__IMAGEMARKER_PLAYSTOREID,
     PARAM_PP__IMAGEMARKER_URL,
-    PARAM_DEBUG_MODE,
+    PARAM_OVERRIDE_MODE,
     PARAM_SHOW_EXTRA_INFO_IN_SETTINGS,
  } from '../parameters.js';
 
@@ -179,14 +179,14 @@ export const PPEnrollmentComponent = (props) => {
         try {
 
             // Unless stated explicitly by our custom build parameter, we do not allow debug/emulated environments
-            if ( (! PARAM_DEBUG_MODE) && (! Device.isDevice) ) {
+            if (( ! PARAM_OVERRIDE_MODE) && (! Device.isDevice) ) {
                 LogMe(1, 'Emulator detected');
                 await SetAttempted(true);
                 await ErrorAlertAsync('Running on an emulator is not allowed in production');
                 return;
             }
  
-            if ( (! PARAM_DEBUG_MODE) && __DEV__) { 
+            if (( ! PARAM_OVERRIDE_MODE) && __DEV__) { 
                 LogMe(1, 'Debugging detected');
                 await SetAttempted(true);
                 await ErrorAlertAsync('Running with debugging enabled is not allowed in production');

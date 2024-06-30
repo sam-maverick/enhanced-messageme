@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-lightbox-v2/dist/Lightbox.js b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
-index 68a2f83..56d82d1 100644
+index 68a2f83..1f83245 100644
 --- a/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 +++ b/node_modules/react-native-lightbox-v2/dist/Lightbox.js
 @@ -2,6 +2,101 @@ import React, { useRef, useState, cloneElement, Children, isValidElement, } from
@@ -104,7 +104,7 @@ index 68a2f83..56d82d1 100644
  const noop = () => { };
  const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false, disabled = false, renderContent, renderHeader, didOpen = noop, onOpen = noop, willClose = noop, onClose = noop, onLongPress = noop, onLayout = noop, springConfig = { tension: 30, friction: 7 }, backgroundColor = "black", underlayColor, style, dragDismissThreshold = 150, children, modalProps = {}, ...rest }) => {
      const layoutOpacity = useRef(new Animated.Value(1));
-@@ -31,8 +126,238 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
+@@ -31,8 +126,243 @@ const Lightbox = ({ activeProps, swipeToDismiss = true, useNativeDriver = false,
              callback({ width, height, x: px, y: py });
          });
      };
@@ -120,8 +120,9 @@ index 68a2f83..56d82d1 100644
 +        let contentsInsideEnvelope = false;
 +        let fileContentsOriginal;
 +
-+        let fileinfo = await FileSystem.getInfoAsync(children.props.source.uri, {size: true});
-+        UpdUtils.LogSys(LIBN, 0, 'Wrapped File size, in bytes: ' + fileinfo.size);
++        // Uncomment this block only if necessary, as it incurs in 0.1 ms overhead
++        //let fileinfo = await FileSystem.getInfoAsync(children.props.source.uri, {size: true});
++        //UpdUtils.LogSys(LIBN, 0, 'Wrapped File size, in bytes: ' + fileinfo.size);
 +
 +        try {
 + 
@@ -156,6 +157,7 @@ index 68a2f83..56d82d1 100644
 +            UpdUtils.LogSys(LIBN, 0, 'We have a wrapped private picture *.*.*.*.');
 +            try {
 +                await tryAcquire(mutexPrivatePictureDisplay).runExclusive(async() => {  // tryAcquire => non-blocking; if mutex is busy it throws error
++                    UpdUtils.LogSys(LIBN, 0, 'mutexPrivatePictureDisplay acquired to begin operations');
 +            
 +                    if (PPplatformNickname===false) {
 +                        throw Error('Found a ppPq chunk without a ppPp chunk.');
@@ -164,8 +166,6 @@ index 68a2f83..56d82d1 100644
 +                    if ( ! PARAM_PP__PLATFORM_NICKNAME_UNWRAPPING_LIST.includes(PPplatformNickname)) {
 +                        throw Error('The ppPq chunk indicates a PP platform nickname that is not in our allowed list.');
 +                    }
-+
-+                    UpdUtils.LogSys(LIBN, 1, 'mutexPrivatePictureDisplay acquired to begin operations');
 +
 +                    const documentDirectory = normalizeEndingSlash(FileSystem.documentDirectory);
 +
@@ -194,7 +194,7 @@ index 68a2f83..56d82d1 100644
 +            
 +                        // ANDROID ---------------------------------------------------------------------------
 +
-+                        UpdUtils.LogSys(LIBN, 1, 'Creating dir '+PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
++                        UpdUtils.LogSys(LIBN, 0, 'Creating dir '+PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
 +                        // Create dir for exchanging files with PP client, if it does not exist
 +                        try {
 +                            await FileSystem.makeDirectoryAsync(documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME);
@@ -206,6 +206,7 @@ index 68a2f83..56d82d1 100644
 +                          UpdUtils.LogSys(LIBN, 1, 'Ignoring error');
 +                          UpdUtils.LogSys(LIBN, 2, err?.stack);
 +                        }
++                        UpdUtils.LogSys(LIBN, 0, 'Done creating dir');
 +              
 +                        UpdUtils.LogSys(LIBN, 2, 'fileContentsOriginal: '+fileContentsOriginal);
 +                        UpdUtils.LogSys(LIBN, 1, 'fileContentsOriginal length: '+fileContentsOriginal.length);
@@ -225,20 +226,24 @@ index 68a2f83..56d82d1 100644
 +                         * folder. Once the ppclient has finished displaying the private picture, the Finally 
 +                         * clause below will be in charge of deleting the temporary file.
 +                         */
++                        UpdUtils.LogSys(LIBN, 0, 'Writing file');
 +                        await FileSystem.writeAsStringAsync(PPandroidTmpFilePath, fileContentsOriginal, {encoding: 'base64'});
++                        UpdUtils.LogSys(LIBN, 0, 'File written');
 +                        UpdUtils.LogSys(LIBN, 1, 'Full path is: '+PPandroidTmpFilePath);
 +
 +                        PPandroidContentUri = await FileProvider.getUriForFile(PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY, PPandroidTmpFilePath);
-+                        UpdUtils.LogSys(LIBN, 1, 'FileProvider contentUri: ' + PPandroidContentUri);
++                        UpdUtils.LogSys(LIBN, 0, 'FileProvider contentUri: ' + PPandroidContentUri);
 +                        await FileProvider.grantUriPermissionR(PARAM_PP__PPCLIENT_ANDROID_NAME, PPandroidContentUri);
-+                        UpdUtils.LogSys(LIBN, 1, 'FileProvider R permission granted');
++                        UpdUtils.LogSys(LIBN, 0, 'FileProvider R permission granted');
 +                        URLofPPselectionService.searchParams.append('fileUri', PPandroidContentUri);
 +                
 +                    } else if (Platform.OS === 'ios') {
 +            
 +                        // iOS ---------------------------------------------------------------------------
 +            
++                        UpdUtils.LogSys(LIBN, 0, 'Preparing URL');
 +                        URLofPPselectionService.searchParams.append('fileContents', UpdUtils.SafeUrlEncodeForB64(fileContentsOriginal));
++                        UpdUtils.LogSys(LIBN, 0, 'URL prepared');
 +            
 +                    } else {
 +            

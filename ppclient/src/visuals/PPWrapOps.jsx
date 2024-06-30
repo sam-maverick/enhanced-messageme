@@ -62,7 +62,7 @@ import { PPEnrollmentComponent } from './PPEnrollment.jsx';
 import { PPFinishedComponent } from './PPFinished.jsx';
 import { CountdownComponent } from './Countdown.jsx';
 
-import { PARAM_SCREENSHOTS_ALLOWED, PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT } from '../parameters.js';
+import { PARAM_SCREENSHOTS_ALLOWED, PARAM_OUR_SCHEME, PARAM_DEBUG_MODE, PARAM_OVERRIDE_MODE, PARAM_PP__PROCESSING_TIMEOUT_MS, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT } from '../parameters.js';
 
 import { WrapPicture, UnwrapPicture } from '../cryptography/wrapops.js';
 
@@ -227,12 +227,13 @@ export const PPWrapOpsComponent = (props) => {
             props.route.path = 'consumed';
 
             try {
-                LogMe(1, 'Trying to acquire mutex');  // For added security, we force to process requests serially
+                LogMe(0, 'Trying to acquire mutex');  // For added security, we force to process requests serially
                 await mutexPPclientAccess.runExclusive(async() => {  // blocking call; if mutex is busy it waits
                     // tasks
-                    LogMe(1, 'Mutex acquired; request will be processed now'); 
+                    LogMe(0, 'Mutex acquired; request will be processed now'); 
                     await ProcessUrlRequest(props.route.params);  // await omitted as it is the last command
                 });
+                LogMe(0, 'Mutex released');
             } catch (e) {
                 if (e === E_TIMEOUT) {
                     LogMe(1, 'mutexPPclientAccess released by timeout'); 
@@ -413,14 +414,14 @@ export const PPWrapOpsComponent = (props) => {
         }
 
         let errormsgoncheck = '';
-        if ((!PARAM_DEBUG_MODE) && (accountData.key.enrollmentCompleted !== true) ) {
+        if (( ! PARAM_OVERRIDE_MODE) && (accountData.key.enrollmentCompleted !== true) ) {
             errormsgoncheck = 'Ooops. This device has not been able to complete the enrollment. Is your device rooted/jailbroken? Check that you downloaded the app via the official store, and that you have all security protections enabled.';
         }
         // Unless stated explicitly by our custom build parameter, we do not allow debug/emulated environments
-        if ((! PARAM_DEBUG_MODE) && (! Device.isDevice) ) {
+        if (( ! PARAM_OVERRIDE_MODE) && (! Device.isDevice) ) {
             errormsgoncheck = 'Running on an emulator is not allowed in production.';
         }
-        if ((! PARAM_DEBUG_MODE) && __DEV__ ) {
+        if (( ! PARAM_OVERRIDE_MODE) && __DEV__ ) {
             errormsgoncheck = 'Running with debugging enabled is not allowed in production.';
         }
 
@@ -533,10 +534,9 @@ export const PPWrapOpsComponent = (props) => {
                 if (Platform.OS === 'android') {
                     LogMe(0, 'Writing file');
                     // See: https://stackoverflow.com/questions/46278019/how-do-i-read-file-with-content-uri-in-react-native-on-android
-    
                     await WriteMyFileStream(urlParams.fileUri, PARAM_IMPLEMENTATION_ARTIFACT_FORMAT, false, wrappedPrivatePictureContents);
-    
                     LogMe(0, 'File written');
+
                     if (PARAM_DEBUG_MODE)  { setWrappedImageFromSourceUri({uri: urlParams.fileUri}); }
                     LogMe(1, 'UI updated');
     
@@ -593,7 +593,7 @@ export const PPWrapOpsComponent = (props) => {
                     }
 
                     LogMe(1, 'Received Uri: '+urlParams.fileUri);
-                    LogMe(1, 'Reading file');
+                    LogMe(0, 'Reading file');
 
                     // Neither RNFS ir FileSystem work because of
                     // https://docs.expo.dev/versions/latest/sdk/filesystem/#supported-uri-schemes
@@ -604,7 +604,7 @@ export const PPWrapOpsComponent = (props) => {
 
                     wrappedPrivatePictureContents = await ReadMyFileStream(urlParams.fileUri, 'base64');
 
-                    LogMe(1, 'File read');
+                    LogMe(0, 'File read');
                 } else {
                     wrappedPrivatePictureContents = SafeUrlDecodeForB64(urlParams.fileContents);
                 }
@@ -835,7 +835,7 @@ export const PPWrapOpsComponent = (props) => {
                         </ReactNativeZoomableView>
                     </View>
 
-                        { /*<ExtraInfoComponent/> */ }
+                        <ExtraInfoComponent/>
     
                 </View>
             );    
@@ -894,7 +894,7 @@ export const PPWrapOpsComponent = (props) => {
                             alt="Placeholder for: Loading..."
                         />
 
-                        { /*<ExtraInfoComponent/> */ }
+                        <ExtraInfoComponent/>
 
                     </View>
                     <View style={styles.leftleft}>
