@@ -257,7 +257,7 @@ export const PPWrapOpsComponent = (props) => {
      * @param {mode} options : mode can be 'partial' or 'full'
      */
     async function ClearWorkingData(options) {
-        LogMe(1, 'ClearWorkingData() called with option: '+JSON.stringify(options));
+        LogMe(0, 'ClearWorkingData() called with option: '+JSON.stringify(options));
 
         // Clear timer from previous image(s), for the cases where app is minimized before timer expiration.
         if (options?.mode==='full') {
@@ -267,8 +267,10 @@ export const PPWrapOpsComponent = (props) => {
         }
 
         if (options?.mode==='full' || options?.mode==='partial') {
+            LogMe(0, 'ClearWorkingData(): setState visuals started');
             setRequestedUrlParams({});
             setPrivatePictureContents(blankimage);
+            LogMe(0, 'ClearWorkingData(): setState visuals finished');
             if (Platform.OS === 'android' && options.androidContentUri) {
                 LogMe(1, 'ClearWorkingData(): Clearing Android FileProvider permissions');
                 await FileProvider.revokeUriPermissionR(options.androidContentUri);  // Empirically, we have cheched that can do this from the consumer app
@@ -277,6 +279,7 @@ export const PPWrapOpsComponent = (props) => {
         }
 
         if (options?.mode==='full') {
+            LogMe(0, 'ClearWorkingData(): setState visuals started');
             setShowPrivatePicture(false);
             var_showPrivatePicture=false;
             setTimerExpired(false);
@@ -289,15 +292,20 @@ export const PPWrapOpsComponent = (props) => {
                     return async () => {};
                 }
             );            
+            LogMe(0, 'ClearWorkingData(): setState visuals finished');
         }
 
         if (options?.mode==='full' || options?.mode==='partial') {
+            LogMe(0, 'ClearWorkingData(): gc() started');
             gc();  // Call garbage collector
+            LogMe(0, 'ClearWorkingData(): gc() finished');
         }
+
+        LogMe(0, 'ClearWorkingData() finished');
     }
 
     async function ProcessUrlRequest (urlParams) {
-        LogMe(1, 'ProcessUrlRequest() called');
+        LogMe(0, 'ProcessUrlRequest() called');
         LogMe(1, 'url: '+JSON.stringify(urlParams));
         LogMe(1, 'url is of type: '+typeof(urlParams));
 
@@ -316,6 +324,7 @@ export const PPWrapOpsComponent = (props) => {
 
         // GET USER PROFILE DATA 
 
+        LogMe(0, 'ProcessUrlRequest(): Getting profile information');
         try {
             const storagenewdata = {
                 syncInBackground: false,        
@@ -367,6 +376,7 @@ export const PPWrapOpsComponent = (props) => {
                 return;
             }
         }
+        LogMe(0, 'ProcessUrlRequest(): Profile information loaded');
 
 
         // CHECK INPUT AND ENVIRONMENT
@@ -442,8 +452,10 @@ export const PPWrapOpsComponent = (props) => {
         if (urlParams?.operationName === 'wrap') {
             try {
                 LogMe(0, '--------- DO STUFF: wrap ------------');
+                LogMe(0, 'ProcessUrlRequest(): setState() visuals starting');
                 setOperationTitle('Wrapping your private picture...');
                 setScreenToShow('wrapop');
+                LogMe(0, 'ProcessUrlRequest(): setState() visuals done');
                 var_screenToShow='wrapop';
                 // 
                 //
