@@ -75,7 +75,7 @@ export const PARAM_GOOGLE_CLOUD_PROJECT_NUMBER = 48509944813;
 export const PARAM_IOS_KEY_IDENTIFIER = {
     PPIntegrity: 'iosKeypairPPIntegrity', 
     PPEnrollment: 'iosKeypairPPEnrollment',
- };
+};
 
 // The custom scheme of our app, in lowercase
 export const PARAM_OUR_SCHEME = 'pripro-' + PP_PLATFORM_NICKNAME;
@@ -99,17 +99,17 @@ export const PARAM_PP__IMAGEMARKER_IOSAPPSTORELOCALE = 'us';
  * ppimagemarker app package identifier on the Play Store (Android)
 */
 export const PARAM_PP__IMAGEMARKER_PLAYSTOREID = 'pt.lasige.safex.ppimagemarker';
- 
+
 /**
  * Deep link to ppimagemarker's main activity
  */
 export const PARAM_PP__IMAGEMARKER_URL = 'ppimagemarker://pptagging';
- 
+
 /**
  * Maximum processing time. Applies both to wrapping and unwrapping operations.
  */
 export const PARAM_PP__PROCESSING_TIMEOUT_MS = 3 * 60 * 1000;
- 
+
 /**
  * Selected cryptographic algorithms and parameters used to wrap private pictures
  */
