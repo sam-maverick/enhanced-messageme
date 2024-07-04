@@ -111,6 +111,21 @@ export const PARAM_PP__IMAGEMARKER_URL = 'ppimagemarker://pptagging';
 export const PARAM_PP__PROCESSING_TIMEOUT_MS = 3 * 60 * 1000;
 
 /**
+ * In Android Standard Play Integrity API, warmup will be performed after this interval.
+ * The interval refers to from the last attestation that was made to the current request.
+ * 
+ * This value must be >> 60/5 seconds, that is >> 12 seconds. This is to avoid getting a 
+ * TOO_MANY_REQUESTS error by the API, as there is a limit of 5 warmup requests per minute.
+ * We say '>>' because there is a limit of 10,000 requests per app platform per day in the
+ * basic tier (including warmups and attestations).
+ * 
+ * This value must be << MAX_PARTIAL_DELAY_MS_STANDARD. This is a parameter of ppserver.
+ * We say '<<' to account for network delays and processing delay on the server, which 
+ * involves contacting Google servers.
+ */
+export const PARAM_PP__MAX_WARMUP_INTERVAL_MS = 30 * 1000;
+
+/**
  * Selected cryptographic algorithms and parameters used to wrap private pictures
  */
 export const PARAM_PP__CRYPTO = {

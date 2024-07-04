@@ -148,7 +148,7 @@ brew -v
 
 In our environment, we have `Homebrew 4.2.4`
 
-Finally, install watchman with
+Install watchman with
 
 ```
 brew install watchman
@@ -162,7 +162,21 @@ watchman version
 
 In our environment, we have `version: 2023.12.04.00`
 
-You should now be fine to use Expo.
+Install yarn with
+
+```
+npm install --global yarn
+```
+
+Check:
+
+```
+yarn --version
+```
+
+In our environment, we have version `1.22.21`
+
+You should now be ready to use Expo.
 
 # 3. Installing Node.js modules
 

@@ -36,7 +36,7 @@ export function SafeUrlDecodeForB64 (s) {  //
   return retval
 }
 
-export async function ReadFileAsArrayBuffer(file) {
+export async function ReadFileAsArrayBuffer(file) {  // Uses browser's FileReader; limited to manual file selection by the end user
   LogSys(LIBN, 1,'ReadFileAsArrayBuffer() called on '+file);
 
   return new Promise((resolve, reject) => {

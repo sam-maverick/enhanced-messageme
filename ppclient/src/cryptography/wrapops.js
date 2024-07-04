@@ -27,6 +27,7 @@ import {
   PARAM_IMPLEMENTATION_OPTION_PNG,
   PARAM_IMPLEMENTATION_ARTIFACT_FORMAT,
   PP_PLATFORM_NICKNAME,
+  PARAM_PP__MAX_WARMUP_INTERVAL_MS,
 } from '../parameters.js';
 
 import { ApiGetNonceFromServer, ApiSubmitAttestationTokensToServer } from '../network/networkApi.js';
@@ -34,7 +35,7 @@ import { ApiGetNonceFromServer, ApiSubmitAttestationTokensToServer } from '../ne
 import * as AppIntegrity from '../integrity/integrityapis.js';
 
 
-//--var warmupDone = false;
+var lastWarmup = 0;
 
 
 // We assume that Platform.OS has already been checked to be compatible
@@ -63,16 +64,18 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
       LogMe(0, 'Nonce obtained');
       //#*#apiresgetnonce2 = await ApiGetNonceFromServer(myPPEcookie, 'android', 'classic');
 
-      //--//Even if we did warmup at startup, we need to do it now; otherwise the PP server will give a 'request too old', as it checks the freshness.
-      //--if (warmupDone) {
-      //--  LogMe(1, 'Android warmup was already done before');
-      //--} else {
+      // Check if we have to refresh the attestation cache;
+      // otherwise the PP server will give a 'request too old' if our attestation is not fresh enough.
+      if (lastWarmup==0 || (Date.now()-lastWarmup) > PARAM_PP__MAX_WARMUP_INTERVAL_MS) {
         LogMe(0, 'Doing Android warmup');
+        LogMe(0, 'Date.now()'+Date.now());
         await AppIntegrity.DoWarmup(function () {}, function () {});
         LogMe(0, 'Android warmup done');
-      //--  LogMe(1, 'Done doing Android warmup');
-      //--  warmupDone = true;
-      //--}
+        lastWarmup = Date.now();
+        LogMe(1, 'Done doing Android warmup');
+      } else {
+        LogMe(1, 'Skipping Android warmup; it was already done before');
+      }
 
     } else {  // ios
       LogMe(0, 'Obtaining nonce from server');

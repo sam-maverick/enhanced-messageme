@@ -10,10 +10,12 @@ echo('We include package.json (by default it is excluded), and we exclude the bu
 //rm('-r', './patches/*');
 exec('npx patch-package react-native-file-provider --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$|^android/src"');
 exec('npx patch-package cipher-base --use-yarn --exclude "^dummy\\$" --include "^index\\\\.js\\$"');
-exec('npx patch-package hash-base --use-yarn --exclude "^dummy\\$" --include "^index\\\\.js\\$"');
+//exec('npx patch-package hash-base --use-yarn --exclude "^dummy\\$" --include "^index\\\\.js\\$"');
 exec('npx patch-package png-metadata --exclude "^dummy\\$" --include "^lib/png-metadata\\\\.js\\$"');
 exec('npx patch-package react-native-app-link --exclude "^dummy\\$" --include "^index\\\\.js\\$"');
 exec('npx patch-package react-native-send-intent --exclude "^dummy\\$" --include "^android/src"');
+//exec('npx patch-package react-native-binary-fs --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$|^android/src|^android/CMakeLists\\\\.txt"');
+exec('npx patch-package react-native-binary-file --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$"');
 // OS update patch
 exec('npx patch-package expo-file-system --exclude "^dummy\\$" --include "^tsconfig\\\\.json\\$|^package\\\\.json\\$|^src/"');
 exec('npx patch-package react-native-lightbox-v2 --exclude "^dummy\\$" --include "^dist/"');
