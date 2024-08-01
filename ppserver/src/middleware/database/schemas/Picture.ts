@@ -5,6 +5,7 @@ const PictureSchema = new Schema({
     pictureIdSenderPrivate: {type: String},  // This identifier is only known to the sender, within the ppclient only. The messaging app does not know this ID
     reported: {type: Boolean},
     unsent: {type: Boolean},
+    viewed: {type: Boolean},
 });
 
 

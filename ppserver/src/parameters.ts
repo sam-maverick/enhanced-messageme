@@ -4,7 +4,7 @@
 /**
  * When set to true, the server will accept all attestations/assertions requests as valid
  */
-export const PARAM_TEST_MODE = false;
+export const PARAM_TEST_MODE = true;
 
 /**
  * Set to true for https; false for http

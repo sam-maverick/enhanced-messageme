@@ -465,12 +465,20 @@ export class AttestationController {
                 return {isSuccessful: false, resultMessage: msg, pictureID: fullDataObject.to_server_data.pictureId};    
             }
 
-            const mynewpicture = await PicturesModel.create({
-                pictureId: fullDataObject.to_server_data.pictureId, 
-                pictureIdSenderPrivate: fullDataObject.to_server_data.pictureIdSenderPrivate, 
-                reported: false,
-                unsent: false,
-            });
+            const mynewpicture = await PicturesModel.updateOne(
+                {
+                    pictureId: fullDataObject.to_server_data.pictureId, 
+                    pictureIdSenderPrivate: fullDataObject.to_server_data.pictureIdSenderPrivate,
+                },
+                { $setOnInsert: { // If an update operation with upsert: true results in an insert of a document, then $setOnInsert assigns the specified values to the fields in the document. If the update operation does not result in an insert, $setOnInsert does nothing.
+                    pictureId: fullDataObject.to_server_data.pictureId, 
+                    pictureIdSenderPrivate: fullDataObject.to_server_data.pictureIdSenderPrivate, 
+                    reported: false,
+                    unsent: false,
+                    viewed: true,
+                      } },
+                {upsert: true}  // Creates a new document if none was updated
+            );
             if (!mynewpicture) {
                 return {isSuccessful: false, resultMessage: 'Could not insert picture with ID='+fullDataObject.to_server_data.pictureId+' into the database'}; 
             }
@@ -508,10 +516,11 @@ export class AttestationController {
         // Ask to do attestation?
 
         LogMe(0, 'Controller: attestations/reportMaterial: Starting');
-        LogMe(2, 'Controller: attestations/reportMaterial: req.body.pictureID='+req.body.pictureID);
+        LogMe(0, 'Controller: attestations/reportMaterial: req.body.pictureID='+req.body.pictureID);
 
+        // We add the viewed:true condition to prevent recipients from reporting pictures not viewed, e.g., when the sender unsends them before the recipients opens
         const pictureObject = await PicturesModel.updateOne(
-            {pictureId: req.body.pictureID},
+            {pictureId: req.body.pictureID, viewed: true},
             [{ $addFields: { reported: true  } }]
         );
 
@@ -520,7 +529,7 @@ export class AttestationController {
 
         }
 
-        // We don't do error control, for privacy. This way, the sender cannot know if the picture was seen or not.
+        // We don't verbose the details of the result, for privacy. This way, the sender cannot know if the picture was seen or not.
         return {
             isSuccessful: true,
             resultMessage: 'If the pictureID was present in our database, it has been marked as reported.',
@@ -556,7 +565,6 @@ export class AttestationController {
 
         }
 
-        // We don't do error control, for privacy. This way, the sender cannot know if the picture was seen or not.
         return {
             isSuccessful: true,
             resultMessage: 'If the pictureID was present in our database, it has been marked as unsent.',
