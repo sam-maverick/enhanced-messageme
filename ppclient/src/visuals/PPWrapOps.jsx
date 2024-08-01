@@ -35,6 +35,8 @@ import { useNavigation } from '@react-navigation/native';
 
 import { HeaderBackButton } from "@react-navigation/elements";
 
+import { ApiReportMaterialToServer } from '../network/networkApi.js';
+
 import { styles, LoadingComponent } from './myVisualsLibrary.jsx';
 import { 
     ToHexString,
@@ -45,6 +47,7 @@ import {
     EraseLocalData, 
     ErrorAlert, 
     ErrorAlertAsync, 
+    ErrorAlertAsyncReport,
     AsyncAlert, 
     LogMe, 
     UpdateLogMeUsername, 
@@ -73,6 +76,8 @@ var androidContentUriGlobal = undefined;
 var var_screenToShow = 'none';
 var var_showPrivatePicture = false;
 var var_timerExpired = false;
+
+var pictureId = undefined;
 
 
 
@@ -264,6 +269,7 @@ export const PPWrapOpsComponent = (props) => {
             LogMe(1, 'ClearWorkingData(): timeoutID = '+timeoutID);
             clearTimeout(timeoutID);
             timeoutID = 0;
+            pictureId = undefined;
         }
 
         if (options?.mode==='full' || options?.mode==='partial') {
@@ -653,12 +659,21 @@ export const PPWrapOpsComponent = (props) => {
 
                 setPrivatePictureContents({uri: 'data:image/'+unwrappedDataObject.contentType+';base64,'+unwrappedDataObject.data});
 
+                pictureId = unwrappedDataObject.pictureId;
+
                 setReportingFunction((previous) => {
                     return async () => {
                         LogMe(1, 'reportingFunction() called');
-                        callbackURL.searchParams.append('result', 'report');  
-                        callbackURL.searchParams.append('RefImageUri', urlParams?.imageUriReference);
-                        unwrappedDataObject = undefined;
+                        
+                        let reportingResult = await ReportMaterial(pictureId); //
+                        if (reportingResult === true) {
+                            callbackURL.searchParams.append('result', 'report');    
+                            callbackURL.searchParams.append('RefImageUri', urlParams?.imageUriReference);    
+                        } else {
+                            callbackURL.searchParams.append('result', 'fail');    
+                            callbackURL.searchParams.append('message', 'Sorry. There has been an error while trying to report this material to the server. Please try again later.');  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions        
+                        }
+
                         LogMe(1, 'calling ClearWorkingData() on reportingFunction() before Linking.openURL()');
                         await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});
                         setScreenToShow('jobcompleted');
@@ -671,7 +686,6 @@ export const PPWrapOpsComponent = (props) => {
                     return async () => {
                         LogMe(0, 'returnFunction() called');
                         callbackURL.searchParams.append('result', 'success');  
-                        unwrappedDataObject = undefined;
                         LogMe(1, 'calling ClearWorkingData() on returnFunction() before Linking.openURL()');
                         await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});
                         setScreenToShow('jobcompleted');
@@ -685,7 +699,6 @@ export const PPWrapOpsComponent = (props) => {
                     async() => {
                         setTimerExpired(true);
                         var_timerExpired=true;
-                        unwrappedDataObject = undefined;
                         LogMe(1, 'Calling ClearWorkingData() for a partial clean on setTimeout() timer expired');
                         await ClearWorkingData({mode: 'partial', androidContentUri: urlParams?.fileUri});
                     }, 
@@ -699,11 +712,38 @@ export const PPWrapOpsComponent = (props) => {
 
             } catch (err) {
                 let errormsg = '' + err.message + '';
+                let title = 'Unknown error';
+                if (errormsg.startsWith('Error: ')) {
+                    title = 'Error';
+                    errormsg = errormsg.replace('Error: ', '');
+                }
+                if (errormsg.startsWith('Access denied: ')) {
+                    title = 'Access denied';
+                    errormsg = errormsg.replace('Access denied: ', '');
+                }
+
                 LogMe(1, errormsg);
-                callbackURL.searchParams.append('result', 'fail');    
-                callbackURL.searchParams.append('message', err.message);  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions
                 await ClearWorkingData({mode: 'partial', androidContentUri: urlParams?.fileUri});
-                await ErrorAlertAsync(errormsg+' Press Ok to go back to your messaging app.', err);
+                let dialogresult;
+                if (title === 'Access denied') {
+                    dialogresult = await ErrorAlertAsyncReport(errormsg+' Press Ok to go back to your messaging app.', err, title);
+                } else {
+                    dialogresult = await ErrorAlertAsync(errormsg+' Press Ok to go back to your messaging app.', err, title);
+                }
+
+                if (dialogresult === 'REPORT') {
+                    let reportingResult = await ReportMaterial(err.pictureID);
+                    if (reportingResult === true) {
+                        callbackURL.searchParams.append('result', 'report');    
+                        callbackURL.searchParams.append('RefImageUri', urlParams?.imageUriReference);    
+                    } else {
+                        callbackURL.searchParams.append('result', 'fail');    
+                        callbackURL.searchParams.append('message', 'Sorry. There has been an error while trying to report this material to the server. Please try again later.');  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions        
+                    }
+                } else {
+                    callbackURL.searchParams.append('result', 'fail');    
+                    callbackURL.searchParams.append('message', err.message);  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions    
+                }
                 setScreenToShow('jobcompleted');  
                 var_screenToShow='jobcompleted';
                 Linking.openURL(callbackURL.toString());    
@@ -716,6 +756,25 @@ export const PPWrapOpsComponent = (props) => {
             var_screenToShow='jobcompleted';
         }
 
+    }
+
+
+    const ReportMaterial = async (pictureID) => {
+        LogMe(0, 'ReportMaterial()');
+        let retval;
+        try {
+            retval = await ApiReportMaterialToServer(pictureID);
+        } catch (err) {
+            LogMe(1, 'Error when reporting to server: ' + err.message);
+            await ErrorAlertAsync('Error when reporting to server. Try again later.', err);
+            return false;
+        }
+        if (retval.isSuccessful !== true) {
+            LogMe(1, 'Unexpected response from server');
+            await ErrorAlertAsync('Unexpected response from server. Try again later.', undefined);
+            return false;
+        }
+        return true;
     }
     
 

@@ -407,7 +407,7 @@ export class AttestationController {
             if (currentDate > fullDataObject.to_server_data.privacyPolicies.ExpirationDate) {
                 let msg = 'Access denied: Attempting to open a private picture past the expiration date.';
                 LogMe(1, msg + ' Expiration date is ' + fullDataObject.to_server_data.privacyPolicies.ExpirationDate.toString());
-                return {isSuccessful: false, resultMessage: msg};        
+                return {isSuccessful: false, resultMessage: msg, pictureID: fullDataObject.to_server_data.pictureId};        
             }
 
             // View Once
@@ -436,18 +436,43 @@ export class AttestationController {
                 LogMe(1, msg);
                 return {isSuccessful: false, resultMessage: msg};
             }
+            if (fullDataObject.to_server_data.pictureIdSenderPrivate=='') {
+                let msg = 'Error: to_server_data.pictureIdSenderPrivate field cannot be empty.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
+            if ((typeof fullDataObject.to_server_data.pictureIdSenderPrivate) !== 'string') {
+                let msg = 'Error: to_server_data.pictureIdSenderPrivate field is not a string.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg};
+            }
             if (fullDataObject.to_server_data.privacyPolicies.ViewOnce==='Yes') {
                 const pictureObject = await PicturesModel.findOne({'pictureId': fullDataObject.to_server_data.pictureId});
                 if (pictureObject) {
                     let msg = 'Access denied: Attempting to re open a private picture that is set to view only once.';
                     LogMe(1, msg);
-                    return {isSuccessful: false, resultMessage: msg};    
-                } else {
-                    const mynewpicture = await PicturesModel.create({pictureId: fullDataObject.to_server_data.pictureId});
-                    if (!mynewpicture) {
-                       throw new Error('Could not insert picture with ID='+fullDataObject.to_server_data.pictureId+' into the database'); 
-                    }
+                    return {isSuccessful: false, resultMessage: msg, pictureID: fullDataObject.to_server_data.pictureId};    
                 }
+            }
+
+            const pictureObjectCheckUnsent = await PicturesModel.findOne({
+                'pictureIdSenderPrivate': fullDataObject.to_server_data.pictureIdSenderPrivate,
+                'unsent': true,
+            });
+            if (pictureObjectCheckUnsent) {
+                let msg = 'Access denied: This private picture has been unsent by the sender.';
+                LogMe(1, msg);
+                return {isSuccessful: false, resultMessage: msg, pictureID: fullDataObject.to_server_data.pictureId};    
+            }
+
+            const mynewpicture = await PicturesModel.create({
+                pictureId: fullDataObject.to_server_data.pictureId, 
+                pictureIdSenderPrivate: fullDataObject.to_server_data.pictureIdSenderPrivate, 
+                reported: false,
+                unsent: false,
+            });
+            if (!mynewpicture) {
+                return {isSuccessful: false, resultMessage: 'Could not insert picture with ID='+fullDataObject.to_server_data.pictureId+' into the database'}; 
             }
 
             // Success
@@ -457,7 +482,8 @@ export class AttestationController {
                 resultMessage: 'Successful',
                 replyDataObject: {
                     stage1: fullDataObject.stage1,
-                    privacyPolicies: fullDataObject.to_server_data.privacyPolicies,                
+                    privacyPolicies: fullDataObject.to_server_data.privacyPolicies,  
+                    pictureId: fullDataObject.to_server_data.pictureId,
                 },
             };
         } catch (err) {
@@ -474,6 +500,69 @@ export class AttestationController {
   }
 
 
+    @Post('/reportMaterial')
+    async reportMaterial(@Req() req) {
+
+        // ToDo: Prevent brute force attacks
+        // Introduce a delay?
+        // Ask to do attestation?
+
+        LogMe(0, 'Controller: attestations/reportMaterial: Starting');
+        LogMe(2, 'Controller: attestations/reportMaterial: req.body.pictureID='+req.body.pictureID);
+
+        const pictureObject = await PicturesModel.updateOne(
+            {pictureId: req.body.pictureID},
+            [{ $addFields: { reported: true  } }]
+        );
+
+        if ( ! pictureObject) {
+            return {isSuccessful: false, resultMessage: 'Could not update picture with ID='+req.body.pictureID+' in the database'}; 
+
+        }
+
+        // We don't do error control, for privacy. This way, the sender cannot know if the picture was seen or not.
+        return {
+            isSuccessful: true,
+            resultMessage: 'If the pictureID was present in our database, it has been marked as reported.',
+        };
+
+    }
+
+
+    // This method has not been tested yet
+    @Post('/unsendMaterial')
+    async unsendMaterial(@Req() req) {
+
+        // ToDo: Prevent brute force attacks
+        // Introduce a delay?
+        // Ask to do attestation?
+
+        LogMe(0, 'Controller: attestations/unsendMaterial: Starting');
+        LogMe(2, 'Controller: attestations/unsendMaterial: req.body.pictureIDSenderPrivate='+req.body.pictureIDSenderPrivate);
+        LogMe(2, 'Controller: attestations/unsendMaterial: req.body.pictureID='+req.body.pictureID);
+
+        const pictureObject = await PicturesModel.updateOne(
+            {pictureId: req.body.pictureID, pictureIdSenderPrivate: req.body.pictureIDSenderPrivate},
+            [{ $addFields: { 
+                pictureId: req.body.pictureID, 
+                pictureIdSenderPrivate: req.body.pictureIDSenderPrivate,
+                unsent: true,
+              } }],
+            {upsert: true}  // Creates a new document if none was updated
+        );
+
+        if ( ! pictureObject) {
+            return {isSuccessful: false, resultMessage: 'Could not update picture with ID='+req.body.pictureID+' in the database'}; 
+
+        }
+
+        // We don't do error control, for privacy. This way, the sender cannot know if the picture was seen or not.
+        return {
+            isSuccessful: true,
+            resultMessage: 'If the pictureID was present in our database, it has been marked as unsent.',
+        };
+
+    }
 
 
     @Post('/getNonceFromServer')

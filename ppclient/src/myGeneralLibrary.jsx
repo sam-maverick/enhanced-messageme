@@ -273,7 +273,30 @@ export const AsyncAlert = async (message, title) => new Promise((resolve) => {
       ],
       { cancelable: false },
     );
-  });
+});
+
+export const AsyncAlertReport = async (message, title) => new Promise((resolve) => {
+  Alert.alert(
+    title,
+    message,
+    [
+      {
+        text: 'Report',
+        style: 'destructive',  // Only has effect in iOS
+        onPress: () => {
+          resolve('REPORT');
+        },
+      },
+      {
+        text: 'Ok',
+        onPress: () => {
+          resolve('YES');
+        },
+      },
+    ],
+    { cancelable: false },
+  );
+});
 
 export async function ErrorAlertAsync(message, errorObject) {
     LogMe(1, '* * * * * * ERROR * * * * * *  ' + message);
@@ -281,8 +304,19 @@ export async function ErrorAlertAsync(message, errorObject) {
     let finalmessage = message;
     if (errorObject!=undefined) { finalmessage = message + '\n' + errorObject.message }
 
-    await AsyncAlert(message, 'Error');
+    return await AsyncAlert(message, 'Error');
 }
+
+
+export async function ErrorAlertAsyncReport(message, errorObject, title) {
+  LogMe(1, '* * * * * * ERROR * * * * * *  ' + message);
+  if (errorObject!=undefined) { LogMe(1, errorObject.stack); }
+  let finalmessage = message;
+  if (errorObject!=undefined) { finalmessage = message + '\n' + errorObject.message }
+
+  return await AsyncAlertReport(message, title);
+}
+
 
 export function ErrorAlert(message, errorObject) {
     LogMe(1, '* * * * * * ERROR * * * * * *  ' + message);
@@ -299,6 +333,8 @@ export function ErrorAlert(message, errorObject) {
       { cancelable: false }
     );
 }
+
+
 
 export function InfoMessage(title, message) {
     LogMe(2, 'INFO provided to the user: ' + title + ': ' + message);

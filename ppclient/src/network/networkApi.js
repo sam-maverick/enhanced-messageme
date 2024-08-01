@@ -12,6 +12,22 @@ const POST_HEADERS = {
 };
 
 
+export async function ApiReportMaterialToServer(pictureID) {
+
+    LogMe(1, 'API: ApiReportMaterialToServer');
+
+    return fetch(`${PARAM_SERVER_API_URL}/attestations/reportMaterial`, {
+        ...POST_HEADERS,
+        body: JSON.stringify({
+            pictureID: pictureID,
+        }),
+    })
+    .then((res) => res.json())
+    .then((res) => res)
+
+}
+
+
 export async function ApiSubmitAttestationTokensToServer(environment, cookie, platformType, platformVersion, tokensArray, requestDataObject) {
 
     LogMe(1, 'API: ApiSubmitAttestationTokensToServer');

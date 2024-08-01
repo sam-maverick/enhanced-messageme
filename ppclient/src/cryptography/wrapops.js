@@ -68,11 +68,9 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
       // otherwise the PP server will give a 'request too old' if our attestation is not fresh enough.
       if (lastWarmup==0 || (Date.now()-lastWarmup) > PARAM_PP__MAX_WARMUP_INTERVAL_MS) {
         LogMe(0, 'Doing Android warmup');
-        LogMe(0, 'Date.now()'+Date.now());
         await AppIntegrity.DoWarmup(function () {}, function () {});
-        LogMe(0, 'Android warmup done');
         lastWarmup = Date.now();
-        LogMe(1, 'Done doing Android warmup');
+        LogMe(0, 'Android warmup done');
       } else {
         LogMe(1, 'Skipping Android warmup; it was already done before');
       }
@@ -195,7 +193,7 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
     // Failed by application (attestation rejected)
     const msg = '' + apiressubmitobject.resultMessage;
     LogMe(1, msg);
-    return Promise.reject({message: msg});
+    return Promise.reject({message: msg, pictureID: apiressubmitobject?.pictureID});
   } else {
       // Successful
       return Promise.resolve(apiressubmitobject);
@@ -329,10 +327,13 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
         'contentType': ppPpChunkContents.contentType,
         'data': decrypted_picture,
         'privacyPolicies': replyObjectFromServer.replyDataObject.privacyPolicies,
+        'pictureId': replyObjectFromServer.replyDataObject.pictureId,
       };
+
+      replyObjectFromServer = undefined;
+
     }
 
-    replyObjectFromServer = undefined;
     gc();  // Call garbage collector
 
     LogMe(0, 'UnwrapPicture(): Finished');
@@ -403,13 +404,15 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       LogMe(0, 'WrapPicture(): STAGE2: read');
 
       const myPictureId = Crypto.randomBytes(32);
+      const myPictureIdSenderPrivate = Crypto.randomBytes(32);
       LogMe(0, 'UnwrapPicture(): STAGE2b: creating createCipheriv');
       const cipher2b = Crypto.createCipheriv(PARAM_PP__CRYPTO.stage2.encryption_algorithm, stage2_key, stage2_iv);
       LogMe(0, 'UnwrapPicture(): STAGE2b: createCipheriv created');
       LogMe(0, 'WrapPicture(): STAGE2b: writing');
       await cipher2b.write(JSON.stringify({
         privacyPolicies: privacyPoliciesObj,
-        pictureId: await EncodeFromArrayBufferToB64(myPictureId.buffer),  // This must be kept secret from the recipient
+        pictureId: await EncodeFromArrayBufferToB64(myPictureId.buffer),
+        pictureIdSenderPrivate: await EncodeFromArrayBufferToB64(myPictureIdSenderPrivate.buffer),  // This must be kept secret from the recipient
       }));
       LogMe(0, 'WrapPicture(): STAGE2b: written');
       await cipher2b.end();
@@ -417,6 +420,7 @@ export async function WrapPicture (plainPicture, fileExt, myAccountData, privacy
       const ciphertext_to_server_data = await cipher2b.read();
       LogMe(0, 'WrapPicture(): STAGE2b: read');
       LogMe(1, 'Encoded pictureId=' + await EncodeFromArrayBufferToB64(myPictureId.buffer));
+      LogMe(1, 'Encoded pictureIdSenderPrivate=' + await EncodeFromArrayBufferToB64(myPictureIdSenderPrivate.buffer));
 
       // STAGE3
       LogMe(1, 'WrapPicture(): STAGE3');
