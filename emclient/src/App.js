@@ -8,7 +8,9 @@ import { LogBox } from 'react-native';
 import Storage from 'react-native-storage';
 //import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import * as FileSystem from 'expo-file-system';
+// We need this to let the PrivatePictureAPI register the Linking.addEventListener at boot time, otherwise this error is raised:
+// TypeError: Cannot read property 'NativeModule' of undefined, js engine: hermes
+import * as PrivatePictureAPI from '../os_update/PrivatePictureAPI.js';
 import { registerRootComponent } from 'expo';
 
 

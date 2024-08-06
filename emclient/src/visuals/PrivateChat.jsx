@@ -37,6 +37,7 @@ import { MyWebsocketConnect, MyWebsocketDisconnect, WsApiEmitSomething, WsApiHan
 import { PARAM_IMAGES_DIRNAME } from '../parameters.js';
 import { PARAM_IMAGE_PICKER_QUALITY } from '../parameters.js';
 
+import * as PrivatePictureAPI from '../../os_update/PrivatePictureAPI.js';
 
 
 
@@ -420,7 +421,7 @@ export const PrivateChatComponent = props => {
             return null;
         } 
         
-        let result = await ImagePicker.launchImageLibraryAsync({
+        let result = await PrivatePictureAPI.PickPicture({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: false,
             quality: PARAM_IMAGE_PICKER_QUALITY,

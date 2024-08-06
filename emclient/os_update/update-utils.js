@@ -61,6 +61,13 @@ export async function ReadFileAsArrayBuffer(file) {  // Uses browser's FileReade
   });
 }
 
+export function normalizeEndingSlash(p) {
+  if (p != null) {
+    return p.replace(/\/*$/, '') + '/';
+  }
+  return null;
+}
+
 export function IsValidImageExtensionAndContentType (myextension) {
     // We assume that there is an equivalence between image extension and image content-type
     if (myextension === null || myextension === undefined) {

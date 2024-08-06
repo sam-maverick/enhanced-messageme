@@ -12,7 +12,7 @@ exec('npx patch-package hash-base --use-yarn --exclude "^dummy\\$" --include "^i
 exec('npx patch-package png-metadata --exclude "^dummy\\$" --include "^lib/png-metadata\\\\.js\\$"');
 exec('npx patch-package expo-app-integrity --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$|^ios/"');
 exec('npx patch-package react-native-blob-util --exclude "^dummy\\$" --include "^android/src/|^class/"');
-exec('npx patch-package expo-device --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$"');
+//exec('npx patch-package expo-device --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$"');
 exec('npx patch-package png-metadata --exclude "^dummy\\$" --include "^lib/png-metadata\\\\.js\\$"');
 exec('npx patch-package react-native-file-provider --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$|^android/src"');
 exec('npx patch-package react-native-popup-menu --exclude "^dummy\\$" --include "^src|^build"');
