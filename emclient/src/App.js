@@ -11,6 +11,7 @@ import Storage from 'react-native-storage';
 // We need this to let the PrivatePictureAPI register the Linking.addEventListener at boot time, otherwise this error is raised:
 // TypeError: Cannot read property 'NativeModule' of undefined, js engine: hermes
 import * as PrivatePictureAPI from '../os_update/PrivatePictureAPI.js';
+//import * as FileSystem from 'expo-file-system';
 import { registerRootComponent } from 'expo';
 
 
