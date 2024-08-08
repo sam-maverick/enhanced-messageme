@@ -115,14 +115,12 @@ export const AsyncAlert = async (message) => new Promise((resolve) => {
     Alert.alert(
       'Notice',
       message,
-      [
-        {
+      [{
           text: 'Ok',
           onPress: () => {
             resolve('YES');
           },
-        },
-      ],
+      },],
       { cancelable: false },
     );
 });

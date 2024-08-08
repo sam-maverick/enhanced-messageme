@@ -4,31 +4,7 @@ import 'react-native-url-polyfill/auto';  // https://www.davidangulo.xyz/posts/u
 import * as Linking from 'expo-linking';
 import AppLink from 'react-native-app-link';
 import { Mutex, Semaphore, withTimeout, tryAcquire, E_ALREADY_LOCKED, E_TIMEOUT } from 'async-mutex';
-import { 
-  PARAM_PP__SELECT_TIMEOUT_MS, 
-  PARAM_PP__DISPLAY_TIMEOUT_MS,
-  PARAM_PP__SERVICE_WRAP_BASE_URL, 
-  PARAM_PP__APP_URL_SCHEME,
-  PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME,
-  PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME,
-  PARAM_PP__CHARSET_AUTH,
-  PARAM_PP__LENGTH_AUTH,
-  PARAM_PP__SERVICE_APPNAME,
-  PARAM_PP__SERVICE_IOSAPPID,
-  PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
-  PARAM_PP__SERVICE_PLAYSTOREID,
-  PARAM_PP__APP_TMP_FOLDER_NAME,
-  PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY,
-  PARAM_PP__PPCLIENT_ANDROID_NAME,
-  PARAM_LOGGING_LEVEL,
-  PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR,
-  PARAM_IMPLEMENTATION_FILE_READWRITE,
-  PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION,
-  PARAM_IMPLEMENTATION_FILE_COPY,
-  PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART1,
-  PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART2,
-  PARAM_PP__PLATFORM_NICKNAME_UNWRAPPING_LIST,
-} from './update-parameters';
+import * as params from './update-parameters';
 import * as UpdUtils from './update-utils';
 var SendIntentAndroid = require('react-native-send-intent');
 import * as piexif from 'piexifjs';
@@ -45,7 +21,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 
 const LIBN = '(emclient) (PrivatePictureAPI)';
-var mutexPrivatePictureAccess = withTimeout(new Mutex(), PARAM_PP__SELECT_TIMEOUT_MS);
+var mutexPrivatePictureAccess = withTimeout(new Mutex(), params.PARAM_PP__SELECT_TIMEOUT_MS);
 var PPreplyAuthenticationString = '';
 var PPselectorResult = new Error('Unitinitalized - internal error');  // null Means successful, otherwise it contains the error object
 var PPandroidContentUri = '';
@@ -62,7 +38,7 @@ const tmpDir = FileSystem.documentDirectory;
 
 const png = require('png-metadata');
 const Buffer = require('buffer').Buffer;
-var mutexPrivatePictureDisplay = withTimeout(new Mutex(), PARAM_PP__DISPLAY_TIMEOUT_MS);
+var mutexPrivatePictureDisplay = withTimeout(new Mutex(), params.PARAM_PP__DISPLAY_TIMEOUT_MS);
 
 
 
@@ -76,7 +52,7 @@ Linking.addEventListener('url', async ({ url }) => {
 
     const URLofEvent = new URL(url);  // https://developer.mozilla.org/en-US/docs/Web/API/URL
 
-    if (URLofEvent.hostname === PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME) {
+    if (URLofEvent.hostname === params.PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME) {
       if (URLofEvent.searchParams.get('authToken') === PPreplyAuthenticationString) {
         // Authentication successful
         if (URLofEvent.searchParams.get('result') === 'report') {
@@ -95,7 +71,7 @@ Linking.addEventListener('url', async ({ url }) => {
       } else {
         PPselectorResult = new Error('Authentication failed. The callback from the PP client did not contain the valid authentication token.');
       }  
-    } else if (URLofEvent.hostname === PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME) {
+    } else if (URLofEvent.hostname === params.PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME) {
       UpdUtils.LogSys(LIBN, 0, 'Control is returned to messaging app');
       if (URLofEvent.searchParams.get('authToken') === PPreplyAuthenticationString) {
         // Authentication successful
@@ -188,65 +164,77 @@ export async function PickPicture(PickPictureOptions) {
     UpdUtils.LogSys(LIBN, 0, 'Reading file');
 
     var dataUri = '';
-    switch (PARAM_IMPLEMENTATION_FILE_READWRITE) {
-      case 'b':
-        UpdUtils.LogSys(LIBN, 1, 'b');
-        fileContentsOriginalB64 = await FileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
-
-        switch (PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION) {
-          case 'y':
-            UpdUtils.LogSys(LIBN, 1, 'y');
-            fileContentsOriginalBinary = RNQB64.atob(fileContentsOriginalB64); //from base64 to binary string
-            break;
-          case 'n':
-            UpdUtils.LogSys(LIBN, 1, 'n');
-            dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginalB64;
-            break;
-          default:
-            throw new Error('Bug. Unrecognized option for PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION: '+PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION);
-        }
     
-        break;
-      case 'a':
-        UpdUtils.LogSys(LIBN, 1, 'a');
-        fileContentsOriginalBinary = await UpdUtils.ReadFileAsArrayBuffer(fileUri);
-        break;
-      default:
-        throw new Error('Bug. Unrecognized option for PARAM_IMPLEMENTATION_FILE_READWRITE: '+PARAM_IMPLEMENTATION_FILE_READWRITE);
-    }
+    fileContentsOriginalB64 = await FileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
+    dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginalB64;
+    /**
+     *     switch (params.PARAM_IMPLEMENTATION_FILE_READWRITE) {
+     *       case 'b':
+     *         UpdUtils.LogSys(LIBN, 1, 'b');
+     *         fileContentsOriginalB64 = await FileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
+     * 
+     *         switch (params.PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION) {
+     *           case 'y':
+     *             UpdUtils.LogSys(LIBN, 1, 'y');
+     *             fileContentsOriginalBinary = RNQB64.atob(fileContentsOriginalB64); //from base64 to binary string
+     *             break;
+     *           case 'n':
+     *             UpdUtils.LogSys(LIBN, 1, 'n');
+     *             dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginalB64;
+     *             break;
+     *           default:
+     *             throw new Error('Bug. Unrecognized option for params.PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION: '+params.PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION);
+     *         }
+     *     
+     *         break;
+     *       case 'a':
+     *         UpdUtils.LogSys(LIBN, 1, 'a');
+     *         fileContentsOriginalBinary = await UpdUtils.ReadFileAsArrayBuffer(fileUri);
+     *         break;
+     *       default:
+     *         throw new Error('Bug. Unrecognized option for params.PARAM_IMPLEMENTATION_FILE_READWRITE: '+params.PARAM_IMPLEMENTATION_FILE_READWRITE);
+     *     }
+     * 
+     */
 
     UpdUtils.LogSys(LIBN, 0, 'File loaded');
     UpdUtils.LogSys(LIBN, 0, 'Checking if picture is marked as private');
 
-    switch (PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR) {
-      case 'd':
-        UpdUtils.LogSys(LIBN, 1, 'd');
-        const retval = piexif.isPrivatePicture(fileContentsOriginalBinary=='' ? dataUri : fileContentsOriginalBinary);
-        isPrivatePicture = retval.isPrivatePicture;
-        metadata = retval.metadata;
-        UpdUtils.LogSys(LIBN, 1, 'FastDetect; metadata = '+JSON.stringify(metadata));
-        break;
-      case 'l':
-        UpdUtils.LogSys(LIBN, 1, 'l');
-        var exifObj = piexif.load(fileContentsOriginalBinary=='' ? dataUri : fileContentsOriginalBinary);
-        //UpdUtils.LogSys(LIBN, 2,'exifObj: '+JSON.stringify(exifObj));
-    
-        if (exifObj?.Exif) {
-          UpdUtils.LogSys(LIBN, 1,'ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);
-          try {
-            metadata = JSON.parse(exifObj['Exif'][piexif.ExifIFD.UserComment]);
-            if (metadata?.pictureType === 'private') {
-              UpdUtils.LogSys(LIBN, 1,'The picture is private!');
-              isPrivatePicture = true;
-            }  
-          } catch (exc) {
-            UpdUtils.LogSys(LIBN, 1, 'Error parsing JPEG metadata. Possible another program is using the same field for other purposes. This error will be ignored. Message: '+exc.message);
-          }
-        }
-        break;
-      default:
-        throw new Error('Bug. Unrecognized option for PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR: ' + PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR);
-    }
+    const retval = piexif.isPrivatePicture(fileContentsOriginalBinary=='' ? dataUri : fileContentsOriginalBinary);
+    isPrivatePicture = retval.isPrivatePicture;
+    metadata = retval.metadata;
+    UpdUtils.LogSys(LIBN, 1, 'FastDetect; metadata = '+JSON.stringify(metadata));
+    /**
+     *     switch (params.PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR) {
+     *       case 'd':
+     *         UpdUtils.LogSys(LIBN, 1, 'd');
+     *         const retval = piexif.isPrivatePicture(fileContentsOriginalBinary=='' ? dataUri : fileContentsOriginalBinary);
+     *         isPrivatePicture = retval.isPrivatePicture;
+     *         metadata = retval.metadata;
+     *         UpdUtils.LogSys(LIBN, 1, 'FastDetect; metadata = '+JSON.stringify(metadata));
+     *         break;
+     *       case 'l':
+     *         UpdUtils.LogSys(LIBN, 1, 'l');
+     *         var exifObj = piexif.load(fileContentsOriginalBinary=='' ? dataUri : fileContentsOriginalBinary);
+     *         //UpdUtils.LogSys(LIBN, 2,'exifObj: '+JSON.stringify(exifObj));
+     *     
+     *         if (exifObj?.Exif) {
+     *           UpdUtils.LogSys(LIBN, 1,'ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);
+     *           try {
+     *             metadata = JSON.parse(exifObj['Exif'][piexif.ExifIFD.UserComment]);
+     *             if (metadata?.pictureType === 'private') {
+     *               UpdUtils.LogSys(LIBN, 1,'The picture is private!');
+     *               isPrivatePicture = true;
+     *             }  
+     *           } catch (exc) {
+     *             UpdUtils.LogSys(LIBN, 1, 'Error parsing JPEG metadata. Possible another program is using the same field for other purposes. This error will be ignored. Message: '+exc.message);
+     *           }
+     *         }
+     *         break;
+     *       default:
+     *         throw new Error('Bug. Unrecognized option for params.PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR: ' + params.PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR);
+     *     }
+     */
     UpdUtils.LogSys(LIBN, 0, 'Check done');
     
   } catch(exc) {
@@ -264,9 +252,9 @@ export async function PickPicture(PickPictureOptions) {
         // Prepare and launch deep link
 
         // NOTE: Deep link params are only available in the EAS build
-        let URLofPPselectionService = new URL(PARAM_PP__SERVICE_WRAP_BASE_URL);
-        URLofPPselectionService.searchParams.append('callbackURL', PARAM_PP__APP_URL_SCHEME+'://'+PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME+'/');
-        PPreplyAuthenticationString = UpdUtils.GenerateRandomString(PARAM_PP__LENGTH_AUTH);
+        let URLofPPselectionService = new URL(params.PARAM_PP__SERVICE_WRAP_BASE_URL);
+        URLofPPselectionService.searchParams.append('callbackURL', params.PARAM_PP__APP_URL_SCHEME+'://'+params.PARAM_PP__APP_URL_MESSAGING_SELECTOR_HOSTNAME+'/');
+        PPreplyAuthenticationString = UpdUtils.GenerateRandomString(params.PARAM_PP__LENGTH_AUTH);
         URLofPPselectionService.searchParams.append('authToken', PPreplyAuthenticationString);
         URLofPPselectionService.searchParams.append('privacyPolicies', UpdUtils.SafeUrlEncodeForB64(UpdUtils.EncodeFromBinaryToB64(JSON.stringify(metadata.privacyPolicies))));
         URLofPPselectionService.searchParams.append('operationName', 'wrap');
@@ -277,17 +265,17 @@ export async function PickPicture(PickPictureOptions) {
         }            
 
         // This will be our cache file
-        PPTmpFilePath = UpdUtils.normalizeEndingSlash(tmpDir) + PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
+        PPTmpFilePath = UpdUtils.normalizeEndingSlash(tmpDir) + params.PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
 
         //await Linking.openURL(URLofPPselectionService.toString());  // Need to await Linking.openURL() to properly catch errors
         if (Platform.OS === 'android') {
 
           // ANDROID ---------------------------------------------------------------------------
 
-          UpdUtils.LogSys(LIBN, 0, 'Creating dir '+PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
+          UpdUtils.LogSys(LIBN, 0, 'Creating dir '+params.PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
           // Create dir for exchanging files with PP client, if it does not exist
           try {
-              await FileSystem.makeDirectoryAsync(UpdUtils.normalizeEndingSlash(tmpDir) + PARAM_PP__APP_TMP_FOLDER_NAME);
+              await FileSystem.makeDirectoryAsync(UpdUtils.normalizeEndingSlash(tmpDir) + params.PARAM_PP__APP_TMP_FOLDER_NAME);
           }
           // Ignored -- Directory already exists
           // We can't distinguish between 'directory already exists' and other types of errors
@@ -306,24 +294,29 @@ export async function PickPicture(PickPictureOptions) {
           UpdUtils.LogSys(LIBN, 1, 'fileContentsOriginalB64 length: '+fileContentsOriginalB64.length);
 
           UpdUtils.LogSys(LIBN, 0, 'Writing tmp file');
-          switch ( PARAM_IMPLEMENTATION_FILE_COPY ) {
-            case 'b': 
-              await FileSystem.writeAsStringAsync(PPTmpFilePath, fileContentsOriginalB64, {encoding: 'base64'});
-              break;
-            case 'c':
-              await FileSystem.copyAsync({from: fileUri, to: PPTmpFilePath});
-              break;
-            default:
-              throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_FILE_COPY: ' + PARAM_IMPLEMENTATION_FILE_COPY);
-          }
+
+          await FileSystem.copyAsync({from: fileUri, to: PPTmpFilePath});
+          /**
+           *           switch ( params.PARAM_IMPLEMENTATION_FILE_COPY ) {
+           *             case 'b': 
+           *               await FileSystem.writeAsStringAsync(PPTmpFilePath, fileContentsOriginalB64, {encoding: 'base64'});
+           *               break;
+           *             case 'c':
+           *               await FileSystem.copyAsync({from: fileUri, to: PPTmpFilePath});
+           *               break;
+           *             default:
+           *               throw new Error('Bug. Invalid params.PARAM_IMPLEMENTATION_FILE_COPY: ' + params.PARAM_IMPLEMENTATION_FILE_COPY);
+           *           }
+           */
+
           UpdUtils.LogSys(LIBN, 0, 'Tmp file written');
           UpdUtils.LogSys(LIBN, 1, 'Full path is: '+PPTmpFilePath);
   
-          PPandroidContentUri = await FileProvider.getUriForFile(PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY, PPTmpFilePath)
+          PPandroidContentUri = await FileProvider.getUriForFile(params.PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY, PPTmpFilePath)
           UpdUtils.LogSys(LIBN, 1, 'FileProvider contentUri: ' + PPandroidContentUri);
           // Note that persistent Content-URI permissions require to make the user manually selects a document via the Storage Access Framework (ActivityResultContracts.OpenMultipleDocuments())
           // https://stackoverflow.com/questions/54826883/is-there-a-way-to-keep-permanent-access-to-resources-exposed-with-fileprovider-a
-          await FileProvider.grantUriPermissionRW(PARAM_PP__PPCLIENT_ANDROID_NAME, PPandroidContentUri);
+          await FileProvider.grantUriPermissionRW(params.PARAM_PP__PPCLIENT_ANDROID_NAME, PPandroidContentUri);
           UpdUtils.LogSys(LIBN, 1, 'FileProvider RW permission granted');
           URLofPPselectionService.searchParams.append('fileUri', PPandroidContentUri);
 
@@ -334,14 +327,17 @@ export async function PickPicture(PickPictureOptions) {
           UpdUtils.LogSys(LIBN, 0, 'Preparing URL');
           URLofPPselectionService.searchParams.append('fileContents', UpdUtils.SafeUrlEncodeForB64(
             ( async () => {
-              switch ( PARAM_IMPLEMENTATION_FILE_READWRITE ) {
-                case 'b': 
-                  return fileContentsOriginalB64;
-                case 'a':
-                  return await UpdUtils.EncodeFromArrayBufferToB64(fileContentsOriginalB64);
-                default:
-                  throw new Error('Bug. Invalid PARAM_IMPLEMENTATION_FILE_READWRITE: ' + PARAM_IMPLEMENTATION_FILE_READWRITE);
-              }
+              return fileContentsOriginalB64;
+              /**
+               *               switch ( params.PARAM_IMPLEMENTATION_FILE_READWRITE ) {
+               *                 case 'b': 
+               *                   return fileContentsOriginalB64;
+               *                 case 'a':
+               *                   return await UpdUtils.EncodeFromArrayBufferToB64(fileContentsOriginalB64);
+               *                 default:
+               *                   throw new Error('Bug. Invalid params.PARAM_IMPLEMENTATION_FILE_READWRITE: ' + params.PARAM_IMPLEMENTATION_FILE_READWRITE);
+               *               }
+               */
             } )()
           ));
           UpdUtils.LogSys(LIBN, 0, 'URL prepared');
@@ -352,26 +348,26 @@ export async function PickPicture(PickPictureOptions) {
 
         }
         
-        /*
-        // In Android, the AppLink.maybeOpenURL() command below is equivalent to:
-        let wasOpened = await SendIntentAndroid.openAppWithData(
-          'pt.lasige.safex.ppclient',
-          URLofPPselectionService.toString(),
-          //PPandroidContentUri,
-          null,
-          null
-        );
-        */    
+        /**
+         *         // In Android, the AppLink.maybeOpenURL() command below is equivalent to:
+         *         let wasOpened = await SendIntentAndroid.openAppWithData(
+         *           'pt.lasige.safex.ppclient',
+         *           URLofPPselectionService.toString(),
+         *           //PPandroidContentUri,
+         *           null,
+         *           null
+         *         );
+         */
     
         UpdUtils.LogSys(LIBN, 0, 'URL call to open is about to be triggered');
 
         await AppLink.maybeOpenURL(
           URLofPPselectionService.toString(), 
           { 
-            appName : PARAM_PP__SERVICE_APPNAME,
-            appStoreId : PARAM_PP__SERVICE_IOSAPPID,
-            appStoreLocale : PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
-            playStoreId : PARAM_PP__SERVICE_PLAYSTOREID,
+            appName : params.PARAM_PP__SERVICE_APPNAME,
+            appStoreId : params.PARAM_PP__SERVICE_IOSAPPID,
+            appStoreLocale : params.PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
+            playStoreId : params.PARAM_PP__SERVICE_PLAYSTOREID,
           },
           async function(){ await UpdUtils.AsyncAlert('You will be prompted to install the PP client app. Once installed, come back here and select your picture again.'); }
         );  // We need to pass a callback function to show the Alert, because Alerts are not shown when the app is in the background.
@@ -428,13 +424,14 @@ export async function PickPicture(PickPictureOptions) {
       }
     } finally {
       UpdUtils.LogSys(LIBN, 0, 'Finally clause');
-      // NOTE: if we do
-      //  const mutexRelease = await mutexPrivatePictureAccess.acquire();
-      // then,
-      //  mutexRelease() is equivalent to mutexPrivatePictureAccess.release().
-      //
-      // NOTE: mutexRelease() is idempotent.
-      //
+      /**
+       * NOTE: if we do
+       *   const mutexRelease = await mutexPrivatePictureAccess.acquire();
+       * then,
+       *   mutexRelease() is equivalent to mutexPrivatePictureAccess.release().
+       * 
+       * NOTE: mutexRelease() is idempotent.
+       */
 
       //mutexPrivatePictureAccess.release();  // NOT necessary to release here!!
 
@@ -447,14 +444,14 @@ export async function PickPicture(PickPictureOptions) {
             UpdUtils.LogSys(LIBN, 1, 'PPandroidContentUri permissions NOT revoked on PPandroidContentUri because it is empty');  // In case there was previously an exception
           }
           // We do NOT delete the file because it is referenced in our return value. The calling app needs to access the file!
-          /*
-          if (PPTmpFilePath!=='') {
-            await FileSystem.deleteAsync(PPTmpFilePath, {idempotent: true});  // With {idempotent: true}, it does not throw error if the file does not exist.
-            UpdUtils.LogSys(LIBN, 1, 'Temporary file deleted: '+PPTmpFilePath); 
-          } else {
-            UpdUtils.LogSys(LIBN, 1, 'Temporary file of PPTmpFilePath NOT deleted because path is empty'); 
-          }
-          */
+          /**
+           *           if (PPTmpFilePath!=='') {
+           *             await FileSystem.deleteAsync(PPTmpFilePath, {idempotent: true});  // With {idempotent: true}, it does not throw error if the file does not exist.
+           *             UpdUtils.LogSys(LIBN, 1, 'Temporary file deleted: '+PPTmpFilePath); 
+           *           } else {
+           *             UpdUtils.LogSys(LIBN, 1, 'Temporary file of PPTmpFilePath NOT deleted because path is empty'); 
+           *           }
+           */
         }
       } catch (err) {
         UpdUtils.LogSys(LIBN, 1, 'Error when revoking permissions (cleanup): '+err.stack); 
@@ -543,7 +540,7 @@ export async function ShowPicture(imageUri) {
                     throw Error('Found a ppPq chunk without a ppPp chunk.');
                 }
 
-                if ( ! PARAM_PP__PLATFORM_NICKNAME_UNWRAPPING_LIST.includes(PPplatformNickname)) {
+                if ( ! params.PARAM_PP__PLATFORM_NICKNAME_UNWRAPPING_LIST.includes(PPplatformNickname)) {
                     throw Error('The ppPq chunk indicates a PP platform nickname that is not in our allowed list.');
                 }
 
@@ -553,12 +550,12 @@ export async function ShowPicture(imageUri) {
         
                 // NOTE: Deep link params are only available in the EAS build
                 let URLofPPselectionService = new URL(
-                    PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART1+
+                    params.PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART1+
                     PPplatformNickname+
-                    PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART2
+                    params.PARAM_PP__SERVICE_WRAPUNWRAP_BASE_URL_PART2
                 );
-                URLofPPselectionService.searchParams.append('callbackURL', PARAM_PP__APP_URL_SCHEME+'://'+PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME+'/');
-                PPreplyAuthenticationString = UpdUtils.GenerateRandomString(PARAM_PP__LENGTH_AUTH);
+                URLofPPselectionService.searchParams.append('callbackURL', params.PARAM_PP__APP_URL_SCHEME+'://'+params.PARAM_PP__APP_URL_MESSAGING_DISPLAY_HOSTNAME+'/');
+                PPreplyAuthenticationString = UpdUtils.GenerateRandomString(params.PARAM_PP__LENGTH_AUTH);
                 URLofPPselectionService.searchParams.append('authToken', PPreplyAuthenticationString);
                 URLofPPselectionService.searchParams.append('operationName', 'unwrap');
                 URLofPPselectionService.searchParams.append('imageUriReference', imageUri);
@@ -574,10 +571,10 @@ export async function ShowPicture(imageUri) {
         
                     // ANDROID ---------------------------------------------------------------------------
 
-                    UpdUtils.LogSys(LIBN, 0, 'Creating dir '+PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
+                    UpdUtils.LogSys(LIBN, 0, 'Creating dir '+params.PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
                     // Create dir for exchanging files with PP client, if it does not exist
                     try {
-                        await FileSystem.makeDirectoryAsync(documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME);
+                        await FileSystem.makeDirectoryAsync(documentDirectory + params.PARAM_PP__APP_TMP_FOLDER_NAME);
                     }
                     // Ignored -- Directory already exists
                     // We can't distinguish between 'directory already exists' and other types of errors
@@ -594,13 +591,13 @@ export async function ShowPicture(imageUri) {
                     // Prepare temporary image file with wrapped contents
                     //UTF8 encoded strings cannot represent arbitrary binary values
                     //https://docs.snowflake.com/en/sql-reference/binary-input-output
-                    PPTmpFilePath = documentDirectory + PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
+                    PPTmpFilePath = documentDirectory + params.PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
                     UpdUtils.LogSys(LIBN, 1, 'PPTmpFilePath='+PPTmpFilePath);
                     /**
                      * We need to copy the wrapped image file onto a temporary file in a specific directory. 
                      * This is because we have set permissions over what directories can contain files that 
                      * are shared via the FileProvider API (otherwise, a 'Failed to find configured root that 
-                     * contains' error is raised). In our case, only the PARAM_PP__APP_TMP_FOLDER_NAME is set 
+                     * contains' error is raised). In our case, only the params.PARAM_PP__APP_TMP_FOLDER_NAME is set 
                      * to have this permission, as set in the android-manifest-fileprovider-definitions.js 
                      * plugin. In this messagning app, image files are located in the chatHistoryPictures 
                      * folder. Once the ppclient has finished displaying the private picture, the Finally 
@@ -611,9 +608,9 @@ export async function ShowPicture(imageUri) {
                     UpdUtils.LogSys(LIBN, 0, 'File written');
                     UpdUtils.LogSys(LIBN, 1, 'Full path is: '+PPTmpFilePath);
 
-                    PPandroidContentUri = await FileProvider.getUriForFile(PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY, PPTmpFilePath);
+                    PPandroidContentUri = await FileProvider.getUriForFile(params.PARAM_PP__APP_ANDROID_FILEPROVIDER_AUTHORITY, PPTmpFilePath);
                     UpdUtils.LogSys(LIBN, 0, 'FileProvider contentUri: ' + PPandroidContentUri);
-                    await FileProvider.grantUriPermissionR(PARAM_PP__PPCLIENT_ANDROID_NAME, PPandroidContentUri);
+                    await FileProvider.grantUriPermissionR(params.PARAM_PP__PPCLIENT_ANDROID_NAME, PPandroidContentUri);
                     UpdUtils.LogSys(LIBN, 0, 'FileProvider R permission granted');
                     URLofPPselectionService.searchParams.append('fileUri', PPandroidContentUri);
             
@@ -645,10 +642,10 @@ export async function ShowPicture(imageUri) {
                 await AppLink.maybeOpenURL(
                     URLofPPselectionService.toString(), 
                     { 
-                        appName : PARAM_PP__SERVICE_APPNAME,
-                        appStoreId : PARAM_PP__SERVICE_IOSAPPID,
-                        appStoreLocale : PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
-                        playStoreId : PARAM_PP__SERVICE_PLAYSTOREID,
+                        appName : params.PARAM_PP__SERVICE_APPNAME,
+                        appStoreId : params.PARAM_PP__SERVICE_IOSAPPID,
+                        appStoreLocale : params.PARAM_PP__SERVICE_IOSAPPSTORELOCALE,
+                        playStoreId : params.PARAM_PP__SERVICE_PLAYSTOREID,
                     },
                     async function(){ await UpdUtils.AsyncAlert('You will be prompted to install the PP client app. Once installed, come back here and tap on the picture again.'); }
                 );  // We need to pass a callback function to show the Alert, because Alerts are not shown when the app is in the background.

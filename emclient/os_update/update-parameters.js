@@ -1,10 +1,13 @@
 // Parameters of the Updated OS layer
 
-// Console logging.
-// -1=disabled, 0=performance metrics, 1=normal logging, 2=verbose debugging
-// NOTE: Setting this to anything other than 0 may significantly impact performance
-// NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
-// https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
+/**
+ * Console logging.
+ * -1=disabled, 0=performance metrics, 1=normal logging, 2=verbose debugging
+ * NOTE: Setting this to anything other than 0 may significantly impact performance
+ * NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
+ * https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
+ */
+
 export const PARAM_LOGGING_LEVEL = 0;  // Change accordingly to your preference
 
 /**
@@ -114,7 +117,7 @@ export const PARAM_PP__PPCLIENT_ANDROID_NAME = 'pt.lasige.safex.ppclient';
  * 'l' for piexifjs.load.
  * 'd' for custom function, more efficient.
  */
-export const PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR = 'd';
+//export const PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR = 'd';
 
 /**
  * How files are loaded
@@ -125,20 +128,20 @@ export const PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR = 'd';
  *    See: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
  * Experimental - do not use.
  */
-export const PARAM_IMPLEMENTATION_FILE_READWRITE = 'b';
+//export const PARAM_IMPLEMENTATION_FILE_READWRITE = 'b';
 
 /**
  * How files are copied
  * 'b' for base-64 string, with 'expo-file-system' module writeAsStringAsync().
  * 'c' for copyAsync(), with 'expo-file-system' module.
  */
-export const PARAM_IMPLEMENTATION_FILE_COPY = 'c';
+//export const PARAM_IMPLEMENTATION_FILE_COPY = 'c';
 
 /**
  * 'n' for none.
  * 'y' for deduplication technique.
  */
-export const PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION = 'n';
+//export const PARAM_IMPLEMENTATION_ATOB_DEDUPLICATION = 'n';
 
 /**
  * 'n' for normal processing.
