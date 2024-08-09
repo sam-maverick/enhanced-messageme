@@ -336,7 +336,7 @@ Install EAS. Despite not being stated in the official guide, we needed a sudo:
 sudo npm install -g eas-cli
 ```
 
-Then log in to your EAS account. If you do not have any, just create one.
+Then log in to your EAS account. If you do not have any, just create one at https://expo.dev. Please note that this is the EAS account; not your Android Developer account.
 
 ```
 eas login
@@ -346,7 +346,7 @@ To prepare your environment for development builds, follow the steps explained i
 
 # 8. Preparing the tools for the EAS build for iOS
 
-You will need a MacOS computer to compile the app for iOS.
+**NOTE: You will need a MacOS computer to compile the app for iOS.**
 
 According to this [guide](https://docs.expo.dev/build-reference/local-builds/), you first need to install fastlane:
 
@@ -362,19 +362,25 @@ Install EAS:
 npm install -g eas-cli
 ```
 
-Then log in to your EAS account. If you do not have any, just create one.
+Then log in to your EAS account. If you do not have any, just create one at https://expo.dev. Please note that this is the EAS account; not your Apple Developer account. You will be asked about your Apple Developer account credentials later.
 
 ```
 eas login
 ```
 
-When you try to build for the first time, you should be asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build).
+
+You then need to follow the instructions [here](https://developer.apple.com/support/expiration/) to install the new Apple Worldwide Developer Relations Intermediate Certificate. Otherwise, you will get the following error when deploying the app: `Distribution certificate with fingerprint <...> hasn't been imported successfully`.
 
 # 9. Deploying the apps
 
-##### You will need to perform the steps below from the ppclient, ppimagemarker and emclient folders, separately:
+For deploying the apps, we provide a `build.js` script that performs all the necessary steps to perform a clean build of the app bundle. You do not need to (nor should) modify the `android` and `ios` folders under the ppimagemarker, emclient, and ppclient folders. Once the build is complete, it will automatically install it on the phone that is connected to your computer, if applicable. You can install ppimagemarker and emclient locally, but you will need to install the ppclient from the Apple/Android official stores by using the Android AAB build or the iOS XCODE build; otherwise the app integrity API will fail. [This guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories.
 
-For the development build, connect the phone to the computer and run:
+
+**Repeat all the steps below from the ppimagemarker, emclient, and ppclient folders, separately:**
+
+**IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order).** Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.
+
+For the development build for Android, connect the phone to the computer and run:
 
 ```
 node ./build.js bare patch nosavepatches
@@ -387,13 +393,14 @@ node ./build.js apk patch nosavepatches
 node ./build.js aab patch nosavepatches
 ```
 
-To compile for iOS,
+To compile for iOS, run the command below. Answer Y when asked "Do you want to log in to your Apple account". You will then have to enter your Apple Developer account credentials.
+
+| WARNING:<br />This step makes the credentials available to the EAS utility, which is a third party software. Although most Apple accounts are protected with a security layer of two-factor authentication, this still poses security risks. Please consult with a security expert before proceeding if you are unsure about the implications of this step. |
+| ------------------------------------------------------------ |
 
 `node ./build.js ios patch nosavepatches`
 
-[This guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories.
-
-**IMPORTANT: Always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order).**
+When you try to build for iOS for the first time, you should be asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build).
 
 # 10. Acknowledgements
 
