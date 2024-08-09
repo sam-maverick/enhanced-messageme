@@ -182,6 +182,22 @@ You should now be ready to use Expo.
 
 *NOTE: Do not use npm in ppclient nor in emclient !! Use yarn only!! This is because the 'resolutions' directive in package.json is not supported in npm. We need that directive to fix the issue `cannot read property 'slice' of undefined` of react-native-quick-crypto. See https://github.com/margelo/react-native-quick-crypto/issues/242 for more info.*
 
+First of all, from any folder,
+
+```
+npm install -g shelljs
+```
+
+Then, you will have to run the command below every time you open a new console. This is to configure some required environment variables that cannot be set from within a Node script file. Sorry! The example below works for Linux and Mac systems. I provide a `setenv.windows.cmd` equivalent although I have not tested it.
+
+```
+. ./setenv.linux.sh
+```
+
+
+
+Now we can install the required modules. Notice that some are `yarn` while others are `npm`.
+
 From the `emclient/` folder,
 
 ```
@@ -210,14 +226,6 @@ From the `ppserver/` folder,
 
 ```
 npm install
-```
-
-You can ignore any warnings and notices for now.
-
-From any folder,
-
-```
-npm install -g shelljs
 ```
 
 # 4. Editing configuration files
@@ -353,12 +361,6 @@ When you try to build for the first time, you should be asked about the Apple de
 # 9. Deploying the apps
 
 ##### You will need to perform the steps below from the ppclient, ppimagemarker and emclient folders, separately:
-
-Run this to set some environment variables:
-
-```
-. ./setenv.linux.sh
-```
 
 For the development build, connect the phone to the computer and run:
 
