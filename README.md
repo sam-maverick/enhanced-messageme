@@ -356,7 +356,7 @@ brew install fastlane
 
 According to [this guide](https://docs.expo.dev/build/setup/), "*If you have not generated a provisioning profile and/or distribution certificate yet, you can let EAS CLI take care of that for you by signing into your Apple Developer Program account and following the prompts.*"
 
-Install EAS. Despite not being stated in the official guide, we needed a sudo:
+Install EAS:
 
 ```
 npm install -g eas-cli
