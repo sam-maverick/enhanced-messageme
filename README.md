@@ -356,6 +356,18 @@ brew install fastlane
 
 According to [this guide](https://docs.expo.dev/build/setup/), "*If you have not generated a provisioning profile and/or distribution certificate yet, you can let EAS CLI take care of that for you by signing into your Apple Developer Program account and following the prompts.*"
 
+Install EAS. Despite not being stated in the official guide, we needed a sudo:
+
+```
+npm install -g eas-cli
+```
+
+Then log in to your EAS account. If you do not have any, just create one.
+
+```
+eas login
+```
+
 When you try to build for the first time, you should be asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build).
 
 # 9. Deploying the apps
