@@ -1,5 +1,5 @@
 diff --git a/node_modules/expo-app-integrity/android/build.gradle b/node_modules/expo-app-integrity/android/build.gradle
-index f0d7658..4831de5 100644
+index f0d7658..38df657 100644
 --- a/node_modules/expo-app-integrity/android/build.gradle
 +++ b/node_modules/expo-app-integrity/android/build.gradle
 @@ -37,7 +37,7 @@ buildscript {
@@ -11,6 +11,35 @@ index f0d7658..4831de5 100644
    from android.sourceSets.main.java.srcDirs
  }
  
+@@ -59,15 +59,24 @@ afterEvaluate {
+ }
+ 
+ android {
+-  compileSdkVersion safeExtGet("compileSdkVersion", 31)
++  compileSdkVersion safeExtGet("compileSdkVersion", 34)
+ 
+   compileOptions {
+-    sourceCompatibility JavaVersion.VERSION_11
+-    targetCompatibility JavaVersion.VERSION_11
++    sourceCompatibility JavaVersion.VERSION_17
++    targetCompatibility JavaVersion.VERSION_17
+   }
+ 
+   kotlinOptions {
+-    jvmTarget = JavaVersion.VERSION_11.majorVersion
++    jvmTarget = JavaVersion.VERSION_17.majorVersion
++  }
++
++  kotlin {
++    jvmToolchain(17)
++  }
++
++  java {
++      sourceCompatibility = JavaVersion.VERSION_17
++      targetCompatibility = JavaVersion.VERSION_17
+   }
+ 
+   defaultConfig {
 diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
 index e3fd69a..039941f 100644
 --- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift

@@ -14,7 +14,7 @@
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 33,
+            "compileSdkVersion": 34,
             "targetSdkVersion": 34,
             "usesCleartextTraffic": true,
             "packagingOptions": {
@@ -27,12 +27,14 @@
             "deploymentTarget": "16.0"
           }
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-secure-store"
     ],
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro-gen",
-    "version": "2.11.279",
+    "version": "2.11.290",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -63,7 +65,7 @@
         "pt.lasige.safex.permission.PRIVACY_PROVIDER"
       ],
       "package": "pt.lasige.safex.ppclient",
-      "versionCode": 353
+      "versionCode": 355
     },
     "web": {
       "favicon": "./assets/favicon.png"

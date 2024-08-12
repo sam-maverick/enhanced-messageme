@@ -39,14 +39,14 @@ const replaceInFile = (myfilepath, mypattern, mynewtext) => {
 echo('Patching source code of installed modules from diff files in patches folder');
 exec('npx patch-package');
 
-echo('Backing up tsconfig.json');
-cp('./node_modules/expo-file-system/tsconfig.json', './node_modules/expo-file-system/tsconfig.json.tmp');
+//-//echo('Backing up tsconfig.json');
+//-//cp('./node_modules/expo-file-system/tsconfig.json', './node_modules/expo-file-system/tsconfig.json.tmp');
 
-echo('Installing necessary modules within expo-file-system, including the expo-module');
-exec('npm install --prefix node_modules/expo-file-system');
+//-//echo('Installing necessary modules within expo-file-system, including the expo-module');
+//-//exec('npm install --prefix node_modules/expo-file-system');
 
-echo('Restoring tsconfig.json');
-mv('./node_modules/expo-file-system/tsconfig.json.tmp', './node_modules/expo-file-system/tsconfig.json');
+//-//echo('Restoring tsconfig.json');
+//-//mv('./node_modules/expo-file-system/tsconfig.json.tmp', './node_modules/expo-file-system/tsconfig.json');
 
 echo('Patching podspecsPath undefined');
 echo('See https://github.com/expo/expo/pull/20789');
@@ -67,28 +67,28 @@ replaceInFile(
 //sed -r 's/var Transform = require\(\x27stream\x27\)\.Transform/echo -n "var Transform = require(''readable-stream'').Transform"/ge' ./node_modules/expo-file-system/node_modules/hash-base/index.js > ./node_modules/expo-file-system/node_modules/hash-base/index.js.tmp
 //mv ./node_modules/expo-file-system/node_modules/hash-base/index.js.tmp ./node_modules/expo-file-system/node_modules/hash-base/index.js
 
-echo('For some reason, the \'npm install\' command eliminates "**/__stories__/*" from tsconfig.json, which causes issues to patches of tsconfig.json, so we re-include that');
+//-//echo('For some reason, the \'npm install\' command eliminates "**/__stories__/*" from tsconfig.json, which causes issues to patches of tsconfig.json, so we re-include that');
 
 //!!!!sed -r 's/  "exclude": \["\*\*\/__mocks__\/\*", "\*\*\/__tests__\/\*"\]/echo -n "  \\"exclude\\": \[\\"\*\*\/__mocks__\/\*\\", \\"\*\*\/__tests__\/\*\\", \\"\*\*\/__stories__\/\*\\"\]"/ge' ./node_modules/expo-file-system/tsconfig.json > ./node_modules/expo-file-system/tsconfig.json.tmp
-replaceInFile(
-'./node_modules/expo-file-system/tsconfig.json', 
-/  "exclude": \["\*\*\/__mocks__\/\*", "\*\*\/__tests__\/\*"\]/g,
-"  \"exclude\": \[\"\*\*\/__mocks__\/\*\", \"\*\*\/__tests__\/\*\", \"\*\*\/__stories__\/\*\"\]"
-);
+//-//replaceInFile(
+//-//'./node_modules/expo-file-system/tsconfig.json', 
+//-///  "exclude": \["\*\*\/__mocks__\/\*", "\*\*\/__tests__\/\*"\]/g,
+//-//"  \"exclude\": \[\"\*\*\/__mocks__\/\*\", \"\*\*\/__tests__\/\*\", \"\*\*\/__stories__\/\*\"\]"
+//-//);
 //sed -r 's/  "exclude": \["\*\*\/__mocks__\/\*", "\*\*\/__tests__\/\*"\]/echo -n "  \\"exclude\\": \[\\"\*\*\/__mocks__\/\*\\", \\"\*\*\/__tests__\/\*\\", \\"\*\*\/__stories__\/\*\\"\]"/ge' ./node_modules/expo-file-system/tsconfig.json > ./node_modules/expo-file-system/tsconfig.json.tmp
 
 
-mv('./node_modules/expo-file-system/tsconfig.json.tmp', './node_modules/expo-file-system/tsconfig.json');
+//-//mv('./node_modules/expo-file-system/tsconfig.json.tmp', './node_modules/expo-file-system/tsconfig.json');
 
-echo('Clearing build directory');
-rm('-r', './node_modules/expo-file-system/build');
+//-//echo('Clearing build directory');
+//-//rm('-r', './node_modules/expo-file-system/build');
 
-echo('Building JS files to build/ from TS files in src/, without watch option');
-echo('Note that expo-file-system comes with dist folder by default, so we need to spread changes from TS to JS');
-exec('npm run tsc --prefix node_modules/expo-file-system');
+//-//echo('Building JS files to build/ from TS files in src/, without watch option');
+//-//echo('Note that expo-file-system comes with dist folder by default, so we need to spread changes from TS to JS');
+//-//exec('npm run tsc --prefix node_modules/expo-file-system');
 
-echo('Contents of ./node_modules/expo-file-system/tsconfig.json: ');
-cat('./node_modules/expo-file-system/tsconfig.json');
+//-//echo('Contents of ./node_modules/expo-file-system/tsconfig.json: ');
+//-//cat('./node_modules/expo-file-system/tsconfig.json');
 
 echo('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ');
 echo('END: UPDATING SYSTEM');
