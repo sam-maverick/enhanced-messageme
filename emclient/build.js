@@ -235,6 +235,10 @@ if (process.argv[2] === 'apk') {
   mv('*.apk', artifactname + '.apk');
   echo('Artifact renamed to ' + artifactname + '.apk');
 }
+if (process.argv[2] === 'ios') {
+  mv('*.ipa', artifactname + '.ipa');
+  echo('Artifact renamed to ' + artifactname + '.ipa');
+}
 
 
 // Install and run APK
