@@ -78,6 +78,10 @@ if (process.argv[2] === 'apk') {
   rm('-f', './*.apk');
   echo('Old APKs deleted');
 }
+if (process.argv[2] === 'ios') {
+  rm('-f', './*.ipa');
+  echo('Old IPAs deleted');
+}
 
 if (process.argv[4] === 'savepatches') {
   require('./savepatches.js');
