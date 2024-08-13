@@ -369,7 +369,7 @@ eas login
 ```
 
 
-You then need to follow the instructions [here](https://developer.apple.com/support/expiration/) to install the new Apple Worldwide Developer Relations Intermediate Certificate. Otherwise, you will get the following error when deploying the app: `Distribution certificate with fingerprint <...> hasn't been imported successfully`.
+You then need to follow the instructions [here](https://developer.apple.com/support/expiration/) to install the new Apple Worldwide Developer Relations Intermediate Certificate. Otherwise, you will get the following error when deploying the app: `Distribution certificate with fingerprint <...> hasn't been imported successfully`. Once you import the certificate, double-click on it from Keychain Access, expand Trust, and select "Use System Defaults" for "When using this certificate". If you select "Always trust" you may run into issues, as explained [here](https://forums.developer.apple.com/forums/thread/712043).
 
 # 9. Deploying the apps
 
@@ -393,14 +393,14 @@ node ./build.js apk patch nosavepatches
 node ./build.js aab patch nosavepatches
 ```
 
-To compile for iOS, run the command below. Answer Y when asked "Do you want to log in to your Apple account". You will then have to enter your Apple Developer account credentials.
+To compile for iOS for a production build, run the command below. Answer Y when asked "Do you want to log in to your Apple account". You will then have to enter your Apple Developer account credentials.
 
 | WARNING:<br />This step makes the credentials available to the EAS utility, which is a third party software. Although most Apple accounts are protected with a security layer of two-factor authentication, this still poses security risks. Please consult with a security expert before proceeding if you are unsure about the implications of this step. |
 | ------------------------------------------------------------ |
 
 `node ./build.js ios patch nosavepatches`
 
-When you try to build for iOS for the first time, you should be asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build).
+When you try to build for iOS for the first time,you are asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build).
 
 # 10. Acknowledgements
 
