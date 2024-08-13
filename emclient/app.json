@@ -38,7 +38,7 @@
     "name": "enhmessageme",
     "slug": "enhmessageme",
     "scheme": "enhmsm",
-    "version": "2.22.250",
+    "version": "2.22.252",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -62,7 +62,8 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
-      }
+      },
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {

@@ -38,7 +38,7 @@
     "name": "ppimagemarker",
     "slug": "ppimagemarker",
     "scheme": "ppimagemarker",
-    "version": "2.12.25",
+    "version": "2.12.28",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -56,7 +56,8 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app uses the library to let users share images in private chats.",
         "NSPhotoLibraryAddUsageDescription": "This app uses the library to let users share images in private chats."
-      }
+      },
+      "buildNumber": "6"
     },
     "android": {
       "adaptiveIcon": {
