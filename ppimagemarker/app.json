@@ -51,7 +51,6 @@
       "**/*"
     ],
     "ios": {
-      "deploymentTarget": "13.0",
       "supportsTablet": false,
       "bundleIdentifier": "pt.lasige.safex.ppimagemarker",
       "infoPlist": {
