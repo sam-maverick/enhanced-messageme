@@ -47,7 +47,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
+      "deploymentTarget": "13.0",
+      "supportsTablet": false,
       "bundleIdentifier": "pt.lasige.safex.ppclient",
       "infoPlist": {
         "NSAppTransportSecurity": {

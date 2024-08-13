@@ -51,7 +51,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
+      "deploymentTarget": "13.0",
+      "supportsTablet": false,
       "bundleIdentifier": "pt.lasige.safex.ppimagemarker",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app uses the library to let users share images in private chats.",
