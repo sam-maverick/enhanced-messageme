@@ -190,7 +190,7 @@ First of all, from any folder,
 
 ```
 npm install -g shelljs
-yarn global add react-native-asset
+npm install -g react-native-asset
 ```
 
 Then, you will have to run the command below every time you open a new console. This is to configure some required environment variables that cannot be set from within a Node script file. Sorry! The example below works for Linux and Mac systems. I provide a `setenv.windows.cmd` equivalent although I have not tested it.
