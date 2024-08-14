@@ -18,4 +18,4 @@ exec('npx patch-package react-native-file-provider --exclude "^dummy\\$" --inclu
 exec('npx patch-package react-native-popup-menu --exclude "^dummy\\$" --include "^src|^build"');
 exec('npx patch-package react-native-quick-base64 --exclude "^dummy\\$" --include "^src/"');
 exec('npx patch-package base-64 --exclude "^dummy\\$" --include "^base64\\.js$"');
-exec('npx patch-package react-native-quick-crypto --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$"');
+//exec('npx patch-package react-native-quick-crypto --exclude "^dummy\\$" --include "^android/build\\\\.gradle\\$"');
