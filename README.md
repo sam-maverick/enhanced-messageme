@@ -1,4 +1,8 @@
-Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware dubbed **PP platform**. This project is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/) (CC BY 4.0, Joel Samper and Bernardo Ferreira), which is a playground messaging app that we take as our base. Both projects are for testing and academic purposes. You can deploy Enhanced Messageme on a single computer. It is composed of:
+Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware dubbed **PP platform** for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features.
+
+This project is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/) (CC BY 4.0, Joel Samper and Bernardo Ferreira), which is a no-frills playground messaging app that we take as our base. Both projects are for testing and academic purposes.
+
+You can deploy the Enhanced Messageme project on a single computer. It is composed of:
 
 - emclient: This is a messaging app that features the ability to exchange text and pictures over private chats among users.  For the client, you can use either emulators or physical devices. NOTE: If you want to run phone emulators, it is highly recommended to deploy this project on a bare metal machine, not a virtual machine.
 - emserver: The server of the messaging platform
@@ -7,7 +11,7 @@ Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices
 
 The client apps have been developed with [Expo Go](https://expo.dev/go) and [React Native](https://reactnative.dev/), so that you can run them on Android and iOS devices. The servers have been developed with [NestJS](https://nestjs.com/) and use a [MongoDB](https://www.mongodb.com) self-hosted database in the backend.
 
-We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links and adapt some shell scripts. For the app binaries, we provide a build.js script for convenience. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
+We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links. For the app binaries, we provide a build.js script for convenience. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
 
 # 1. Preparing the network environment
 
@@ -373,34 +377,17 @@ You then need to follow the instructions [here](https://developer.apple.com/supp
 
 # 9. Deploying the apps
 
-For deploying the apps, we provide a `build.js` script that performs all the necessary steps to perform a clean build of the app bundle. You do not need to (nor should) modify the `android` and `ios` folders under the ppimagemarker, emclient, and ppclient folders. Once the build is complete, it will automatically install it on the phone that is connected to your computer, if applicable. You can install ppimagemarker and emclient locally, but you will need to install the ppclient from the Apple/Android official stores by using the Android AAB build or the iOS XCODE build; otherwise the app integrity API will fail. [This Expo guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories. This [Apple guide](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases) explains how to use TestFlight for beta builds.
-
+For deploying the apps, we provide a `build.js` script that performs all the necessary steps to perform a clean build of the app bundle. We use the **local build** of EAS rather than the server build. You do not need to (nor should) modify the `android` and `ios` folders under the ppimagemarker, emclient, and ppclient folders. Once the build is complete, it will automatically install it on the phone that is connected to your computer, if applicable. You can install ppimagemarker and emclient locally, but you will need to install the ppclient from the Apple/Android official stores by using the Android AAB production build or the iOS build; otherwise the app integrity API will fail. [This Expo guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories. This [Apple guide](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases) explains how to use TestFlight for beta builds.
 
 **Repeat all the steps below from the ppimagemarker, emclient, and ppclient folders, separately:**
 
-**IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order).** Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.
-
-For the development build for Android, connect the phone to the computer and run:
-
-```
-node ./build.js bare patch nosavepatches
-```
-
-To generate the Android APK or AAB files for the production builds, run either:
-
-```
-node ./build.js apk patch nosavepatches
-node ./build.js aab patch nosavepatches
-```
-
-To compile for iOS for a production build, run the command below. Answer Y when asked "Do you want to log in to your Apple account". You will then have to enter your Apple Developer account credentials.
-
-| WARNING:<br />This step makes the credentials available to the EAS utility, which is a third party software. Although most Apple accounts are protected with a security layer of two-factor authentication, this still poses security risks. Please consult with a security expert before proceeding if you are unsure about the implications of this step. |
+| Android                                                      |
 | ------------------------------------------------------------ |
+| **IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order)**. Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.<br /><br />For the development build for Android (can be used with a physical device), connect the phone to the computer and run:<br />`node ./build.js bare patch nosavepatches`<br /><br />To generate the Android APK or AAB files for the production builds, run either:<br />`node ./build.js apk patch nosavepatches`<br />`node ./build.js aab patch nosavepatches` |
 
-`node ./build.js ios patch nosavepatches`
-
-When you try to build for iOS for the first time,you are asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build).
+| iOS                                                          |
+| ------------------------------------------------------------ |
+| **IMPORTANT: The commands below make the Apple developer account credentials available to the EAS utility, which is a third party software. Although Apple accounts may be protected with a security layer of two-factor authentication, this still poses security risks. Please consult with a security expert before proceeding if you are unsure about the implications of this step.**<br /><br />Answer Y when asked "Do you want to log in to your Apple account" in the commands below. You will then have to enter your Apple Developer account credentials<br /><br />For the development build (can be used with iOS simulator), the command is:<br />`node ./build.js barei patch nosavepatches`<br /><br />To compile for iOS for a production build, run the command below.<br />`node ./build.js ios patch nosavepatches`<br /><br />When you try to build for iOS for the first time, you are asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build). |
 
 # 10. Acknowledgements
 
