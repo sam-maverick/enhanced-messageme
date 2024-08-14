@@ -40,8 +40,8 @@ if (process.argv[2] === 'bare' && artifactname === 'ppimagemarker') {
   exit(1);
 }*/
 
-if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'bare' && process.argv[2] !== 'ios') {
-  echo('The first parameter is the build type, and must be either \'apk\', \'aab\', \'ios\' or \'bare\'.');
+if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'bare' && process.argv[2] !== 'barei' && process.argv[2] !== 'ios') {
+  echo('The first parameter is the build type, and must be either \'apk\', \'aab\', \'ios\' or \'bare\' or \'barei\'.');
   exit(1);
 }
 if (process.argv[3] !== 'major' && process.argv[3] !== 'minor' && process.argv[3] !== 'patch') {
@@ -54,7 +54,7 @@ echo('Running build: ' + process.argv[2] + ' on ' + appname);
 
 
 // For the user to check connected devices on-screen
-if (process.argv[2] !== 'ios') {
+if (process.argv[2] !== 'ios' && process.argv[2] !== 'barei') {
   echo('Connected and recognized devices to the the ADB service:');
   myExec('adb devices');
   env.RESULT = error();
@@ -111,7 +111,7 @@ if (artifactname === 'ppclient') {
   }
 }
 
-if (process.argv[2] !== 'aab' && process.argv[2] !== 'ios') {
+if (process.argv[2] === 'apk' || process.argv[2] === 'bare') {
   echo('Stopping any current app execution on the phone');
   myExec(`adb shell am force-stop ${appname}`);
 }
@@ -199,8 +199,8 @@ if (process.argv[2] === 'apk') {
     exit(1);
   }
 }
-// If we call "npx expo run:android" directly, the package.json scripts are not checked
-// We need to invoke the npm script of package.json, which in turn will invoke "npx expo run:android"
+// ? If we call "npx expo run:android" directly, the package.json scripts are not checked
+// ? We need to invoke the npm script of package.json, which in turn will invoke "npx expo run:android"
 if (process.argv[2] === 'bare') {
   if (artifactname === 'ppclient') {
     myExec('npx expo run:android --port 8082');
@@ -228,6 +228,36 @@ if (process.argv[2] === 'bare') {
     }
   }
 }
+
+
+if (process.argv[2] === 'barei') {
+  if (artifactname === 'ppclient') {
+    myExec('npx expo run:ios --port 8082');
+    env.RESULT = error();
+    if (env.RESULT.toString() !== 'null') {
+      echo('Aborting on ' + env.RESULT + ', command failed:');
+      echo('npx expo ...');
+      exit(1);
+    }
+  } else if (artifactname === 'ppimagemarker') {
+    myExec('npx expo run:ios --port 8083');
+    env.RESULT = error();
+    if (env.RESULT.toString() !== 'null') {
+      echo('Aborting on ' + env.RESULT + ', command failed:');
+      echo('npx expo ...');
+      exit(1);
+    }
+  } else {
+    myExec('npm run ios -c');
+    env.RESULT = error();
+    if (env.RESULT.toString() !== 'null') {
+      echo('Aborting on ' + env.RESULT + ', command failed:');
+      echo('npm run ...');
+      exit(1);
+    }
+  }
+}
+
 
 
 //Rename artifacts

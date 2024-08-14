@@ -98,22 +98,22 @@ export async function WriteMyFileStream (path, mode, append, data) {
 
 
 export function EncodeFromB64ToBinary (str) {
-  LogUS(1,'EncodeFromB64ToBinary() called');
+  LogMe(1,'EncodeFromB64ToBinary() called');
   return Buffer.from(str, 'base64').toString('binary');
 }
 
 export function EncodeFromBinaryToB64 (str) {
-  LogUS(1,'EncodeFromBinaryToB64() called');
+  LogMe(1,'EncodeFromBinaryToB64() called');
   return Buffer.from(str, 'binary').toString('base64');
 }
 
 export function EncodeFromB64ToUTF8 (str) {
-  LogUS(1,'EncodeFromB64ToUTF8() called');
+  LogMe(1,'EncodeFromB64ToUTF8() called');
   return Buffer.from(str, 'base64').toString('utf8');
 }
 
 export function EncodeFromUTF8ToB64 (str) {
-  LogUS(1,'EncodeFromUTF8ToB64() called');
+  LogMe(1,'EncodeFromUTF8ToB64() called');
   return Buffer.from(str, 'utf8').toString('base64');
 }
 

@@ -37,7 +37,7 @@ import storage from '../storage/storageApi.js';
 
 //import * as AndroidPermanentMediaOverwritePermissions from 'android-permanent-media-overwrite-permissions';
 
-
+// NOTE: iOS does not provide albumId for selected picture file assets; therefore in iOS we do not detect when picture is from PrivatePics album
 
 export const PPTaggingComponent = (props) => {
 
@@ -57,7 +57,7 @@ export const PPTaggingComponent = (props) => {
     //const [assets, setAssets] = useState<Asset[]>([]);
     const [assets, setAssets] = useState();
 
-    const [status, requestPermission] = MediaLibrary.usePermissions();
+    const [statusUsePermissions, usePermissions] = MediaLibrary.usePermissions();
 
     // Privacy policies
     const [selectionViewOnce, setSelectionViewOnce] = useState();
@@ -78,7 +78,23 @@ export const PPTaggingComponent = (props) => {
 
             for (let i = 0; i < assets.length; i++) {
 
-                let fileExt = assets[i].uri.split('.').pop().toLowerCase();
+                LogMe(1, ":1::"+JSON.stringify(await MediaLibrary.getAssetInfoAsync(assets[i])));
+                LogMe(1, ":2::"+JSON.stringify(assets[i]));
+
+                let hopefullyReadableUri;
+                let uriWithExtension;
+                if (Platform.OS === 'android') {
+                    hopefullyReadableUri = assets[i].uri;
+                    uriWithExtension = assets[i].uri;
+                } else if (Platform.OS === 'ios') {
+                    hopefullyReadableUri = assets[i].uri;
+                    uriWithExtension = (await MediaLibrary.getAssetInfoAsync(assets[i])).localUri;
+                } else {
+                    ErrorAlert('Platform not supported: '+Platform.OS);  
+                    return; 
+                }
+
+                let fileExt = uriWithExtension.split('.').pop().toLowerCase();
                 if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
                 if (!IsValidImageExtensionAndContentType(fileExt)) {
                     ErrorAlert('Image URI extension is not valid: '+fileExt);  
@@ -91,7 +107,17 @@ export const PPTaggingComponent = (props) => {
                 }
                 // Get exif data as object. jpegData must be a string that starts with "data:image/jpeg;base64,"(DataURL), "\xff\xd8", or "Exif".
                 LogMe(1,'ExecuteTheMarking(): readAsStringAsync');
-                let fileContentsOriginal = await FileSystem.readAsStringAsync(assets[i].uri, {encoding: 'base64'});
+
+                let uriInCache = FileSystem.cacheDirectory + "/" + uuid.v4() + "." + fileExt;
+                await FileSystem.copyAsync({
+                    from: hopefullyReadableUri,
+                    to: uriInCache,
+                });
+                LogMe(1, "Selected file " + hopefullyReadableUri + " was copied to "+uriInCache);
+
+                LogMe(1, "readAsStringAsync() : ");
+
+                let fileContentsOriginal = await FileSystem.readAsStringAsync(uriInCache, {encoding: 'base64'});
                 let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
                 LogMe(2,'ExecuteTheMarking(): dataUri: ----'+dataUri);
                 LogMe(1,'ExecuteTheMarking(): piexif.load');
@@ -129,7 +155,7 @@ export const PPTaggingComponent = (props) => {
                     LogMe(1,'ExecuteTheMarking(): processing a picture that is in PrivatePics');
                     try {
                         await FileSystem.writeAsStringAsync(
-                            assets[i].uri,
+                            hopefullyReadableUri,
                             base64ContentsWithInsertedMetadata,
                             {encoding: 'base64'}
                         );       
@@ -202,18 +228,27 @@ export const PPTaggingComponent = (props) => {
             } else {
                 LogMe(1, 'EIP perms not granted');
                 await AsyncAlert('The system indicates that you did not grant privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
-            }    
-
-            let permsML = await requestPermission();
-            LogMe(1, 'Result is: permsML='+JSON.stringify(permsML));
-            if (permsML.granted) {
-                LogMe(1, 'ML perms granted');
+            }      
+/*
+            let MLreqPerms = await MediaLibrary.requestPermissionsAsync();
+            LogMe(1, 'Result is: MLreqPerms='+JSON.stringify(MLreqPerms));
+            if (MLreqPerms.granted) {
+                LogMe(1, 'ML req perms granted');
             } else {
-                LogMe(1, 'ML perms not granted');
+                LogMe(1, 'ML req perms not granted');
+                await AsyncAlert('The system indicates that you did not grant privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
+            }    
+*/
+            let MLusePerms = await usePermissions();
+            LogMe(1, 'Result is: MLusePerms='+JSON.stringify(MLusePerms));
+            if (MLusePerms.granted) {
+                LogMe(1, 'ML use perms granted');
+            } else {
+                LogMe(1, 'ML use perms not granted');
                 await AsyncAlert('The system indicates that you did not grant privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
             }    
 
-            if (permsEIP.granted && permsML.granted) {
+            if (permsEIP.granted && MLusePerms.granted) {
                 setImagePermissionsGranted(true);       
             }
 
@@ -259,8 +294,6 @@ export const PPTaggingComponent = (props) => {
         
                 setPropsState(cloneOfProps);    
             }
-
-        
         }
     }
 
@@ -351,10 +384,23 @@ export const PPTaggingComponent = (props) => {
                                     LogMe(1, 'onSave: '+JSON.stringify(newassets));
                                     setAssets(newassets);
 
+                                    let hopefullyReadableUri;
+                                    let uriWithExtension;
+                                    if (Platform.OS === 'android') {
+                                        hopefullyReadableUri = newassets[0].uri;
+                                        uriWithExtension = newassets[0].uri;
+                                    } else if (Platform.OS === 'ios') {
+                                        hopefullyReadableUri = newassets[0].uri;
+                                        uriWithExtension = (await MediaLibrary.getAssetInfoAsync(newassets[0])).localUri;
+                                    } else {
+                                        ErrorAlert('Platform not supported: '+Platform.OS);  
+                                        return; 
+                                    }                    
+
                                     // Load appropriate preselected values
                                     if (newassets.length == 1 && newassets[0].albumId == privateAlbumID.key) {
                                         LogMe(1, 'Loading current values');
-                                        let fileExt = newassets[0].uri.split('.').pop().toLowerCase();
+                                        let fileExt = uriWithExtension.split('.').pop().toLowerCase();
                                         if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
                                         if (!IsValidImageExtensionAndContentType(fileExt)) {
                                             ErrorAlert('Image URI extension is not valid: '+fileExt);  
@@ -365,7 +411,7 @@ export const PPTaggingComponent = (props) => {
                                             ErrorAlert('Image extension '+fileExt+' is not supported. Only jpg/jpeg and tiff images are supported.');
                                             return;
                                         }
-                                        let fileContentsOriginal = await FileSystem.readAsStringAsync(newassets[0].uri, {encoding: 'base64'});
+                                        let fileContentsOriginal = await FileSystem.readAsStringAsync(hopefullyReadableUri, {encoding: 'base64'});
                                         let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
                                         let exifObj = piexif.load(dataUri);
                                         LogMe(2,'exifObj: '+JSON.stringify(exifObj));
@@ -377,7 +423,7 @@ export const PPTaggingComponent = (props) => {
                                                 if (metadata?.pictureType === 'private') {
                                                     LogMe(1,'The picture is indeed private!');
                                                 } else {
-                                                    let msg = 'Inconsistency: Picture '+newassets[i].uri+' is in PrivatePics album but is not marked as private. Aborting.';
+                                                    let msg = 'Inconsistency: Picture '+hopefullyReadableUri+' is in PrivatePics album but is not marked as private. Aborting.';
                                                     ErrorAlert(msg);
                                                     LogMe(1, msg);
                                                     return;
@@ -392,7 +438,7 @@ export const PPTaggingComponent = (props) => {
                                                 return;
                                             }
                                         } else {
-                                            let msg = 'Inconsistency: Picture '+newassets[i].uri+' is in PrivatePics album but it does not have EXIF metadata. Aborting.';
+                                            let msg = 'Inconsistency: Picture '+hopefullyReadableUri+' is in PrivatePics album but it does not have EXIF metadata. Aborting.';
                                             ErrorAlert(msg);
                                             LogMe(1, msg);
                                             return;
