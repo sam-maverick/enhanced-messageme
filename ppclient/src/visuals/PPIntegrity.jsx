@@ -14,7 +14,7 @@ import { EraseLocalData, ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGen
 
 import storage from '../storage/storageApi.js';
 
-import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_IOS_KEY_IDENTIFIER } from '../parameters.js';
+//import {  } from '../parameters.js';
 
 import { useNavigation } from '@react-navigation/native';
 
@@ -136,7 +136,7 @@ export const PPIntegrityComponent = (props) => {
                     <Text />
 
                     <View style={styles.leftleft}>
-                        <Button disabled={attestationTestInProgressStandard} title='Check integrity (standard request)' onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatusStandard, setAttestationTestInProgressStandard, 'standard', 'PPIcookie')} />
+                        <Button disabled={attestationTestInProgressStandard} title='Check integrity (standard request)' onPress={() => CheckIntegrity('PPIntegrity', propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatusStandard, setAttestationTestInProgressStandard, 'standard', 'PPIcookie')} />
                     </View>
 
                     <View style={styles.leftleft}>
@@ -163,9 +163,9 @@ export const PPIntegrityComponent = (props) => {
                         {
                             Platform.OS === 'android'
                             ?
-                            <Button disabled={attestationTestInProgress} title="Check integrity (classic request)" onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatus, setAttestationTestInProgress, 'classic', 'PPIcookie')} />
+                            <Button disabled={attestationTestInProgress} title="Check integrity (classic request)" onPress={() => CheckIntegrity('PPIntegrity', propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatus, setAttestationTestInProgress, 'classic', 'PPIcookie')} />
                             :
-                            <Button disabled={attestationTestInProgress} title="Do attestation" onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatus, setAttestationTestInProgress, 'attestation', 'PPIcookie')} />
+                            <Button disabled={attestationTestInProgress} title="Do attestation" onPress={() => CheckIntegrity('PPIntegrity', propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAttestationStatus, setAttestationTestInProgress, 'attestation', 'PPIcookie')} />
                         }
                     </View>
 
@@ -207,15 +207,37 @@ export const PPIntegrityComponent = (props) => {
                     <Text />
 
                     <View style={styles.leftleft}>
-                        <Button disabled={keygenInProgress} title='Generate new key-pair' onPress={() => DoKeygen(setkeygenStatus, setkeygenInProgress, PARAM_IOS_KEY_IDENTIFIER.PPIntegrity)} />
+                        <Button disabled={keygenInProgress} title='Generate new key-pair' onPress={async() => {
+                            let name = await DoKeygen(setkeygenStatus, setkeygenInProgress);
+
+                            let cloneOfProps = {AccountData: propsStateSync.key.AccountData};  // Force pass-by-value
+                            cloneOfProps.AccountData.iosKeyName = name;
+                            try {
+                                const storagenewdata = {
+                                    key: 'accountData', // Note: Do not use underscore("_") in key!
+                                    data: cloneOfProps.AccountData,
+                                };
+                                await storage.save(storagenewdata);
+                                LogMe(1,'Saved to storage: '+JSON.stringify(name));
+                    
+                                setPropsState(cloneOfProps);
+                                propsStateSync.key = cloneOfProps;
+                    
+                            } catch(error) { 
+                                ErrorAlert(error.message, error);  // Storage error    
+                                LogMe(1, 'Storage issue.');
+                            }                                                                        
+
+                        }}
+                        />
                     </View>
                     <View style={styles.leftleft}>
                         <Text>Keygen result is: </Text><Text style={{fontWeight: "bold"}}>{ keygenStatus }</Text>
                     </View>
 
                     <View style={styles.leftleft}>
-                        <Text>Is there a key-pair stored locally? </Text>
-                        <Text style={{fontWeight: "bold"}}>{propsState.AccountData.PPIiosKeypairName==='' ? 'No' : 'Yes'}</Text>
+                        <Text>Key-pair name ('' means none) </Text>
+                        <Text style={{fontWeight: "bold"}}>{propsState.AccountData.iosKeyName}</Text>
                     </View>
                     <View style={styles.leftleft}>
                     <Text>This only applies to iOS.</Text>
@@ -246,7 +268,7 @@ export const PPIntegrityComponent = (props) => {
                     <Text />
 
                     <View style={styles.leftleft}>
-                        <Button disabled={assertionInProgress} title='Do assertion' onPress={() => CheckIntegrity('PPIntegrity', PARAM_IOS_KEY_IDENTIFIER.PPIntegrity, propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAssertionStatus, setAssertionInProgress, 'assertion', 'PPIcookie')} />
+                        <Button disabled={assertionInProgress} title='Do assertion' onPress={() => CheckIntegrity('PPIntegrity', propsStateSync.key, function async (newProps) { LogMe(1, 'newProps='+JSON.stringify(newProps)); propsStateSync.key = newProps; setPropsState(newProps); }, setAssertionStatus, setAssertionInProgress, 'assertion', 'PPIcookie')} />
                     </View>
                     <View style={styles.leftleft}>
                         <Text>Assertion result is: </Text><Text style={{fontWeight: "bold"}}>{ assertionStatus }</Text>

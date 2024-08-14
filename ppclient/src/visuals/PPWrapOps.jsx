@@ -354,7 +354,8 @@ export const PPWrapOpsComponent = (props) => {
               'PPEcookie': '',
               'enrollmentAttempted': false,
               'enrollmentCompleted': false,
-            };
+              'iosKeyName': '',
+        };
 
             try {
                 await InitialisationActions();   

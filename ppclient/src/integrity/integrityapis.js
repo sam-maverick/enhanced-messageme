@@ -5,7 +5,7 @@ import * as Integrity from 'expo-app-integrity';
 import { ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
 import storage from '../storage/storageApi.js';
 
-import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_IOS_KEY_IDENTIFIER } from '../parameters.js';
+import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER } from '../parameters.js';
 
 import { ApiGetNonceFromServer, ApiSubmitAttestationTokensToServer } from '../network/networkApi.js';
 
@@ -28,8 +28,8 @@ export async function AndroidClassicRequest(nonce, GoogleCloudProjectNumber) {
   return await Integrity.attestKey(nonce, GoogleCloudProjectNumber);
 }
 
-export async function iosKeygen(keyID) {
-  return await Integrity.generateKey(keyID);
+export async function iosKeygen() {
+  return await Integrity.generateKey();
 }
 
 export async function iosAppAttestRequest(keyID, challenge) {
@@ -83,7 +83,7 @@ export async function DoWarmup(setWarmupStatusFunction, setWarmupInProgressFunct
 * @param {function} setAttestationTestInProgressFunction Callback function to set progress status as boolean; true means 'in progress'
 * @return Promise
 */
-export async function CheckIntegrity(environment, keyIdentifier, someProps, saveMyProps, setAttestationStatusFunction, setAttestationTestInProgressFunction, RequestType, CookieName) {
+export async function CheckIntegrity(environment, someProps, saveMyProps, setAttestationStatusFunction, setAttestationTestInProgressFunction, RequestType, CookieName) {
   //console.log('param:'+PARAM_GOOGLE_CLOUD_PROJECT_NUMBER);
   setAttestationTestInProgressFunction(true);
   setAttestationStatusFunction('Executing...');
@@ -148,9 +148,9 @@ export async function CheckIntegrity(environment, keyIdentifier, someProps, save
       } else if (Platform.OS === 'android' && RequestType === 'standard') {
           resultingpromise = AndroidStandardRequest(apiresgetnonce.nonce, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER.toString());
       } else if (Platform.OS === 'ios' && RequestType === 'attestation') {
-          resultingpromise = iosAppAttestRequest(keyIdentifier, apiresgetnonce.nonce);
+          resultingpromise = iosAppAttestRequest(someProps.AccountData.iosKeyName, apiresgetnonce.nonce);
       } else if (Platform.OS === 'ios' && RequestType === 'assertion') {
-          resultingpromise = iosAppAssertRequest(keyIdentifier, apiresgetnonce.nonce);
+          resultingpromise = iosAppAssertRequest(someProps.AccountData.iosKeyName, apiresgetnonce.nonce);
       } else {
           ErrorAlert('Error: RequestType must be either \'classic\' or \'standard\' for \'android\' platforms, or \'attestation\' or \'assertion\' for \'ios\' platforms. We found '+RequestType+'.', undefined);
           setAttestationStatusFunction('ERROR');       
@@ -205,20 +205,20 @@ export async function CheckIntegrity(environment, keyIdentifier, someProps, save
 * Generates and stores a new keypair. Only applies to iOS
 * @param {function} setKeygenStatusFunction Callback function to set informational status as string
 * @param {function} setKeygenInProgressFunction Callback function to set progress status as boolean; true means 'in progress'
-* @return Promise
+* @return Promise that is false or is the result object
 */
-export async function DoKeygen(setKeygenStatusFunction, setKeygenInProgressFunction, keypairName) {
+export async function DoKeygen(setKeygenStatusFunction, setKeygenInProgressFunction) {
   LogMe(1, 'Starting key-pair generation');
   setKeygenInProgressFunction(true);
   setKeygenStatusFunction('Executing...');
 
-  return iosKeygen(keypairName)
-  .then( async () => {
+  return iosKeygen()
+  .then( async (result) => {
 
       setKeygenStatusFunction('Successful');
       setKeygenInProgressFunction(false);
       LogMe(1, 'Key-pair generation OK');
-      return Promise.resolve(true);
+      return Promise.resolve(result);
 
   })
   .catch((error) => {

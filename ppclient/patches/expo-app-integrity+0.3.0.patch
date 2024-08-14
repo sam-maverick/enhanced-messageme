@@ -40,23 +40,3 @@ index f0d7658..38df657 100644
    }
  
    defaultConfig {
-diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-index e3fd69a..039941f 100644
---- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-+++ b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-@@ -136,11 +136,13 @@ public class IntegrityModule: Module {
-             service.isSupported
-         }
- 
--        AsyncFunction("generateKey") { () async throws -> String in
-+        AsyncFunction("generateKey") { (
-+            keyIdentifier: String
-+        ) async throws -> String in
-             
-             
-             let result = await withCheckedContinuation { continuation in
--                service.generateKey { result, error in
-+                service.generateKey { keyIdentifier, error in  /* FIX: was `result' instead of keyIdentifier */
-                     
-                     return self.appAttestCompletion(
-                         result: AppAttestSuccessResult.keyIdentifier(string: result),

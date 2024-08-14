@@ -18,7 +18,6 @@ import storage from '../storage/storageApi.js';
 
 import { 
     PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, 
-    PARAM_IOS_KEY_IDENTIFIER,
     PARAM_PP__IMAGEMARKER_APPNAME,
     PARAM_PP__IMAGEMARKER_IOSAPPID,
     PARAM_PP__IMAGEMARKER_IOSAPPSTORELOCALE,
@@ -80,6 +79,30 @@ export const PPEnrollmentComponent = (props) => {
     } else {
         callbackOnFinishFunction = function () {};
         LogMe(1, 'callbackOnFinishFunction is: void');
+    }
+
+
+    async function SetIosKeyName(name) {
+      
+        //NO:internalSyncState.attempted = newState;
+
+        let cloneOfProps = {AccountData: propsStateSync.key.AccountData};  // Force pass-by-value
+        cloneOfProps.AccountData.iosKeyName = name;
+        try {
+            const storagenewdata = {
+                key: 'accountData', // Note: Do not use underscore("_") in key!
+                data: cloneOfProps.AccountData,
+            };
+            await storage.save(storagenewdata);
+            LogMe(1,'Saved to storage: '+JSON.stringify(name));
+
+            setPropsState(cloneOfProps);
+            propsStateSync.key = cloneOfProps;
+
+        } catch(error) { 
+            ErrorAlert(error.message, error);  // Storage error    
+            LogMe(1, 'Storage issue.');
+        }                                                    
     }
 
     async function SetAttempted(newState) {
@@ -208,14 +231,14 @@ export const PPEnrollmentComponent = (props) => {
                 
                     if (resultWarmup) {
                         LogMe(1, 'Warmup was successful');
-                        CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAndroidAttestationStandardStatus, function () {}, 'standard', 'PPEcookie')
+                        CheckIntegrity('PPEnrollment', propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAndroidAttestationStandardStatus, function () {}, 'standard', 'PPEcookie')
                         .then( async (resultStandard) => {
 
                             LogMe(1, 'after standard att. propsStateSync.key='+JSON.stringify(propsStateSync.key));
 
                             if (resultStandard) {
                                 LogMe(1, 'Standard attestation was successful');
-                                CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAndroidAttestationClassicStatus, function () {}, 'classic', 'PPEcookie')
+                                CheckIntegrity('PPEnrollment', propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setAndroidAttestationClassicStatus, function () {}, 'classic', 'PPEcookie')
                                 .then( async (resultClassic) => {
     
                                     LogMe(1, 'after classic att. propsStateSync.key='+JSON.stringify(propsStateSync.key));
@@ -272,17 +295,24 @@ export const PPEnrollmentComponent = (props) => {
 
                     setIosSupportStatus('OK');
 
-                    await DoKeygen(setIosKeypairStatus, function () {}, PARAM_IOS_KEY_IDENTIFIER.PPEnrollment)
+                    await DoKeygen(setIosKeypairStatus, function () {})
                     .then( async (resultKeygen) => {
                     
-                        if (resultKeygen) {
-                            LogMe(1, 'Warmup was successful');
-                            CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setIosAttestationStatus, function () {}, 'attestation', 'PPEcookie')
+                        if ( ! (resultKeygen===false)) {
+                            LogMe(1, 'Key generation was successful');
+                            LogMe(1, 'Key name is' + JSON.stringify(resultKeygen));
+                            await AsyncAlert(JSON.stringify(resultKeygen), "Key name - obj"); // debug
+                            await AsyncAlert(resultKeygen, "Key name - str"); // debug
+
+                            // store resultKeyken.something? as the key name for iosKeyName
+                            await SetIosKeyName(resultKeygen);
+                
+                            CheckIntegrity('PPEnrollment', propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setIosAttestationStatus, function () {}, 'attestation', 'PPEcookie')
                             .then( async (resultAttestation) => {
     
                                 if (resultAttestation) {
                                     LogMe(1, 'Attestation was successful');
-                                    CheckIntegrity('PPEnrollment', PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setIosAssertionStatus, function () {}, 'assertion', 'PPEcookie')
+                                    CheckIntegrity('PPEnrollment', propsStateSync.key, function async (newProps) { propsStateSync.key = newProps; setPropsState(newProps); }, setIosAssertionStatus, function () {}, 'assertion', 'PPEcookie')
                                     .then( async (resultAssertion) => {
         
                                         if (resultAssertion) {

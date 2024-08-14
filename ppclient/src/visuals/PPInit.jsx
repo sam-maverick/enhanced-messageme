@@ -61,6 +61,7 @@ export const PPInitComponent = ({ route, navigation }) => {
                   'PPEcookie': '',  
                   'enrollmentAttempted': false,  
                   'enrollmentCompleted': false,  
+                  'iosKeyName': '',
                 };
   
                 // any exception including data not found goes to catch()

@@ -71,12 +71,6 @@ export const PARAM_LOGGING_LEVEL = 1;  // Change accordingly to your preference
 
 export const PARAM_GOOGLE_CLOUD_PROJECT_NUMBER = 48509944813;
 
-// The value is not really important. What is important is to remember it and that it is the same as the one configured server side
-export const PARAM_IOS_KEY_IDENTIFIER = {
-    PPIntegrity: 'iosKeypairPPIntegrity', 
-    PPEnrollment: 'iosKeypairPPEnrollment',
-};
-
 // The custom scheme of our app, in lowercase
 export const PARAM_OUR_SCHEME = 'pripro-' + PP_PLATFORM_NICKNAME;
 

@@ -21,7 +21,6 @@ import {
 
 import {
   PARAM_PP__CRYPTO,
-  PARAM_IOS_KEY_IDENTIFIER,
   PARAM_GOOGLE_CLOUD_PROJECT_NUMBER,
   PARAM_IMPLEMENTATION_OPTION_B64,
   PARAM_IMPLEMENTATION_OPTION_PNG,
@@ -39,7 +38,7 @@ var lastWarmup = 0;
 
 
 // We assume that Platform.OS has already been checked to be compatible
-export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
+export async function RequestToDecryptThings(myPPEcookie, iosKeyName, requestDataObject) {
   LogMe(0, 'RequestToDecryptThings() called');
   LogMe(2, 'requestDataObject:'+JSON.stringify(requestDataObject));
   LogMe(0, 'Requesting token(s) from server');
@@ -131,7 +130,7 @@ export async function RequestToDecryptThings(myPPEcookie, requestDataObject) {
     // We skip attestation because we can assume it has been done, as the device needs to achieve enrollment to reach this point
     try {
       LogMe(0, 'Obtaining assertion token from API');
-      attestationobject1 = await AppIntegrity.iosAppAssertRequest(PARAM_IOS_KEY_IDENTIFIER.PPEnrollment, apiresgetnonce1.nonce);
+      attestationobject1 = await AppIntegrity.iosAppAssertRequest(iosKeyName, apiresgetnonce1.nonce);
       LogMe(0, 'Assertion token obtained');
     } catch(error) {
       return Promise.reject({message: 'Coult not prepare iOS assertion object. Error from AppIntegrity API.\n'+JSON.stringify(error)});
@@ -282,6 +281,7 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
       // Make request to the PP server to decrypt stuff
       let replyObjectFromServer = await RequestToDecryptThings(
         myAccountData.PPEcookie,
+        myAccountData.iosKeyName,
         {
           stage2: {
             encrypted_stage2_key_b64: ppPpChunkContents.stage2.encrypted_stage2_key_b64,
