@@ -78,9 +78,6 @@ export const PPTaggingComponent = (props) => {
 
             for (let i = 0; i < assets.length; i++) {
 
-                LogMe(1, ":1::"+JSON.stringify(await MediaLibrary.getAssetInfoAsync(assets[i])));
-                LogMe(1, ":2::"+JSON.stringify(assets[i]));
-
                 let hopefullyReadableUri;
                 let uriWithExtension;
                 if (Platform.OS === 'android') {
