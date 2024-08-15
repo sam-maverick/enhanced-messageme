@@ -1,4 +1,4 @@
-Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware dubbed **PP platform** for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features.
+Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware dubbed PP platform for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features.
 
 This project is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/) (CC BY 4.0, Joel Samper and Bernardo Ferreira), which is a no-frills playground messaging app that we take as our base. Both projects are for testing and academic purposes.
 
@@ -97,7 +97,7 @@ You should now be able to connect via WiFi from your phone. Once connected, chec
 
 Also, throughout this guide, remember to open any necessary ports of the firewall of your computer's OS, if applicable.
 
-# 2. Installing the Expo Go development environment
+# 2. Installing the development environment
 
 Follow the steps to [install Expo](https://docs.expo.dev/get-started/installation/). See the notes below if you need more help.
 
@@ -129,6 +129,12 @@ git --version
 ```
 
 In our environment, we have `git version 2.34.1`
+
+We can then clone this repo:
+
+```
+git clone https://github.com/sam-maverick/enhanced-messageme
+```
 
 For **watchman**, install curl with
 
@@ -233,7 +239,98 @@ From the `ppserver/` folder,
 npm install
 ```
 
-# 4. Editing configuration files
+# 4. Deploying the digital certificates
+
+**Create directory structure**
+
+```
+mkdir secrets 2> /dev/null
+mkdir secrets/https 2> /dev/null
+mkdir secrets/https/ca 2> /dev/null
+mkdir secrets/https/srv 2> /dev/null
+```
+
+**CA deployment for TLS**
+
+If you ever generate a new key but reuse an ancient CN for the CA, then do not create a new serial. You must reuse the old serial because otherwise Firefox complains about reusing serial numbers (it considers two CA's with the same CN to be the same CA). From the ppserver directory,
+
+```
+echo "01" > ./secrets/https/ca/crlnumber
+echo "01" > ./secrets/https/ca/serial
+touch ./secrets/https/ca/index.txt
+```
+
+This is to list available ECC algorithms:
+
+```
+openssl ecparam -list_curves
+```
+
+Generate private key using ECC
+
+```
+openssl ecparam -genkey -name prime256v1 -out ./secrets/https/ca/ca_priv.key
+```
+
+Generate CA certificate
+
+```
+openssl req -config ./openssl-ca.cnf -new -nodes -days 3650 -x509 -extensions v3_ca -key ./secrets/https/ca/ca_priv.key -out ./secrets/https/ca/ca_cert.cer
+```
+
+Generate first CRL for the CA
+
+```
+openssl ca -gencrl -crldays 5840 -config ./openssl-ca.cnf -keyfile ./secrets/https/ca/ca_priv.key -cert ./secrets/https/ca/ca_cert.cer -out ./secrets/https/ca/ca_crl_B64.crl
+```
+
+**Server certificate deployment for TLS**
+
+Generate private key using ECC
+
+```
+mkdir secrets/https/srv
+openssl ecparam -genkey -name prime256v1 -out ./secrets/https/srv/srv_priv.key
+```
+
+Generate new certificate and CSR for the server
+
+```
+openssl req -config ./openssl-srv.cnf -new -nodes -days 1460 -key ./secrets/https/srv/srv_priv.key -out ./secrets/https/srv/srv_csr.csr
+```
+
+We sign the CSR with our CA
+
+```
+openssl ca -config ./openssl-ca.cnf -days 1460 -out ./secrets/https/srv/srv_cert.cer -infiles ./secrets/https/srv/srv_csr.csr
+```
+
+We attach the CA certificate to the certificate chain of the server certificate
+
+```
+echo "" >> ./secrets/https/srv/srv_cert.cer
+cat ./secrets/https/ca/ca_cert.cer >> ./secrets/https/srv/srv_cert.cer
+```
+
+This is it for the server. If you observer src/main.ts you will see that our NestJS server will read the certificate files we just generated.
+
+**Android certificate pinning for TLS**
+
+```
+cp ./secrets/https/ca/ca_cert.cer ../ppclient/assets/custom/ca_cert.cer
+```
+
+Because the CA certificate is embedded within the app assets, there is no need to install the CA in the Android system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet..., which is not the case. once you build the ppclient app, it will configure the certificate pinning via the android-manifest-https-traffic.js plugin.
+
+**Configuring the digital certificate for wrapping and unwrapping of the private pictures**
+
+This is as simple as
+
+```
+node ./genkeys-wrapping.js
+```
+
+# 5. Editing configuration files
 
 Edit the configuration files according to your needs and your environment:
 
@@ -251,7 +348,7 @@ Edit the configuration files according to your needs and your environment:
 
 You must also change the name, slug, package and bundleIdentifier of `ppclient/app.json`, and the PARAM_PP\__SERVICE_PLAYSTOREID and  PARAM_PP__SERVICE_IOSAPPID parameters in `emclient/os_update/update-parameters.js` if you want to upload the app in the Android or Apple app repositories.
 
-# 5. Installing MongoDB
+# 6. Installing MongoDB
 
 Download the [Community Server](https://www.mongodb.com/try/download/community) and install it:
 
@@ -285,7 +382,7 @@ sudo systemctl status mongod
 
 Optionally, install the [MongoDB Compass](https://www.mongodb.com/products/tools/compass). It is a GUI for this database.
 
-# 6. Starting the servers
+# 7. Starting the servers
 
 Install NestJS CLI tools, as explained in the [docs](https://docs.nestjs.com/):
 
@@ -293,7 +390,7 @@ Install NestJS CLI tools, as explained in the [docs](https://docs.nestjs.com/):
 npm i -g @nestjs/cli
 ```
 
-From the `ppserver/` folder, start the server:
+From the **`ppserver/`** folder, start the server:
 
 ```
 npm start --reset-cache
@@ -305,9 +402,7 @@ You can load this URL from a local browser on the server, to check that it works
 
 http://ppserver-gen-phy.localnet:3020/test/doNothing
 
-
-
-From the `emserver/` folder, start the server:
+From the **`emserver/`** folder, start the server:
 
 ```
 npm start --reset-cache
@@ -315,7 +410,7 @@ npm start --reset-cache
 
 You should get a `Nest application successfully started`.
 
-# 7. Preparing the tools for the EAS build for Android APK/AAB
+# 8. Preparing the tools for the EAS build for Android APK/AAB
 
 Building the APK/AAB is known as a 'production build'. Here we will deploy the app as a bare React Native app. You will need to compile your project to generate the APK file. The [Expo Go 'Create your first build' guide](https://docs.expo.dev/build/setup/) provides the steps to use the EAS cloud service for the compilation. However, we prefer to compile locally, using the [Expo Go 'Local app development' guide](https://docs.expo.dev/guides/local-app-development/). Below is a summary of the steps you need to perform.
 
@@ -330,8 +425,6 @@ java --version
 ```
 
 In our environment, we have `openjdk 17.0.10 2024-01-16`
-
-
 
 Now, we have to follow steps 1 & 2 from the Expo Go 'Create your first build' guide, so:
 
@@ -349,7 +442,7 @@ eas login
 
 To prepare your environment for development builds, follow the steps explained in the '<u>Install with adb</u>' section of the [Expo Go 'Build APKs for Android Emulators and devices' guide](https://docs.expo.dev/build-reference/apk/#install-with-adb).
 
-# 8. Preparing the tools for the EAS build for iOS
+# 9. Preparing the tools for the EAS build for iOS
 
 **NOTE: You will need a MacOS computer to compile the app for iOS.**
 
@@ -376,7 +469,7 @@ eas login
 
 You then need to follow the instructions [here](https://developer.apple.com/support/expiration/) to install the new Apple Worldwide Developer Relations Intermediate Certificate. Otherwise, you will get the following error when deploying the app: `Distribution certificate with fingerprint <...> hasn't been imported successfully`. Once you import the certificate, double-click on it from Keychain Access, expand Trust, and select "Use System Defaults" for "When using this certificate". If you select "Always trust" you may run into issues, as explained [here](https://forums.developer.apple.com/forums/thread/712043).
 
-# 9. Deploying the apps
+# 10. Deploying the apps
 
 For deploying the apps, we provide a `build.js` script that performs all the necessary steps to perform a clean build of the app bundle. We use the **local build** of EAS rather than the server build. You do not need to (nor should) modify the `android` and `ios` folders under the ppimagemarker, emclient, and ppclient folders. Once the build is complete, it will automatically install it on the phone that is connected to your computer, if applicable. You can install ppimagemarker and emclient locally, but you will need to install the ppclient from the Apple/Android official stores by using the Android AAB production build or the iOS build; otherwise the app integrity API will fail. [This Expo guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories. This [Apple guide](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases) explains how to use TestFlight for beta builds.
 
@@ -390,10 +483,10 @@ For deploying the apps, we provide a `build.js` script that performs all the nec
 | ------------------------------------------------------------ |
 | **IMPORTANT: The commands below make the Apple developer account credentials available to the EAS utility, which is a third party software. Although Apple accounts may be protected with a security layer of two-factor authentication, this still poses security risks. Please consult with a security expert before proceeding if you are unsure about the implications of this step.**<br /><br />Answer Y when asked "Do you want to log in to your Apple account" in the commands below. You will then have to enter your Apple Developer account credentials<br /><br />For the development build (can be used with iOS simulator), the command is:<br />`node ./build.js barei patch nosavepatches`<br /><br />To compile for iOS for a production build, run the command below.<br />`node ./build.js ios patch nosavepatches`<br /><br />When you try to build for iOS for the first time, you are asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build). |
 
-# 10. Acknowledgements
+# 11. Acknowledgements
 
 The project that gave rise to these results received the support of a fellowship from ”la Caixa” Foundation (ID 100010434). The fellowship code is LCF/BQ/DI22/11940036. This work was also supported by FCT through the LASIGE Research Unit (UIDB/00408/2020 and UIDP/00408/2020).
 
-# 11. License
+# 12. License
 
 This work is licensed under CC BY 4.0. See [LICENSE](LICENSE) for more details.

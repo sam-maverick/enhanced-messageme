@@ -16,7 +16,7 @@ function removeAllFilesSync(directory) {
 
 // DO THE JOB:
 
-removeAllFilesSync('./bundled_files/json/');
+//removeAllFilesSync('./bundled_files/json/');
 
 fs.readdirSync('./bundled_files/source/').forEach(file => {
     //Print file name

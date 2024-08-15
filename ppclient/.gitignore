@@ -39,8 +39,6 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
-# Public key of PP server (wrapping service), in JSON format; not necessary to git
-*.pem.json
 
 # local env files
 .env*.local
