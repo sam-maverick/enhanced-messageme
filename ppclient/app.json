@@ -34,7 +34,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro-gen",
-    "version": "2.11.297",
+    "version": "2.11.300",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -54,7 +54,7 @@
           "NSAllowsArbitraryLoads": true
         }
       },
-      "buildNumber": "6"
+      "buildNumber": "9"
     },
     "android": {
       "adaptiveIcon": {

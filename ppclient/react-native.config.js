@@ -6,7 +6,8 @@ module.exports = {
     dependencies: {
     },
     assets: [
-      './assets/custom'
+      './assets/custom',
+      './bundled_files/json'
     ],
    };
    
