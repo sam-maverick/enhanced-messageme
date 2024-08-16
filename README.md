@@ -11,7 +11,7 @@ You can deploy the Enhanced Messageme project on a single computer. It is compos
 
 The client apps have been developed with [Expo Go](https://expo.dev/go) and [React Native](https://reactnative.dev/), so that you can run them on Android and iOS devices. The servers have been developed with [NestJS](https://nestjs.com/) and use a [MongoDB](https://www.mongodb.com) self-hosted database in the backend.
 
-We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links. On Kali, we experienced hangs during the EAS build, so you may want to try Ubuntu instead for better stability. For building iOS apps, you will need a Mac computer. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
+We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links and if you make small adaptations. On Kali, we experienced hangs during the EAS build, so you may want to try Ubuntu instead for better stability. For building iOS apps, you will need a Mac computer. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
 
 # 1. Preparing the network environment
 
@@ -337,13 +337,21 @@ OPTIONAL: Convert to PKCS. It will ask us to provide a PSK to protect the privat
 
 This is it for the server. If you observer src/main.ts you will see that our NestJS server will read the certificate files we just generated.
 
-**Android certificate pinning for TLS**
+**Certificate pinning for TLS**
+
+For Android certificate pinning, execute this command from the `ppserver` directory
 
 ```
 cp ./secrets/https/ca/ca_cert.cer ../ppclient/assets/custom/ca_cert.cer
 ```
 
-Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the Android system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet..., which is not the case. Once you build the ppclient app, it will automatically configure the certificate pinning via the android-manifest-https-traffic.js plugin, which is executed on every build.
+For iOS certificate pinning, execute this command from the `ppclient` directory:
+
+```
+sed '1d;$d' <(openssl x509 -in assets/custom/ca_cert.cer -pubkey  -noout -outform der) | base64 -d | openssl sha256 | sed  s:SHA2-256\(stdin\)=.:: | openssl base64 -A >  assets/custom/ca_cert_pubkey_sha256_base64.txt
+```
+
+Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet..., which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build.
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
