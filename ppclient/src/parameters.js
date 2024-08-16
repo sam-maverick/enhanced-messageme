@@ -2,7 +2,6 @@
 
 // NOTE: When changes are made to files that do not contain components, these changes are not pulled to running apps in real time. You need to re-launch the app to force a re-download.
 
-import * as Device from 'expo-device';
 
 /**
  * When set to true,
@@ -52,12 +51,12 @@ export const PARAM_SHOW_EXTRA_INFO = false;
  */
 export const PP_PLATFORM_NICKNAME = "gen";
 
+export const PARAM_SERVER_HOSTNAME = `ppserver-${PP_PLATFORM_NICKNAME}` + '.localnet';
 
 export const PARAM_SERVER_API_URL = 
 'https://' + // Change to http or https accordingly to your environment
-`ppserver-${PP_PLATFORM_NICKNAME}` +
-'.localnet' + 
-':3020'; // Change port if needed
+  + PARAM_SERVER_HOSTNAME
+  + ':3020'; // Change port if needed
 
 /**
  *  Console logging.

@@ -5,6 +5,9 @@
         "./plugins/android-manifest-https-traffic.js"
       ],
       [
+        "./plugins/ios-https-traffic.ts"
+      ],
+      [
         "./plugins/android-manifest-package-visibility.js"
       ],
       [
@@ -34,7 +37,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro-gen",
-    "version": "2.11.315",
+    "version": "2.11.338",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -54,7 +57,7 @@
           "NSAllowsArbitraryLoads": true
         }
       },
-      "buildNumber": "11"
+      "buildNumber": "19"
     },
     "android": {
       "adaptiveIcon": {
