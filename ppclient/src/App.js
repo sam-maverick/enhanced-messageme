@@ -1,6 +1,9 @@
 //See: https://github.com/charpeni/react-native-url-polyfill#readme
 import 'react-native-url-polyfill/auto';
 
+//https://solana.stackexchange.com/questions/6242/error-while-sending-transaction-with-solanaweb3-referenceerror-property-buff
+global.Buffer = require('buffer').Buffer;
+
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, SafeAreaView, AppRegistry } from 'react-native';
 import React, {useState, useCallback, useEffect, useRef} from 'react';

@@ -1,3 +1,7 @@
+//https://github.com/uuidjs/uuid/issues/514
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+
 import { Buffer } from 'buffer';
 import { Alert } from 'react-native';
 import Crypto from 'react-native-quick-crypto';

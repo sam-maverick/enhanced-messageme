@@ -1,6 +1,6 @@
 {
   "name": "emclient",
-  "version": "2.22.121",
+  "version": "2.22.126",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "node ./update-system.js",
@@ -40,6 +40,7 @@
     "react-native-blob-util": "^0.19.9",
     "react-native-elements": "^3.4.3",
     "react-native-file-provider": "^1.1.0",
+    "react-native-get-random-values": "^1.11.0",
     "react-native-gifted-chat": "^2.4.0",
     "react-native-quick-base64": "^2.0.8",
     "react-native-quick-crypto": "^0.7.0",

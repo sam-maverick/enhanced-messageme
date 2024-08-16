@@ -1,4 +1,7 @@
 //import { StatusBar } from 'expo-status-bar';
+
+const Buffer = require('buffer').Buffer;
+
 import React, {useState} from 'react';
 import { StyleSheet, Button, Text, TextInput, View, SafeAreaView, Alert, Platform } from 'react-native';
 
@@ -14,8 +17,6 @@ import { PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPT
 
 
 import storage from './storage/storageApi.js';
-
-const Buffer = require('buffer').Buffer;
 
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { encode } from 'punycode';

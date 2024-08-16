@@ -49,14 +49,14 @@ export const PARAM_SHOW_EXTRA_INFO = false;
  * - update PARAM_PP__PLATFORM_NICKNAME_WRAPPING in update-parameters.js in your emclient if you want it to use 
  *   this PP platform for wrapping pictures, from now on.
  */
-export const PP_PLATFORM_NICKNAME = "gen";
+export const PP_PLATFORM_NICKNAME = 'gen';
 
 export const PARAM_SERVER_HOSTNAME = `ppserver-${PP_PLATFORM_NICKNAME}` + '.localnet';
 
 export const PARAM_SERVER_API_URL = 
 'https://' + // Change to http or https accordingly to your environment
-  + PARAM_SERVER_HOSTNAME
-  + ':3020'; // Change port if needed
+  PARAM_SERVER_HOSTNAME +
+  ':3020'; // Change port if needed
 
 /**
  *  Console logging.

@@ -1,8 +1,11 @@
+const Buffer = require('buffer').Buffer;
+
 import { Platform } from 'react-native';
 
 import Crypto from 'react-native-quick-crypto';
 
 var png = require('png-metadata');
+
 
 import { 
     EncodeFromB64ToBuffer, 

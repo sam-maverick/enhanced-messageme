@@ -4,7 +4,7 @@
 /**
  * When set to true, the server will accept all attestations/assertions requests as valid
  */
-export const PARAM_TEST_MODE = false;
+export const PARAM_TEST_MODE = true;
 
 /**
  * Set to true for https; false for http
@@ -37,7 +37,7 @@ export const PARAM_DATABASE_URL = "mongodb://127.0.0.1:27017/ppmessagemedb";
  * IMPORTANT NOTE: Setting this to 2 bridges error messages directly from libraries (such as the spic-library-custom),
  * which can potentially contain sensitive data.
  */
-export const PARAM_LOGGING_LEVEL = 0;    // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 1;    // Change accordingly to your preference
 
 /**
  * According to https://developer.android.com/google/play/integrity/classic
