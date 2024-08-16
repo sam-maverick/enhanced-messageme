@@ -1,6 +1,6 @@
-Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware dubbed PP platform for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features.
+Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware dubbed PP platform for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features (such as the disappearing images or the time-expiring messages).
 
-This project is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/) (CC BY 4.0, Joel Samper and Bernardo Ferreira), which is a no-frills playground messaging app that we take as our base. Both projects are for testing and academic purposes.
+This project is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/) (CC BY 4.0, Joel Samper and Bernardo Ferreira), which is a no-frills playground messaging app that we take as our base onto which we deploy the middleware. Both projects are for testing and academic purposes.
 
 You can deploy the Enhanced Messageme project on a single computer. It is composed of:
 
@@ -11,7 +11,7 @@ You can deploy the Enhanced Messageme project on a single computer. It is compos
 
 The client apps have been developed with [Expo Go](https://expo.dev/go) and [React Native](https://reactnative.dev/), so that you can run them on Android and iOS devices. The servers have been developed with [NestJS](https://nestjs.com/) and use a [MongoDB](https://www.mongodb.com) self-hosted database in the backend.
 
-We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links. For the app binaries, we provide a build.js script for convenience. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
+We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links. O Kali, we experienced hangs, so you may want to try Ubuntu instead for better stability. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
 
 # 1. Preparing the network environment
 
@@ -136,7 +136,7 @@ We can then clone this repo:
 git clone https://github.com/sam-maverick/enhanced-messageme
 ```
 
-For **watchman**, install curl with
+For **watchman**, first install curl with
 
 ```
 sudo apt-get install curl 
@@ -172,7 +172,7 @@ watchman version
 
 In our environment, we have `version: 2023.12.04.00`
 
-Install yarn with
+Install **yarn** with
 
 ```
 npm install --global yarn
@@ -190,6 +190,8 @@ You should now be ready to use Expo.
 
 # 3. Installing Node.js modules
 
+**Preparing the global modules and environment variables**
+
 *NOTE: Do not use npm in ppclient nor in emclient !! Use yarn only!! This is because the 'resolutions' directive in package.json is not supported in npm. We need that directive to fix the issue `cannot read property 'slice' of undefined` of react-native-quick-crypto. See https://github.com/margelo/react-native-quick-crypto/issues/242 for more info.*
 
 First of all, from any folder,
@@ -199,13 +201,13 @@ npm install -g shelljs
 npm install -g react-native-asset
 ```
 
-Then, you will have to run the command below every time you open a new console. This is to configure some required environment variables that cannot be set from within a Node script file. Sorry! The example below works for Linux and Mac systems. I provide a `setenv.windows.cmd` equivalent although I have not tested it.
+Then, you will have to run the command below <u>every time you open a new console</u>. This is to configure some required environment variables that cannot be set from within a Node script file. We provide an equivalent script for Linux, Mac and Windows, although we have not tested the Windows script.
 
 ```
 . ./setenv.linux.sh
 ```
 
-
+**Installing the modules**
 
 Now we can install the required modules. Notice that some are `yarn` while others are `npm`.
 
@@ -239,7 +241,7 @@ From the `ppserver/` folder,
 npm install
 ```
 
-# 4. Deploying the digital certificates
+# 4. Deploying digital certificates and key material
 
 **Create directory structure**
 
@@ -284,7 +286,7 @@ Generate first CRL for the CA
 openssl ca -gencrl -crldays 5840 -config ./openssl-ca.cnf -keyfile ./secrets/https/ca/ca_priv.key -cert ./secrets/https/ca/ca_cert.cer -out ./secrets/https/ca/ca_crl_B64.crl
 ```
 
-**Server certificate deployment for TLS**
+**Server's digital certificate deployment for TLS**
 
 Generate private key using ECC
 
@@ -322,7 +324,7 @@ cp ./secrets/https/ca/ca_cert.cer ../ppclient/assets/custom/ca_cert.cer
 
 Because the CA certificate is embedded within the app assets, there is no need to install the CA in the Android system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet..., which is not the case. once you build the ppclient app, it will configure the certificate pinning via the android-manifest-https-traffic.js plugin.
 
-**Configuring the digital certificate for wrapping and unwrapping of the private pictures**
+**Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
 This is as simple as
 
@@ -410,7 +412,7 @@ npm start --reset-cache
 
 You should get a `Nest application successfully started`.
 
-# 8. Preparing the tools for the EAS build for Android APK/AAB
+# 8. Preparing for the EAS build for Android APK/AAB
 
 Building the APK/AAB is known as a 'production build'. Here we will deploy the app as a bare React Native app. You will need to compile your project to generate the APK file. The [Expo Go 'Create your first build' guide](https://docs.expo.dev/build/setup/) provides the steps to use the EAS cloud service for the compilation. However, we prefer to compile locally, using the [Expo Go 'Local app development' guide](https://docs.expo.dev/guides/local-app-development/). Below is a summary of the steps you need to perform.
 
@@ -442,7 +444,7 @@ eas login
 
 To prepare your environment for development builds, follow the steps explained in the '<u>Install with adb</u>' section of the [Expo Go 'Build APKs for Android Emulators and devices' guide](https://docs.expo.dev/build-reference/apk/#install-with-adb).
 
-# 9. Preparing the tools for the EAS build for iOS
+# 9. Preparing for the EAS build for iOS
 
 **NOTE: You will need a MacOS computer to compile the app for iOS.**
 
