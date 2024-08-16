@@ -243,6 +243,8 @@ npm install
 
 # 4. Deploying digital certificates and key material
 
+This section is to configure the certificates and key material for the ppclient app.
+
 **Create directory structure**
 
 ```
@@ -286,6 +288,12 @@ Generate first CRL for the CA
 openssl ca -gencrl -crldays 5840 -config ./openssl-ca.cnf -keyfile ./secrets/https/ca/ca_priv.key -cert ./secrets/https/ca/ca_cert.cer -out ./secrets/https/ca/ca_crl_B64.crl
 ```
 
+OPTIONAL: We convert from B64 to binary DER (e.g., Firefox doesn't like B64):
+
+```
+#openssl crl -inform PEM -outform DER -in ./secrets/https/ca/ca_crl_B64.crl -out ./secrets/https/ca/ca_crl_DER.crl
+```
+
 **Server's digital certificate deployment for TLS**
 
 Generate private key using ECC
@@ -314,6 +322,19 @@ echo "" >> ./secrets/https/srv/srv_cert.cer
 cat ./secrets/https/ca/ca_cert.cer >> ./secrets/https/srv/srv_cert.cer
 ```
 
+OPTIONAL: This is to have a PEM with both public and private keys in it
+
+```
+#cat ./secrets/https/srv/srv_cert.cer > ./secrets/https/srv/srv_pem_pubpri.pem
+#cat ./secrets/https/srv/srv_priv.key >> ./secrets/https/srv/srv_pem_pubpri.pem
+```
+
+OPTIONAL: Convert to PKCS. It will ask us to provide a PSK to protect the private key of the server certificate
+
+```
+#openssl pkcs12 -export -in ./secrets/https/srv/srv_pem_pubpri.pem -out ./secrets/https/srv/srv_pkcs_pubpri.pem
+```
+
 This is it for the server. If you observer src/main.ts you will see that our NestJS server will read the certificate files we just generated.
 
 **Android certificate pinning for TLS**
@@ -322,7 +343,7 @@ This is it for the server. If you observer src/main.ts you will see that our Nes
 cp ./secrets/https/ca/ca_cert.cer ../ppclient/assets/custom/ca_cert.cer
 ```
 
-Because the CA certificate is embedded within the app assets, there is no need to install the CA in the Android system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet..., which is not the case. once you build the ppclient app, it will configure the certificate pinning via the android-manifest-https-traffic.js plugin.
+Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the Android system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet..., which is not the case. Once you build the ppclient app, it will automatically configure the certificate pinning via the android-manifest-https-traffic.js plugin, which is executed on every build.
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
