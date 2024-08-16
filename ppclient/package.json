@@ -1,6 +1,6 @@
 {
   "name": "ppclient",
-  "version": "2.11.74",
+  "version": "2.11.75",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "patch-package",

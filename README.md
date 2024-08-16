@@ -11,7 +11,7 @@ You can deploy the Enhanced Messageme project on a single computer. It is compos
 
 The client apps have been developed with [Expo Go](https://expo.dev/go) and [React Native](https://reactnative.dev/), so that you can run them on Android and iOS devices. The servers have been developed with [NestJS](https://nestjs.com/) and use a [MongoDB](https://www.mongodb.com) self-hosted database in the backend.
 
-We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links. O Kali, we experienced hangs, so you may want to try Ubuntu instead for better stability. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
+We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links. On Kali, we experienced hangs during the EAS build, so you may want to try Ubuntu instead for better stability. For building iOS apps, you will need a Mac computer. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
 
 # 1. Preparing the network environment
 
@@ -446,7 +446,7 @@ To prepare your environment for development builds, follow the steps explained i
 
 # 9. Preparing for the EAS build for iOS
 
-**NOTE: You will need a MacOS computer to compile the app for iOS.**
+**NOTE: You need a MacOS computer to compile the app for iOS.**
 
 According to this [guide](https://docs.expo.dev/build-reference/local-builds/), you first need to install fastlane:
 
