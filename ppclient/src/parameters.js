@@ -67,7 +67,7 @@ export const PARAM_SERVER_API_URL =
  * See:
  * https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
  */
-export const PARAM_LOGGING_LEVEL = 1;  // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 0;  // Change accordingly to your preference
 
 export const PARAM_GOOGLE_CLOUD_PROJECT_NUMBER = 48509944813;
 
