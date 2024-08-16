@@ -351,6 +351,9 @@ For iOS certificate pinning, execute this command from the `ppclient` directory:
 sed '1d;$d' <(openssl x509 -in assets/custom/ca_cert.cer -pubkey  -noout -outform der) | base64 -d | openssl sha256 | sed  s:SHA2-256\(stdin\)=.:: | openssl base64 -A >  assets/custom/ca_cert_pubkey_sha256_base64.txt
 ```
 
+Manually edit the `plugins/ios-https-traffic.ts` with a text editor, and modify the `PARAM_SERVER_HOSTNAME` with the domain name of your server (e.g., ppserver-gen.localnet). You may want to check the `src/parameters.js` file to verify the correct value.
+
+NOTES:
 Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet..., which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build.
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
