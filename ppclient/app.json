@@ -55,9 +55,9 @@
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false
-        }
+        },
+        "ITSAppUsesNonExemptEncryption": false
       },
-      "ITSAppUsesNonExemptEncryption": false,
       "buildNumber": "20"
     },
     "android": {

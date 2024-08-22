@@ -61,9 +61,9 @@
         "NSPhotoLibraryAddUsageDescription": "This app uses the library to let users share images in private chats.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "ITSAppUsesNonExemptEncryption": false
       },
-      "ITSAppUsesNonExemptEncryption": false,
       "buildNumber": "8"
     },
     "android": {
