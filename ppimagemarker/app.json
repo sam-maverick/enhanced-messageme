@@ -56,7 +56,8 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app uses the library to let users share images in private chats.",
         "NSPhotoLibraryAddUsageDescription": "This app uses the library to let users share images in private chats.",
-        "NSAllowsLocalNetworking": false
+        "NSAllowsLocalNetworking": false,
+        "ITSAppUsesNonExemptEncryption": false
       },
       "buildNumber": "19"
     },

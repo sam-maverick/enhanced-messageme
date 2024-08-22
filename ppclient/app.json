@@ -54,9 +54,10 @@
       "bundleIdentifier": "pt.lasige.safex.ppclient",
       "infoPlist": {
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
+          "NSAllowsArbitraryLoads": false
         }
       },
+      "ITSAppUsesNonExemptEncryption": false,
       "buildNumber": "20"
     },
     "android": {

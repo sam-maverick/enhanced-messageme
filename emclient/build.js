@@ -10,15 +10,14 @@ function myExec(command) {
 }
 
 // Clear screen
-if (process.argv[2] !== 'ios') {
-  myExec('clear');
-}
+myExec('clear');
+
 
 echo('NODE_PATH=' + env.NODE_PATH);
 echo('EAS_NO_VCS=' + env.EAS_NO_VCS);
 
 echo('=========================================================================================');
-echo('NOTE: If you switch from/to an EAS build (AAB/APK) to/from a bare workflow, ');
+echo('NOTE: If you switch from/to an EAS build (AAB/APK) to/from a managed workflow, ');
 echo('remember to first uninstall the app, otherwise you will get a signature mismatch error.');
 echo('=========================================================================================');
 
@@ -33,19 +32,16 @@ echo();
 
 
 
-// Check parameters and compatibilities
-/*
-if (process.argv[2] === 'bare' && artifactname === 'ppimagemarker') {
-  echo('ERROR: The bare build is not supported with ppimagemarker. Functional anomalies have been detected with the expo-image-multiple-picker: It never finishes loading pictures. Use the APK/AAB build instead.');
-  exit(1);
-}*/
-
-if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'bare' && process.argv[2] !== 'barei' && process.argv[2] !== 'ios') {
-  echo('The first parameter is the build type, and must be either \'apk\', \'aab\', \'ios\' or \'bare\' or \'barei\'.');
+if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'managed-android' && process.argv[2] !== 'managed-ios' && process.argv[2] !== 'ipa') {
+  echo('The first parameter is the build type, and must be either \'apk\', \'aab\', \'ipa\' or \'managed-android\' or \'managed-ios\'.');
   exit(1);
 }
 if (process.argv[3] !== 'major' && process.argv[3] !== 'minor' && process.argv[3] !== 'patch') {
-  echo('The second parameter must be either \'major\', \'minor\', or \'patch\'.');
+  echo('The second parameter defines how the version number is incremented, and must be either \'major\', \'minor\', or \'patch\'.');
+  exit(1);
+}
+if (process.argv[4] !== 'savepatches' && process.argv[3] !== 'nosavepatches') {
+  echo('The third parameter defines whether the current modifications within ./node_modules must be saved in the patches folder, and must be either \'savepatches\', or \'nosavepatches\'.');
   exit(1);
 }
 
@@ -54,7 +50,7 @@ echo('Running build: ' + process.argv[2] + ' on ' + appname);
 
 
 // For the user to check connected devices on-screen
-if (process.argv[2] !== 'ios' && process.argv[2] !== 'barei') {
+if (process.argv[2] !== 'ipa' && process.argv[2] !== 'managed-ios') {
   echo('Connected and recognized devices to the the ADB service:');
   myExec('adb devices');
   env.RESULT = error();
@@ -78,7 +74,7 @@ if (process.argv[2] === 'apk') {
   rm('-f', './*.apk');
   echo('Old APKs deleted');
 }
-if (process.argv[2] === 'ios') {
+if (process.argv[2] === 'ipa') {
   rm('-f', './*.ipa');
   echo('Old IPAs deleted');
 }
@@ -111,7 +107,7 @@ if (artifactname === 'ppclient') {
   }
 }
 
-if (process.argv[2] === 'apk' || process.argv[2] === 'bare') {
+if (process.argv[2] === 'apk' || process.argv[2] === 'managed-android') {
   echo('Stopping any current app execution on the phone');
   myExec(`adb shell am force-stop ${appname}`);
 }
@@ -172,7 +168,7 @@ if (artifactname === 'ppclient') {
 
 
 echo('Running the build!');
-if (process.argv[2] === 'ios') {
+if (process.argv[2] === 'ipa') {
   myExec('eas build -p ios --non-interactive --profile previewnosim --local');
   env.RESULT = error();
   if (env.RESULT.toString() !== 'null') {
@@ -201,7 +197,7 @@ if (process.argv[2] === 'apk') {
 }
 // ? If we call "npx expo run:android" directly, the package.json scripts are not checked
 // ? We need to invoke the npm script of package.json, which in turn will invoke "npx expo run:android"
-if (process.argv[2] === 'bare') {
+if (process.argv[2] === 'managed-android') {
   if (artifactname === 'ppclient') {
     myExec('npx expo run:android --port 8082');
     env.RESULT = error();
@@ -230,7 +226,7 @@ if (process.argv[2] === 'bare') {
 }
 
 
-if (process.argv[2] === 'barei') {
+if (process.argv[2] === 'managed-ios') {
   if (artifactname === 'ppclient') {
     myExec('npx expo run:ios --port 8082');
     env.RESULT = error();
@@ -269,7 +265,7 @@ if (process.argv[2] === 'apk') {
   mv('*.apk', artifactname + '.apk');
   echo('Artifact renamed to ' + artifactname + '.apk');
 }
-if (process.argv[2] === 'ios') {
+if (process.argv[2] === 'ipa') {
   mv('*.ipa', artifactname + '.ipa');
   echo('Artifact renamed to ' + artifactname + '.ipa');
 }
