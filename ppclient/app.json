@@ -2,16 +2,24 @@
   "expo": {
     "plugins": [
       [
-        "./plugins/android-manifest-https-traffic.js"
-      ],
-      [
-        "./plugins/ios-https-traffic.ts"
-      ],
-      [
-        "./plugins/android-manifest-package-visibility.js"
-      ],
-      [
         "./plugins/jvm-memory.js"
+      ],
+      [
+        "./plugins/android-manifest-requestLegacyExternalStorage.js"
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your contacts in private chats."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
       ],
       [
         "expo-build-properties",
@@ -19,25 +27,18 @@
           "android": {
             "compileSdkVersion": 34,
             "targetSdkVersion": 34,
-            "usesCleartextTraffic": true,
-            "packagingOptions": {
-              "pickFirst": [
-                "**/libcrypto.so"
-              ]
-            }
+            "usesCleartextTraffic": true
           },
           "ios": {
             "deploymentTarget": "16.0"
           }
         }
-      ],
-      "expo-asset",
-      "expo-secure-store"
+      ]
     ],
-    "name": "ppclient",
-    "slug": "ppclient",
-    "scheme": "pripro-gen",
-    "version": "2.11.342",
+    "name": "ppimagemarker",
+    "slug": "ppimagemarker",
+    "scheme": "ppimagemarker",
+    "version": "2.12.47",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -51,14 +52,14 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "pt.lasige.safex.ppclient",
+      "bundleIdentifier": "pt.lasige.safex.ppimagemarker",
       "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": false
-        }
+        "NSPhotoLibraryUsageDescription": "This app uses the library to let users share images in private chats.",
+        "NSPhotoLibraryAddUsageDescription": "This app uses the library to let users share images in private chats.",
+        "NSAllowsLocalNetworking": false,
+        "ITSAppUsesNonExemptEncryption": false
       },
-      "ITSAppUsesNonExemptEncryption": false,
-      "buildNumber": "20"
+      "buildNumber": "19"
     },
     "android": {
       "adaptiveIcon": {
@@ -66,18 +67,21 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "android.permission.QUERY_ALL_PACKAGES",
-        "pt.lasige.safex.permission.PRIVACY_PROVIDER"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA_ROLL",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.ACCESS_MEDIA_LOCATION"
       ],
-      "package": "pt.lasige.safex.ppclient",
-      "versionCode": 368
+      "package": "pt.lasige.safex.ppimagemarker",
+      "versionCode": 299
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "e95e0e42-d7a5-4b52-8f94-9a71a98d0aba"
+        "projectId": "ee367600-6098-42d0-a95e-539944cfc964"
       }
     }
   }

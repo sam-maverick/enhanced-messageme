@@ -40,7 +40,7 @@ if (process.argv[3] !== 'major' && process.argv[3] !== 'minor' && process.argv[3
   echo('The second parameter defines how the version number is incremented, and must be either \'major\', \'minor\', or \'patch\'.');
   exit(1);
 }
-if (process.argv[4] !== 'savepatches' && process.argv[3] !== 'nosavepatches') {
+if (process.argv[4] !== 'savepatches' && process.argv[4] !== 'nosavepatches') {
   echo('The third parameter defines whether the current modifications within ./node_modules must be saved in the patches folder, and must be either \'savepatches\', or \'nosavepatches\'.');
   exit(1);
 }

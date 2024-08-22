@@ -2,13 +2,10 @@
   "expo": {
     "plugins": [
       [
-        "./plugins/android-manifest-fileprovider-definitions.js"
+        "./plugins/jvm-memory.js"
       ],
       [
         "./plugins/android-manifest-requestLegacyExternalStorage.js"
-      ],
-      [
-        "./plugins/jvm-memory.js"
       ],
       [
         "expo-image-picker",
@@ -17,17 +14,20 @@
         }
       ],
       [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
             "compileSdkVersion": 34,
             "targetSdkVersion": 34,
-            "usesCleartextTraffic": true,
-            "packagingOptions": {
-              "pickFirst": [
-                "**/libcrypto.so"
-              ]
-            }
+            "usesCleartextTraffic": true
           },
           "ios": {
             "deploymentTarget": "16.0"
@@ -35,10 +35,10 @@
         }
       ]
     ],
-    "name": "enhmessageme",
-    "slug": "enhmessageme",
-    "scheme": "enhmsm",
-    "version": "2.22.266",
+    "name": "ppimagemarker",
+    "slug": "ppimagemarker",
+    "scheme": "ppimagemarker",
+    "version": "2.12.47",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -52,19 +52,14 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "pt.lasige.safex.enhmessageme",
+      "bundleIdentifier": "pt.lasige.safex.ppimagemarker",
       "infoPlist": {
-        "LSApplicationQueriesSchemes": [
-          "pripro"
-        ],
         "NSPhotoLibraryUsageDescription": "This app uses the library to let users share images in private chats.",
         "NSPhotoLibraryAddUsageDescription": "This app uses the library to let users share images in private chats.",
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        }
+        "NSAllowsLocalNetworking": false,
+        "ITSAppUsesNonExemptEncryption": false
       },
-      "ITSAppUsesNonExemptEncryption": false,
-      "buildNumber": "8"
+      "buildNumber": "19"
     },
     "android": {
       "adaptiveIcon": {
@@ -75,17 +70,18 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA_ROLL",
-        "android.permission.READ_MEDIA_IMAGES"
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.ACCESS_MEDIA_LOCATION"
       ],
-      "package": "pt.lasige.safex.enhmessageme",
-      "versionCode": 244
+      "package": "pt.lasige.safex.ppimagemarker",
+      "versionCode": 299
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "ca35569b-ed5a-4669-8487-7fbf6bef1b84"
+        "projectId": "ee367600-6098-42d0-a95e-539944cfc964"
       }
     }
   }
