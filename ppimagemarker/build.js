@@ -32,7 +32,7 @@ echo();
 
 
 
-if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'managed-android' && process.argv[2] !== 'managed-ios' && process.argv[2] !== 'ipa') {
+if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'managed-android' && process.argv[2] !== 'managed-ios' && process.argv[2] !== 'ipa' && process.argv[2] !== 'xcode') {
   echo('The first parameter is the build type, and must be either \'apk\', \'aab\', \'ipa\' or \'managed-android\' or \'managed-ios\'.');
   exit(1);
 }
@@ -50,7 +50,7 @@ echo('Running build: ' + process.argv[2] + ' on ' + appname);
 
 
 // For the user to check connected devices on-screen
-if (process.argv[2] !== 'ipa' && process.argv[2] !== 'managed-ios') {
+if (process.argv[2] !== 'ipa' && process.argv[2] !== 'managed-ios' && process.argv[2] !== 'xcode') {
   echo('Connected and recognized devices to the the ADB service:');
   myExec('adb devices');
   env.RESULT = error();
@@ -297,5 +297,19 @@ if (process.argv[2] === 'apk') {
   
   // See logs
   myExec('react-native log-android');
+  
+}
+
+
+
+if (process.argv[2] === 'xcode') {
+  echo('');
+  echo('NEXT STEPS:');
+  echo('');
+  echo('Open ios/ppclient.xcodeproj with Xcode and assign your Team in the Signing & Capabilities tab. Then, run:');
+  echo('react-native run-ios');
+
+  // See logs
+  //myExec('react-native log-ios');
   
 }

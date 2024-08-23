@@ -8,6 +8,15 @@
         "./plugins/ios-https-traffic.ts"
       ],
       [
+        "./plugins/ios-itms90078-pushnotificationentitlementwarning.ts"
+      ],
+      [
+        "./plugins/ios-platform-version.ts"
+      ],
+      [
+        "./plugins/ios-development-team.ts"
+      ],
+      [
         "./plugins/android-manifest-package-visibility.js"
       ],
       [
@@ -37,7 +46,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro-gen",
-    "version": "2.11.344",
+    "version": "2.11.389",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -54,11 +63,11 @@
       "bundleIdentifier": "pt.lasige.safex.ppclient",
       "infoPlist": {
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": false
+          "NSAllowsArbitraryLoads": true
         },
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "21"
+      "buildNumber": "51"
     },
     "android": {
       "adaptiveIcon": {

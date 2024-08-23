@@ -8,6 +8,15 @@
         "./plugins/android-manifest-requestLegacyExternalStorage.js"
       ],
       [
+        "./plugins/ios-itms90078-pushnotificationentitlementwarning.ts"
+      ],
+      [
+        "./plugins/ios-platform-version.ts"
+      ],
+      [
+        "./plugins/ios-development-team.ts"
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your contacts in private chats."

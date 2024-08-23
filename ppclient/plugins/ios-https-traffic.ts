@@ -6,7 +6,7 @@ const withInfoPlistHttpConfigurations = (config, id) => {
   return withInfoPlist(config, async(config) => {
 
     const fs = require('fs');
-
+/*
 
     // Check: ../src/parameters
     const PARAM_SERVER_HOSTNAME = 'ppserver-gen.localnet';
@@ -26,19 +26,19 @@ const withInfoPlistHttpConfigurations = (config, id) => {
 
     // Modifications to the Podfile
 
-    let PofileOriginalContents = fs.readFileSync('ios/Podfile', {encoding: 'utf8'});
+    let PodfileOriginalContents = fs.readFileSync('ios/Podfile', {encoding: 'utf8'});
 
-    if ( ! PofileOriginalContents.includes('pod \'TrustKit\'')) {
-      let PofileModifiedContents = PofileOriginalContents.replace(
+    if ( ! PodfileOriginalContents.includes('pod \'TrustKit\'')) {
+      let PodfileModifiedContents = PodfileOriginalContents.replace(
         '  use_expo_modules!', 
         '  use_expo_modules!\n\n\
   pod \'TrustKit\''
       );
   
-      fs.writeFileSync('ios/Podfile', PofileModifiedContents, {encoding: 'utf8'});
+      fs.writeFileSync('ios/Podfile', PodfileModifiedContents, {encoding: 'utf8'});
   
-      console.warn('PofileModifiedContents:');
-      console.warn(PofileModifiedContents);
+      console.warn('PodfileModifiedContents:');
+      console.warn(PodfileModifiedContents);
   
     }
 
@@ -81,7 +81,7 @@ const withInfoPlistHttpConfigurations = (config, id) => {
   
     }
 
-
+*/
     return config;
   });
 };

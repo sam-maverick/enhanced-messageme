@@ -18,7 +18,8 @@
     },
     "previewnosim": {
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "buildConfiguration": "Debug"
       },
       "distribution": "internal",
       "autoIncrement": true
