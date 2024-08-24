@@ -40,3 +40,51 @@ index f0d7658..38df657 100644
    }
  
    defaultConfig {
+diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
+index e3fd69a..3465772 100644
+--- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift
++++ b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
+@@ -1,10 +1,13 @@
+ import CryptoKit
+ import DeviceCheck
+ import ExpoModulesCore
++import os
+ 
+ @available(iOS 14.0, *)
+ public class IntegrityModule: Module {
+ 
++    private let logger: os.Logger = os.Logger()
++
+     private let service: DCAppAttestService = DCAppAttestService.shared
+     
+     enum DeviceCheckError {
+@@ -137,10 +140,18 @@ public class IntegrityModule: Module {
+         }
+ 
+         AsyncFunction("generateKey") { () async throws -> String in
++            //self.logger.log("IntegrityModule.swift called 1")
++            /*
++            let result = await withCheckedContinuation { (continuation: CheckedContinuation<IntegrityModule.AppAttestRequestResult, Never>) -> Void in
++                service.generateKey { result, error in
+             
++                    self.logger.log("IntegrityModule.swift called 2")
+             
+-            let result = await withCheckedContinuation { continuation in
+-                service.generateKey { result, error in
++                    //let resultUnwrapped = result ?? "<nil>"
++                    //self.logger.log("IntegrityModule.swift result=\(resultUnwrapped)")
++
++                    //let errorUnwrapped = error ?? "<nil>"
++                    //self.logger.log("IntegrityModule.swift error=\(errorUnwrapped)")
+                     
+                     return self.appAttestCompletion(
+                         result: AppAttestSuccessResult.keyIdentifier(string: result),
+@@ -154,6 +165,8 @@ public class IntegrityModule: Module {
+             case .error(let error): throw IntegrityModuleException(appAttestError: error)
+             case .success(let result): return result
+             }
++            */
++            "test1"
+         }
+       
+         AsyncFunction("attestKey") { (

@@ -54,7 +54,7 @@ export const PP_PLATFORM_NICKNAME = 'gen';
 export const PARAM_SERVER_HOSTNAME = `ppserver-${PP_PLATFORM_NICKNAME}` + '.localnet';
 
 export const PARAM_SERVER_API_URL = 
-'https://' + // Change to http or https accordingly to your environment
+'http://' + // Change to http or https accordingly to your environment
   PARAM_SERVER_HOSTNAME +
   ':3020'; // Change port if needed
 
