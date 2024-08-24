@@ -76,8 +76,8 @@ const withInfoPlistHttpConfigurations = (config, id) => {
 
       fs.writeFileSync('ios/ppclient/AppDelegate.mm', AppDelegateModifiedContents, {encoding: 'utf8'});
   
-      console.warn('AppDelegateModifiedContents:');
-      console.warn(AppDelegateModifiedContents);
+      //console.warn('AppDelegateModifiedContents:');
+      //console.warn(AppDelegateModifiedContents);
   
     }
 

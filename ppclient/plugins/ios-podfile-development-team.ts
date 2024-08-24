@@ -6,13 +6,32 @@ const { createRunOncePlugin, withInfoPlist } = require('expo/config-plugins');
 const withInfoPlistDevelopmentTeam = (config, id) => {
   return withInfoPlist(config, async(config) => {
 
+    // 
+
+    /**
+     * Apparently, this is not enough. It keeps throwing an error when the EAS build command
+     * calls xcode to compile. It complains about missing DEVELOPMENT TEAM, and prompts to
+     * configure it with the Xcode app on MAC under the Signing & Capabilities tab.
+     * 
+     * Setting an environment variable doesn't help.
+     * 
+     * So we have proceeded with manual modification of the ppclient.xcodeproj, and then
+     * we have diff'ed the differences. Then we have created the ios-xcode-development-team.ts
+     * plugin to automate the process. Apparently, we need to modify both the Podfile and the 
+     * ppclient.xcodeproj/project.pbxproj file
+     */
+
+
+    //
+
+    
     const fs = require('fs');
 
     // Modifications to the Podfile
 
     let PodfileOriginalContents = fs.readFileSync('ios/Podfile', {encoding: 'utf8'});
 
-    if ( ! PodfileOriginalContents.includes('config.build_settings["DEVELOPMENT_TEAM"] = ')) {
+    if ( ! PodfileOriginalContents.includes('config.build_settings["DEVELOPMENT_TEAM"]')) {
       let PodfileModifiedContents = PodfileOriginalContents.replace(
         '  post_install do |installer|', 
         '  post_install do |installer|\n\n\
@@ -27,8 +46,8 @@ const withInfoPlistDevelopmentTeam = (config, id) => {
   
       fs.writeFileSync('ios/Podfile', PodfileModifiedContents, {encoding: 'utf8'});
   
-      console.warn('PodfileModifiedContents:');
-      console.warn(PodfileModifiedContents);
+      //console.warn('PodfileModifiedContents:');
+      //console.warn(PodfileModifiedContents);
   
     }
 
@@ -43,5 +62,3 @@ module.exports = createRunOncePlugin(
   '1.0.0'
 );
 
-// https://stackoverflow.com/questions/72171458/how-to-add-values-to-app-json-for-android-in-expo-managed-workflow
-// https://stackoverflow.com/questions/75013370/create-a-expo-config-plugin-file-to-modify-android-manifest

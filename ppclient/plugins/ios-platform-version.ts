@@ -25,8 +25,8 @@ const withInfoPlistPlatformVersion = (config, id) => {
   
       fs.writeFileSync('ios/Podfile', PodfileModifiedContents, {encoding: 'utf8'});
   
-      console.warn('PodfileModifiedContents:');
-      console.warn(PodfileModifiedContents);
+      //console.warn('PodfileModifiedContents:');
+      //console.warn(PodfileModifiedContents);
   
     }
 
@@ -41,5 +41,3 @@ module.exports = createRunOncePlugin(
   '1.0.0'
 );
 
-// https://stackoverflow.com/questions/72171458/how-to-add-values-to-app-json-for-android-in-expo-managed-workflow
-// https://stackoverflow.com/questions/75013370/create-a-expo-config-plugin-file-to-modify-android-manifest

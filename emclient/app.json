@@ -8,15 +8,6 @@
         "./plugins/android-manifest-requestLegacyExternalStorage.js"
       ],
       [
-        "./plugins/ios-itms90078-pushnotificationentitlementwarning.ts"
-      ],
-      [
-        "./plugins/ios-platform-version.ts"
-      ],
-      [
-        "./plugins/ios-development-team.ts"
-      ],
-      [
         "./plugins/jvm-memory.js"
       ],
       [

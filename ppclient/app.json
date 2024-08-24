@@ -14,7 +14,13 @@
         "./plugins/ios-platform-version.ts"
       ],
       [
-        "./plugins/ios-development-team.ts"
+        "./plugins/ios-podfile-development-team.ts"
+      ],
+      [
+        "./plugins/ios-xcode-development-team.ts"
+      ],
+      [
+        "./plugins/ios-codesigningallowed.ts"
       ],
       [
         "./plugins/android-manifest-package-visibility.js"
@@ -46,7 +52,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro-gen",
-    "version": "2.11.389",
+    "version": "2.11.398",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

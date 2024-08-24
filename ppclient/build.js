@@ -32,8 +32,8 @@ echo();
 
 
 
-if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'managed-android' && process.argv[2] !== 'managed-ios' && process.argv[2] !== 'ipa' && process.argv[2] !== 'xcode') {
-  echo('The first parameter is the build type, and must be either \'apk\', \'aab\', \'ipa\' or \'managed-android\' or \'managed-ios\'.');
+if (process.argv[2] !== 'apk' && process.argv[2] !== 'aab' && process.argv[2] !== 'managed-android' && process.argv[2] !== 'managed-ios-expo' && process.argv[2] !== 'ipa' && process.argv[2] !== 'managed-ios-xcode') {
+  echo('The first parameter is the build type, and must be either \'apk\', \'aab\', \'ipa\' or \'managed-android\' or \'managed-ios-expo\'.');
   exit(1);
 }
 if (process.argv[3] !== 'major' && process.argv[3] !== 'minor' && process.argv[3] !== 'patch') {
@@ -50,7 +50,7 @@ echo('Running build: ' + process.argv[2] + ' on ' + appname);
 
 
 // For the user to check connected devices on-screen
-if (process.argv[2] !== 'ipa' && process.argv[2] !== 'managed-ios' && process.argv[2] !== 'xcode') {
+if (process.argv[2] !== 'ipa' && process.argv[2] !== 'managed-ios-expo' && process.argv[2] !== 'managed-ios-xcode') {
   echo('Connected and recognized devices to the the ADB service:');
   myExec('adb devices');
   env.RESULT = error();
@@ -226,7 +226,7 @@ if (process.argv[2] === 'managed-android') {
 }
 
 
-if (process.argv[2] === 'managed-ios') {
+if (process.argv[2] === 'managed-ios-expo') {
   if (artifactname === 'ppclient') {
     myExec('npx expo run:ios --port 8082');
     env.RESULT = error();
@@ -302,14 +302,18 @@ if (process.argv[2] === 'apk') {
 
 
 
-if (process.argv[2] === 'xcode') {
-  echo('');
-  echo('NEXT STEPS:');
-  echo('');
-  echo('Open ios/ppclient.xcodeproj with Xcode and assign your Team in the Signing & Capabilities tab. Then, run:');
-  echo('react-native run-ios');
+if (process.argv[2] === 'managed-ios-xcode') {
+  echo('Running on device; make sure the device is connected');
+  myExec(`react-native run-ios`);
+  env.RESULT = error();
+  if (env.RESULT.toString() !== 'null') {
+    echo('Aborting on ' + env.RESULT + ', command failed:');
+    echo('react-native run-ios ...');
+    exit(1);
+  }
+}
 
+if (process.argv[2] === 'managed-ios-expo') {
   // See logs
-  //myExec('react-native log-ios');
-  
+  myExec('react-native log-ios');
 }
