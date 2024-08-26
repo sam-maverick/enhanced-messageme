@@ -1,9 +1,9 @@
 {
   "name": "ppclient",
-  "version": "2.11.159",
+  "version": "2.11.202",
   "main": "./src/App.js",
   "scripts": {
-    "postinstall": "patch-package",
+    "postinstall": "node ./post-install.js",
     "start": "expo start",
     "android": "expo run:android -c",
     "ios": "expo run:ios",

@@ -13,9 +13,9 @@ const replaceInFile = (myfilepath, mypattern, mynewtext) => {
 
     var text = fs.readFileSync(myfilepath, {encoding: 'utf8', flag: 'r'});
    
-    echo('Previous text: '+text);
+    //echo('Previous text: '+text);
     text = text.toString().replace(mypattern, mynewtext);
-    echo('Modified text: '+text);
+    //echo('Modified text: '+text);
 
     fs.writeFileSync(myfilepath, text, {encoding: 'utf8', flag: 'w+'});
 

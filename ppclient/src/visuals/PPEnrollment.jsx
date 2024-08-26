@@ -301,8 +301,6 @@ export const PPEnrollmentComponent = (props) => {
                         if ( ! (resultKeygen===false)) {
                             LogMe(1, 'Key generation was successful');
                             LogMe(1, 'Key name is' + JSON.stringify(resultKeygen));
-                            await AsyncAlert(JSON.stringify(resultKeygen), "Key name - obj"); // debug
-                            await AsyncAlert(resultKeygen, "Key name - str"); // debug
 
                             // store resultKeyken.something? as the key name for iosKeyName
                             await SetIosKeyName(resultKeygen);

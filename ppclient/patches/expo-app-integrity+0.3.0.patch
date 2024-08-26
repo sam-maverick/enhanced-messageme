@@ -40,51 +40,73 @@ index f0d7658..38df657 100644
    }
  
    defaultConfig {
-diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-index e3fd69a..3465772 100644
---- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-+++ b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-@@ -1,10 +1,13 @@
- import CryptoKit
- import DeviceCheck
- import ExpoModulesCore
-+import os
+diff --git a/node_modules/expo-app-integrity/package.json b/node_modules/expo-app-integrity/package.json
+index da3b7b3..ae2540a 100644
+--- a/node_modules/expo-app-integrity/package.json
++++ b/node_modules/expo-app-integrity/package.json
+@@ -5,6 +5,7 @@
+   "main": "build/index.js",
+   "types": "build/index.d.ts",
+   "scripts": {
++    "tsc": "expo-module tsc",
+     "build": "expo-module build",
+     "clean": "expo-module clean",
+     "lint": "expo-module lint",
+diff --git a/node_modules/expo-app-integrity/src/index.ts b/node_modules/expo-app-integrity/src/index.ts
+index fa53e42..713f226 100644
+--- a/node_modules/expo-app-integrity/src/index.ts
++++ b/node_modules/expo-app-integrity/src/index.ts
+@@ -12,27 +12,17 @@ import {
+ } from './errors'
  
- @available(iOS 14.0, *)
- public class IntegrityModule: Module {
+ /** iOS Only */
+-const generateKey = async (): Promise<string | never> =>
++//export const generateKey = async (): Promise<string | never> => {
++//  const keyIdentifier = "test";//await IntegrityModule.generateKey();
++//  return keyIdentifier;
++//}
++export const generateKey = async (): Promise<string | never> =>
+   await IntegrityModule.generateKey()
  
-+    private let logger: os.Logger = os.Logger()
-+
-     private let service: DCAppAttestService = DCAppAttestService.shared
-     
-     enum DeviceCheckError {
-@@ -137,10 +140,18 @@ public class IntegrityModule: Module {
-         }
+-const iOSAttestKey = async (challenge: string): Promise<string | never> => {
++const iOSAttestKey = async (keyIdentifier: string, challenge: string): Promise<string | never> => {
+   if (!Device.isDevice) throw iOSAppAttestErrors.EXECUTED_IN_SIMULATOR
  
-         AsyncFunction("generateKey") { () async throws -> String in
-+            //self.logger.log("IntegrityModule.swift called 1")
-+            /*
-+            let result = await withCheckedContinuation { (continuation: CheckedContinuation<IntegrityModule.AppAttestRequestResult, Never>) -> Void in
-+                service.generateKey { result, error in
-             
-+                    self.logger.log("IntegrityModule.swift called 2")
-             
--            let result = await withCheckedContinuation { continuation in
--                service.generateKey { result, error in
-+                    //let resultUnwrapped = result ?? "<nil>"
-+                    //self.logger.log("IntegrityModule.swift result=\(resultUnwrapped)")
-+
-+                    //let errorUnwrapped = error ?? "<nil>"
-+                    //self.logger.log("IntegrityModule.swift error=\(errorUnwrapped)")
-                     
-                     return self.appAttestCompletion(
-                         result: AppAttestSuccessResult.keyIdentifier(string: result),
-@@ -154,6 +165,8 @@ public class IntegrityModule: Module {
-             case .error(let error): throw IntegrityModuleException(appAttestError: error)
-             case .success(let result): return result
-             }
-+            */
-+            "test1"
-         }
-       
-         AsyncFunction("attestKey") { (
+   try {
+-    // Check secure storage for a key identifier
+-    const secureStorageValue = await SecureStore.getItemAsync(
+-      SECURE_STORAGE_KEYS.INTEGRITY_KEY_IDENTIFIER,
+-    )
+-
+-    // Generate a key if one doesn't exist in secure storage
+-    const keyIdentifier = secureStorageValue ?? (await generateKey())
+-
+-    // Save the key identifier to secure storage if it didn't originally exist
+-    if (!secureStorageValue)
+-      await SecureStore.setItemAsync(
+-        SECURE_STORAGE_KEYS.INTEGRITY_KEY_IDENTIFIER,
+-        keyIdentifier,
+-      )
+ 
+     const attestationResult = await IntegrityModule.attestKey(
+       keyIdentifier,
+@@ -148,6 +138,10 @@ export const isSupported = (): boolean => IntegrityModule.isSupported()
+  * `IntegrityServiceException` class documentation: https://developer.android.com/google/play/integrity/reference/com/google/android/play/core/integrity/IntegrityServiceException
+  */
+ export async function attestKey(
++  /**
++   * Only required in iOS
++   */
++  keyIdentifier: string,
+   /**
+    * A crytographically random value generated on your server,
+    * and associated with your user object for server-side
+@@ -166,7 +160,7 @@ export async function attestKey(
+ ): Promise<string | never> {
+   switch (Platform.OS) {
+     case 'ios':
+-      return await iOSAttestKey(challenge)
++      return await iOSAttestKey(keyIdentifier, challenge)
+     case 'android':
+       if (!cloudProjectNumber)
+         throw AndroidIntegrityErrors.CLOUD_PROJECT_NUMBER_IS_INVALID

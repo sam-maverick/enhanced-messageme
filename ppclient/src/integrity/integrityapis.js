@@ -25,7 +25,7 @@ export async function AndroidStandardRequest(clientHash, GoogleCloudProjectNumbe
 }
 
 export async function AndroidClassicRequest(nonce, GoogleCloudProjectNumber) {
-  return await Integrity.attestKey(nonce, GoogleCloudProjectNumber);
+  return await Integrity.attestKey(null, nonce, GoogleCloudProjectNumber);
 }
 
 export async function iosKeygen() {
@@ -33,7 +33,7 @@ export async function iosKeygen() {
 }
 
 export async function iosAppAttestRequest(keyID, challenge) {
-  return await Integrity.attestKey(keyID, challenge);
+  return await Integrity.attestKey(keyID, challenge, null);
 }
 
 export async function iosAppAssertRequest(keyID, challenge) {
