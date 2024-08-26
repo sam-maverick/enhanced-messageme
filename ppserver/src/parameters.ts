@@ -9,7 +9,7 @@ export const PARAM_TEST_MODE = false;
 /**
  * Set to true for https; false for http
  */
-export const PARAM_HTTPS_ENABLED = true;
+export const PARAM_HTTPS_ENABLED = false;
 
 //     END OF DANGER ZONE
 
@@ -37,7 +37,7 @@ export const PARAM_DATABASE_URL = "mongodb://127.0.0.1:27017/ppmessagemedb";
  * IMPORTANT NOTE: Setting this to 2 bridges error messages directly from libraries (such as the spic-library-custom),
  * which can potentially contain sensitive data.
  */
-export const PARAM_LOGGING_LEVEL = 1;    // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 2;    // Change accordingly to your preference
 
 /**
  * According to https://developer.android.com/google/play/integrity/classic
@@ -80,15 +80,7 @@ export const IOS_BUNDLE_ID = 'pt.lasige.safex.ppclient';
 /**
  * See https://developer.apple.com/account#MembershipDetailsCard
  */
-export const IOS_TEAM_ID = 'L549K3FQ5X';  // Does not change when creating new app if published under the same developer account&team 
-
-/**
- * The value is not really important. What is important is to remember it and that it is the same as the one configured server side
- */
-export const PARAM_IOS_KEY_IDENTIFIER = {
-   PPIntegrity: 'iosKeypairPPIntegrity', 
-   PPEnrollment: 'iosKeypairPPEnrollment',
-};
+export const IOS_TEAM_ID = 'L549K3FQ5X';  // Does not change when creating new app if published under the same developer account&team
 
 /** 
  * Minimum iOS version that client devices must have. This is to reject devices that run old OS versions with known vulnerabilities.

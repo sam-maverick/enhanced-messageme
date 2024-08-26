@@ -162,7 +162,7 @@ export async function CheckIntegrity(environment, someProps, saveMyProps, setAtt
           LogMe(1, 'Received attestation token from library API layer');
           LogMe(2, 'Token is: '+JSON.stringify(attestationTokenObject));
           //console.log(JSON.stringify(attestationTokenObject));
-          return ApiSubmitAttestationTokensToServer(environment, apiresgetnonce.cookie, Platform.OS, Platform.Version, [{requestType: RequestType, token: attestationTokenObject}], undefined)
+          return ApiSubmitAttestationTokensToServer(environment, apiresgetnonce.cookie, Platform.OS, Platform.Version, [{requestType: RequestType, token: attestationTokenObject, keyId: someProps.AccountData.iosKeyName}], undefined)
           .then(async (apiressubmitobject) => {
 
               if ( ! apiressubmitobject.isSuccessful) {

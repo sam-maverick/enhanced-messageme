@@ -5,7 +5,7 @@ import { AppService } from '../app.service';
 import DevicesModel from '../middleware/database/schemas/Device';
 import PicturesModel from '../middleware/database/schemas/Picture';
 import { PARAM_LENGTH_TOKENS, MINIMUM_ANDROID_API_LEVEL, ANDROID_CHECK_MODE, 
-    PARAM_IOS_KEY_IDENTIFIER, IOS_SUPPORTED_VERSIONS, IOS_IS_DEVELOPMENT_ENVIRONMENT, MAX_TOTAL_DELAY_MS, PARAM_TEST_MODE } from '../parameters';
+    IOS_SUPPORTED_VERSIONS, IOS_IS_DEVELOPMENT_ENVIRONMENT, MAX_TOTAL_DELAY_MS, PARAM_TEST_MODE } from '../parameters';
 import { LogMe, GenerateRandomString, isAnInteger, EncodeFromB64ToBuffer, EncodeFromBufferToB64, EncodeFromB64ToBinary, EncodeFromBinaryToB64 } from '../serverLibrary';
 
 import { CheckPlayIntegrity } from '../attestationapi/androidintegrityapi';
@@ -253,7 +253,12 @@ export class AttestationController {
         } else if (req.body.platformType === 'ios') {
     
             if (req.body.subrequests[i].requestType === 'attestation') {
-    
+
+                // Check that a KeyId is provided
+                if ( ! req.body?.subrequests[i]?.keyId) {
+                    return {isSuccessful: false, resultMessage: issueidmsg+'No KeyId was provided.'+advicemsg};
+                }
+                
                 let resultOperation = undefined;            
                 if (PARAM_TEST_MODE) {
                     resultOperation = {
@@ -266,7 +271,7 @@ export class AttestationController {
                     resultOperation = await CheckAppAttestation(
                         req.body.subrequests[i].token, 
                         deviceObject.nonces[req.body.platformType+'_'+req.body.subrequests[i].requestType].nonce, 
-                        PARAM_IOS_KEY_IDENTIFIER[req.body.environment]
+                        req.body.subrequests[i].keyId
                     );
                 }
     

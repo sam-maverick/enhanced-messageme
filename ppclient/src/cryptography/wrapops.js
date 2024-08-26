@@ -157,7 +157,8 @@ export async function RequestToDecryptThings(myPPEcookie, iosKeyName, requestDat
         [
           {
             requestType: 'standard',
-            token: attestationobject1
+            token: attestationobject1,
+            keyId: iosKeyName,
           },
           //#*#{
           //#*#  requestType: 'classic',
