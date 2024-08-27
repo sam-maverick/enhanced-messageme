@@ -513,9 +513,7 @@ For deploying the apps, we provide a `build.js` script that performs all the nec
 
 | Android                                                      |
 | ------------------------------------------------------------ |
-| **IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order)**. Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.<br /><br />For the development build for Android (can be used with a physical device), connect the phone to the computer and run the command below. This will run the app under the 'metro' shell<br />`node ./build.js managed-android patch nosavepatches`<br /><br />To generate the Android APK or AAB files for the production builds, run either:<br />`node ./build.js apk patch nosavepatches`<br />`node ./build.js aab patch nosavepatches` |
-
-
+| **IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order)**. Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.<br /><br />For the development build for Android (can be used with a physical device), connect the phone to the computer and run the command below. This will run the app under the 'metro' shell<br />`node ./build.js managed-android patch nosavepatches`<br /><br />To generate the Android APK or AAB files for the production builds, run either:<br />`node ./build.js apk patch nosavepatches`<br />`node ./build.js aab patch nosavepatches`<br />NOTE: Since we are delegating app signing to Google servers, we need to deploy the ppclient through the Play Store for the attestation to work. |
 
 | iOS                                                          |
 | ------------------------------------------------------------ |
