@@ -41,10 +41,10 @@ index f0d7658..38df657 100644
  
    defaultConfig {
 diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-index e3fd69a..03e5105 100644
+index e3fd69a..7e71273 100644
 --- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift
 +++ b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-@@ -1,10 +1,13 @@
+@@ -1,10 +1,20 @@
  import CryptoKit
  import DeviceCheck
  import ExpoModulesCore
@@ -53,17 +53,77 @@ index e3fd69a..03e5105 100644
  @available(iOS 14.0, *)
  public class IntegrityModule: Module {
  
++    // You'll need to run in Xcode app of Mac, and build for Testing, in order to see the logs generated here
++    // Steps:
++    //   npx expo prebuild
++    //   Open ios/ppclient.xcworkspace (with Xcode)
++    //   Product > Build for > Testing
++    //   Product > Run
++    // Logs will appear on Xcode's console. Enable it: View > Debug area > View Console
 +    let logger = Logger(subsystem: "(ppclient) (integrity-module-swift)", category: "module")
 +
      private let service: DCAppAttestService = DCAppAttestService.shared
      
      enum DeviceCheckError {
-@@ -170,6 +173,7 @@ public class IntegrityModule: Module {
+@@ -48,8 +58,8 @@ public class IntegrityModule: Module {
+     }
+     
+     enum AppAttestSuccessResult {
+-        case assertion(data: Data?),
+-             attestation(data: Data?),
++        case assertion(data: String?),
++             attestation(data: String?),
+              keyIdentifier(string: String?)
+     }
+     
+@@ -97,7 +107,7 @@ public class IntegrityModule: Module {
+                 )
+             }
+             
+-            return continuation.resume(returning: .success(result: String(decoding: data, as: UTF8.self)))
++            return continuation.resume(returning: .success(result: data))
+             
+         case .keyIdentifier(let string):
+             guard let string = string else {
+@@ -124,7 +134,7 @@ public class IntegrityModule: Module {
+                 )
+             }
+             
+-            return continuation.resume(returning: .success(result: String(decoding: data, as: UTF8.self)))
++            return continuation.resume(returning: .success(result: data))
+         }
+ 
+     }
+@@ -164,12 +174,14 @@ public class IntegrityModule: Module {
+             let result = await withCheckedContinuation { continuation in
+                 service.attestKey(keyIdentifier, clientDataHash: hash) { result, error in
+                     return self.appAttestCompletion(
+-                        result: AppAttestSuccessResult.attestation(data: result),
++                        result: AppAttestSuccessResult.attestation(data: result?.base64EncodedString()),
+                         error: error,
+                         continuation: continuation
                      )
                  }
              }
-+            logger.log("Log this now")
++            logger.log("attestKey result")
++            logger.log("\(result)")
                          
+             switch (result) {
+             case .error(let error): throw IntegrityModuleException(appAttestError: error)
+@@ -186,12 +198,14 @@ public class IntegrityModule: Module {
+             let result = await withCheckedContinuation { continuation in
+                 service.generateAssertion(keyIdentifier, clientDataHash: hash) { result, error in
+                     return self.appAttestCompletion(
+-                        result: AppAttestSuccessResult.assertion(data: result),
++                        result: AppAttestSuccessResult.assertion(data: result?.base64EncodedString()),
+                         error: error,
+                         continuation: continuation
+                     )
+                 }
+             }
++            logger.log("generateAssertion result")
++            logger.log("\(result)")
+             
              switch (result) {
              case .error(let error): throw IntegrityModuleException(appAttestError: error)
 diff --git a/node_modules/expo-app-integrity/package.json b/node_modules/expo-app-integrity/package.json
