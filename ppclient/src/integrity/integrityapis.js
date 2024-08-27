@@ -2,7 +2,7 @@ import * as AppIntegrityAndroidStandard from 'app-integrity-android-standard';
 
 import * as Integrity from 'expo-app-integrity';
 
-import { ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername, EncodeFromBinaryToB64 } from '../myGeneralLibrary.jsx';
 import storage from '../storage/storageApi.js';
 
 import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER } from '../parameters.js';
@@ -20,10 +20,16 @@ export async function AndroidStandardWarmup(GoogleCloudProjectNumber) {
   return await AppIntegrityAndroidStandard.DoWarmup(GoogleCloudProjectNumber.toString());
 }
 
+/**
+ * Returns an attestation token in raw object format
+ */
 export async function AndroidStandardRequest(clientHash, GoogleCloudProjectNumber) {
   return await AppIntegrityAndroidStandard.GetToken(clientHash, GoogleCloudProjectNumber.toString());
 }
 
+/**
+ * Returns an attestation token in raw object format
+ */
 export async function AndroidClassicRequest(nonce, GoogleCloudProjectNumber) {
   return await Integrity.attestKey(null, nonce, GoogleCloudProjectNumber);
 }
@@ -32,12 +38,18 @@ export async function iosKeygen() {
   return await Integrity.generateKey();
 }
 
+/**
+ * Returns an attestation token in Base64 format
+ */
 export async function iosAppAttestRequest(keyID, challenge) {
-  return await Integrity.attestKey(keyID, challenge, null);
+  return await EncodeFromBinaryToB64(await Integrity.attestKey(keyID, challenge, null));
 }
 
+/**
+ * Returns an attestation token in Base64 format
+ */
 export async function iosAppAssertRequest(keyID, challenge) {
-  return await Integrity.generateAssertion(keyID, challenge);
+  return await EncodeFromBinaryToB64(await Integrity.generateAssertion(keyID, challenge));
 }
 
 
