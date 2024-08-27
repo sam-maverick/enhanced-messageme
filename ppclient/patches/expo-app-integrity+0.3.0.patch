@@ -40,6 +40,32 @@ index f0d7658..38df657 100644
    }
  
    defaultConfig {
+diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
+index e3fd69a..03e5105 100644
+--- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift
++++ b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
+@@ -1,10 +1,13 @@
+ import CryptoKit
+ import DeviceCheck
+ import ExpoModulesCore
++import os
+ 
+ @available(iOS 14.0, *)
+ public class IntegrityModule: Module {
+ 
++    let logger = Logger(subsystem: "(ppclient) (integrity-module-swift)", category: "module")
++
+     private let service: DCAppAttestService = DCAppAttestService.shared
+     
+     enum DeviceCheckError {
+@@ -170,6 +173,7 @@ public class IntegrityModule: Module {
+                     )
+                 }
+             }
++            logger.log("Log this now")
+                         
+             switch (result) {
+             case .error(let error): throw IntegrityModuleException(appAttestError: error)
 diff --git a/node_modules/expo-app-integrity/package.json b/node_modules/expo-app-integrity/package.json
 index da3b7b3..ae2540a 100644
 --- a/node_modules/expo-app-integrity/package.json

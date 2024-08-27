@@ -34,22 +34,31 @@ export async function AndroidClassicRequest(nonce, GoogleCloudProjectNumber) {
   return await Integrity.attestKey(null, nonce, GoogleCloudProjectNumber);
 }
 
+/**
+ * Integrity.generateKey returns a key name in Base64 format
+ */
 export async function iosKeygen() {
-  return await Integrity.generateKey();
+    const keyname = await Integrity.generateKey();
+    LogMe(2, "iosKeygen / keyname: "+keyname);
+    return keyname;
 }
 
 /**
- * Returns an attestation token in Base64 format
+ * Integrity.attestKey returns an attestation token in Base64 format
  */
 export async function iosAppAttestRequest(keyID, challenge) {
-  return await EncodeFromFullrangeBinaryToB64(await Integrity.attestKey(keyID, challenge, null));
+  const attnobj = await Integrity.attestKey(keyID, challenge, null);
+  LogMe(2, "iosAppAttestRequest / attnobj: "+attnobj);
+  return attnobj;
 }
 
 /**
- * Returns an attestation token in Base64 format
+ * Integrity.generateAssertion returns an assertion token in Base64 format
  */
 export async function iosAppAssertRequest(keyID, challenge) {
-  return await EncodeFromFullrangeBinaryToB64(await Integrity.generateAssertion(keyID, challenge));
+  const attnobj = await Integrity.generateAssertion(keyID, challenge);
+  LogMe(2, "iosAppAssertRequest / attnobj: "+attnobj);
+  return attnobj;
 }
 
 

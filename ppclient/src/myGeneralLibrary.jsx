@@ -226,7 +226,7 @@ export async function EncodeFromFullrangeBinaryToB64 (str) {
   LogMe(1,'EncodeFromFullrangeBinaryToB64(): buffering');
   const buffervalue = Buffer.from(str, 'binary');
   LogMe(1,'EncodeFromFullrangeBinaryToB64(): toString');
-  const retval = buffervalue.toString('base64');
+  const retval = buffervalue.toString('base64')
   LogMe(0,'EncodeFromFullrangeBinaryToB64() finished');
   return retval;  // Returns a String
   // Don't do that - it doesn't work!
