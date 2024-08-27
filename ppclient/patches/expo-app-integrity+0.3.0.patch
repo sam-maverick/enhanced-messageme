@@ -41,7 +41,7 @@ index f0d7658..38df657 100644
  
    defaultConfig {
 diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-index e3fd69a..7e71273 100644
+index e3fd69a..981534c 100644
 --- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift
 +++ b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
 @@ -1,10 +1,20 @@
@@ -94,7 +94,7 @@ index e3fd69a..7e71273 100644
          }
  
      }
-@@ -164,12 +174,14 @@ public class IntegrityModule: Module {
+@@ -164,7 +174,7 @@ public class IntegrityModule: Module {
              let result = await withCheckedContinuation { continuation in
                  service.attestKey(keyIdentifier, clientDataHash: hash) { result, error in
                      return self.appAttestCompletion(
@@ -103,14 +103,20 @@ index e3fd69a..7e71273 100644
                          error: error,
                          continuation: continuation
                      )
-                 }
-             }
-+            logger.log("attestKey result")
-+            logger.log("\(result)")
+@@ -173,7 +183,11 @@ public class IntegrityModule: Module {
                          
              switch (result) {
              case .error(let error): throw IntegrityModuleException(appAttestError: error)
-@@ -186,12 +198,14 @@ public class IntegrityModule: Module {
+-            case .success(let result): return result
++            case .success(let result): 
++                return result
++                logger.log("attestKey result")
++                logger.log("\(result)")
++
+             }
+             
+         }
+@@ -186,7 +200,7 @@ public class IntegrityModule: Module {
              let result = await withCheckedContinuation { continuation in
                  service.generateAssertion(keyIdentifier, clientDataHash: hash) { result, error in
                      return self.appAttestCompletion(
@@ -119,13 +125,19 @@ index e3fd69a..7e71273 100644
                          error: error,
                          continuation: continuation
                      )
-                 }
-             }
-+            logger.log("generateAssertion result")
-+            logger.log("\(result)")
+@@ -195,7 +209,11 @@ public class IntegrityModule: Module {
              
              switch (result) {
              case .error(let error): throw IntegrityModuleException(appAttestError: error)
+-            case .success(let result): return result
++            case .success(let result): 
++                return result
++                logger.log("generateAssertion result")
++                logger.log("\(result)")
++
+             }
+         }
+         
 diff --git a/node_modules/expo-app-integrity/package.json b/node_modules/expo-app-integrity/package.json
 index da3b7b3..ae2540a 100644
 --- a/node_modules/expo-app-integrity/package.json
