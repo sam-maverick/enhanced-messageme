@@ -1,4 +1,4 @@
-import { LogMe, EncodeFromB64ToBinary } from '../serverLibrary';
+import { LogMe, EncodeFromB64ToBuffer } from '../serverLibrary';
 import { PARAM_LOGGING_LEVEL, IOS_BUNDLE_ID, IOS_TEAM_ID, IOS_IS_DEVELOPMENT_ENVIRONMENT, IOS_SUPPORTED_VERSIONS } from '../parameters';
 
 import { verifyAttestation, verifyAssertion } from 'appattest-checker-node';
@@ -28,7 +28,7 @@ export async function CheckAppAttestation(token, nonce_truth, keyId) {
                 },  // appInfo
                 keyId,
                 nonce_truth,
-                await EncodeFromB64ToBinary(token)
+                EncodeFromB64ToBuffer(token)
             );
 
             if ('verifyError' in result) {
@@ -77,7 +77,8 @@ export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, ios
     LogMe(0, 'CheckAppAssertion(): Started');
     LogMe(2, '  Token is: '+token);
     LogMe(2, '  Nonce_truth: '+nonce_truth);
-    LogMe(2, '  record: '+JSON.stringify(record));
+    LogMe(2, '  iosSignCount: '+iosSignCount);
+    LogMe(2, '  iosPublicKeyPem: '+iosPublicKeyPem);
 
     try {
 
@@ -85,10 +86,10 @@ export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, ios
 
         LogMe(0, 'CheckAppAssertion(): Verifying assertion');
         const result = await verifyAssertion(
-            nonce_truth,
+            Buffer.from(nonce_truth),
             iosPublicKeyPem,
             IOS_TEAM_ID + '.' + IOS_BUNDLE_ID,
-            await EncodeFromB64ToBinary(token)
+            EncodeFromB64ToBuffer(token)
         );
         LogMe(0, 'CheckAppAssertion(): Assertion verified');
         if ('verifyError' in result) {
