@@ -15,7 +15,7 @@ import { verifyAttestation, verifyAssertion } from 'appattest-checker-node';
 export async function CheckAppAttestation(token, nonce_truth, keyId) {
 
     LogMe(1, 'Called CheckAppAttestation');
-    LogMe(2, '  Token is: '+JSON.stringify(token));
+    LogMe(2, '  Token is: '+token);
     LogMe(2, '  Nonce_truth: '+nonce_truth);
     LogMe(2, '  KeyId: '+keyId);
 
@@ -75,7 +75,7 @@ export async function CheckAppAttestation(token, nonce_truth, keyId) {
 export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, iosSignCount) {
 
     LogMe(0, 'CheckAppAssertion(): Started');
-    LogMe(2, '  Token is: '+JSON.stringify(token));
+    LogMe(2, '  Token is: '+token);
     LogMe(2, '  Nonce_truth: '+nonce_truth);
     LogMe(2, '  record: '+JSON.stringify(record));
 
