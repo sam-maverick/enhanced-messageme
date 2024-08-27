@@ -2,7 +2,7 @@ import * as AppIntegrityAndroidStandard from 'app-integrity-android-standard';
 
 import * as Integrity from 'expo-app-integrity';
 
-import { ErrorAlert, LogMe, UpdateLogMeUsername, EncodeFromBufferToB64 } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername, EncodeFromBinaryToB64 } from '../myGeneralLibrary.jsx';
 import storage from '../storage/storageApi.js';
 
 import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER } from '../parameters.js';
@@ -42,14 +42,14 @@ export async function iosKeygen() {
  * Returns an attestation token in Base64 format
  */
 export async function iosAppAttestRequest(keyID, challenge) {
-  return await EncodeFromBufferToB64(await Integrity.attestKey(keyID, challenge, null));
+  return await EncodeFromBinaryToB64(await Integrity.attestKey(keyID, challenge, null));
 }
 
 /**
  * Returns an attestation token in Base64 format
  */
 export async function iosAppAssertRequest(keyID, challenge) {
-  return await EncodeFromBufferToB64(await Integrity.generateAssertion(keyID, challenge));
+  return await EncodeFromBinaryToB64(await Integrity.generateAssertion(keyID, challenge));
 }
 
 
