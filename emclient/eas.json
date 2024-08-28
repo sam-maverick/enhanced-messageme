@@ -16,9 +16,18 @@
       "distribution": "internal",
       "autoIncrement": true
     },
-    "previewnosim": {
+    "previewdebug": {
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "buildConfiguration": "Debug"
+      },
+      "distribution": "internal",
+      "autoIncrement": true
+    },
+    "previewrelease": {
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release"
       },
       "distribution": "internal",
       "autoIncrement": true

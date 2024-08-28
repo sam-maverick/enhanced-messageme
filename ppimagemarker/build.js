@@ -169,7 +169,7 @@ if (artifactname === 'ppclient') {
 
 echo('Running the build!');
 if (process.argv[2] === 'ipa') {
-  myExec('eas build -p ios --non-interactive --profile previewnosim --local');
+  myExec('eas build -p ios --non-interactive --profile previewrelease --local');
   env.RESULT = error();
   if (env.RESULT.toString() !== 'null') {
     echo('Aborting on ' + env.RESULT + ', command failed:');
