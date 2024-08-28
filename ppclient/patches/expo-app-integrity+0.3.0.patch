@@ -41,7 +41,7 @@ index f0d7658..38df657 100644
  
    defaultConfig {
 diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-index e3fd69a..41c4010 100644
+index e3fd69a..680ff5c 100644
 --- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift
 +++ b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
 @@ -1,10 +1,20 @@
@@ -103,7 +103,7 @@ index e3fd69a..41c4010 100644
                          error: error,
                          continuation: continuation
                      )
-@@ -173,7 +183,11 @@ public class IntegrityModule: Module {
+@@ -173,20 +183,26 @@ public class IntegrityModule: Module {
                          
              switch (result) {
              case .error(let error): throw IntegrityModuleException(appAttestError: error)
@@ -116,7 +116,16 @@ index e3fd69a..41c4010 100644
              }
              
          }
-@@ -186,7 +200,7 @@ public class IntegrityModule: Module {
+         
+         AsyncFunction("generateAssertion") { (
+             keyIdentifier: String,
+-            requestJSON: String
++            challenge: String
+         ) async throws -> String in
+-            let hash = Data(SHA256.hash(data: Data(requestJSON.utf8)))
++            let hash = Data(SHA256.hash(data: Data(challenge.utf8)))
++            logger.log("clientData hash:")
++            logger.log("\(hash.base64EncodedString())")
              let result = await withCheckedContinuation { continuation in
                  service.generateAssertion(keyIdentifier, clientDataHash: hash) { result, error in
                      return self.appAttestCompletion(
@@ -125,7 +134,7 @@ index e3fd69a..41c4010 100644
                          error: error,
                          continuation: continuation
                      )
-@@ -195,7 +209,11 @@ public class IntegrityModule: Module {
+@@ -195,7 +211,11 @@ public class IntegrityModule: Module {
              
              switch (result) {
              case .error(let error): throw IntegrityModuleException(appAttestError: error)
@@ -151,7 +160,7 @@ index da3b7b3..ae2540a 100644
      "clean": "expo-module clean",
      "lint": "expo-module lint",
 diff --git a/node_modules/expo-app-integrity/src/index.ts b/node_modules/expo-app-integrity/src/index.ts
-index fa53e42..713f226 100644
+index fa53e42..f590925 100644
 --- a/node_modules/expo-app-integrity/src/index.ts
 +++ b/node_modules/expo-app-integrity/src/index.ts
 @@ -12,27 +12,17 @@ import {
@@ -208,3 +217,21 @@ index fa53e42..713f226 100644
      case 'android':
        if (!cloudProjectNumber)
          throw AndroidIntegrityErrors.CLOUD_PROJECT_NUMBER_IS_INVALID
+@@ -187,16 +181,11 @@ export async function generateAssertion(
+    * comparison after Apple signs the request
+    */
+   challenge: string,
+-
+-  /** The request JSON for Apple to sign */
+-  requestJSON: Record<string | number | symbol, unknown>,
+ ): Promise<string | never> {
+-  /** Include the server-issued challenge into the requestJSON */
+-  const withChallenge = { ...requestJSON, challenge }
+ 
+   const assertionResult = await IntegrityModule.generateAssertion(
+     keyIdentifier,
+-    JSON.stringify(withChallenge),
++    challenge,
+   )
+ 
+   return assertionResult
