@@ -276,7 +276,7 @@ export const PPIntegrityComponent = (props) => {
 
                     <View style={styles.leftleft}>
                         <Text>Do we hold an attested key-pair? </Text>
-                        <Text style={{fontWeight: "bold"}}>{propsState.AccountData.PPIcookie==='' ? 'No' : 'Yes'}</Text>
+                        <Text style={{fontWeight: "bold"}}>{propsState.AccountData.iosKeyName==='' ? 'No' : 'Yes'}</Text>
                     </View>
                     <View style={styles.leftleft}>
                     <Text>This only applies to iOS.</Text>
