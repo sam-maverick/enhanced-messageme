@@ -41,7 +41,7 @@ index f0d7658..38df657 100644
  
    defaultConfig {
 diff --git a/node_modules/expo-app-integrity/ios/IntegrityModule.swift b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
-index e3fd69a..680ff5c 100644
+index e3fd69a..1dfb380 100644
 --- a/node_modules/expo-app-integrity/ios/IntegrityModule.swift
 +++ b/node_modules/expo-app-integrity/ios/IntegrityModule.swift
 @@ -1,10 +1,20 @@
@@ -109,8 +109,8 @@ index e3fd69a..680ff5c 100644
              case .error(let error): throw IntegrityModuleException(appAttestError: error)
 -            case .success(let result): return result
 +            case .success(let result): 
-+                logger.log("attestKey result")
-+                logger.log("\(result)")
++                //logger.log("attestKey result")
++                //logger.log("\(result)")
 +                return result
 +
              }
@@ -124,8 +124,8 @@ index e3fd69a..680ff5c 100644
          ) async throws -> String in
 -            let hash = Data(SHA256.hash(data: Data(requestJSON.utf8)))
 +            let hash = Data(SHA256.hash(data: Data(challenge.utf8)))
-+            logger.log("clientData hash:")
-+            logger.log("\(hash.base64EncodedString())")
++            //logger.log("clientData hash:")
++            //logger.log("\(hash.base64EncodedString())")
              let result = await withCheckedContinuation { continuation in
                  service.generateAssertion(keyIdentifier, clientDataHash: hash) { result, error in
                      return self.appAttestCompletion(
@@ -140,8 +140,8 @@ index e3fd69a..680ff5c 100644
              case .error(let error): throw IntegrityModuleException(appAttestError: error)
 -            case .success(let result): return result
 +            case .success(let result): 
-+                logger.log("generateAssertion result")
-+                logger.log("\(result)")
++                //logger.log("generateAssertion result")
++                //logger.log("\(result)")
 +                return result
 +
              }
