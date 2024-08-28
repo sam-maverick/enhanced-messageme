@@ -1,4 +1,4 @@
-import { LogMe, EncodeFromB64ToBuffer } from '../serverLibrary';
+import { LogMe, EncodeFromB64ToBuffer, getSHA256, EncodeFromBufferToB64 } from '../serverLibrary';
 import { PARAM_LOGGING_LEVEL, IOS_BUNDLE_ID, IOS_TEAM_ID, IOS_IS_DEVELOPMENT_ENVIRONMENT, IOS_SUPPORTED_VERSIONS } from '../parameters';
 
 import { verifyAttestation, verifyAssertion } from 'appattest-checker-node';
@@ -84,9 +84,12 @@ export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, ios
 
         // Check that challenge in request matches challenge issued by server
 
+        const clientHash = await getSHA256(Buffer.from(nonce_truth));
+        LogMe(0, 'clientHash: '+EncodeFromBufferToB64(clientHash));
+
         LogMe(0, 'CheckAppAssertion(): Verifying assertion');
         const result = await verifyAssertion(
-            Buffer.from(nonce_truth),
+            clientHash,
             iosPublicKeyPem,
             IOS_TEAM_ID + '.' + IOS_BUNDLE_ID,
             EncodeFromB64ToBuffer(token)

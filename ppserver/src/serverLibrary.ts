@@ -5,6 +5,13 @@ import * as crypto from "crypto";
 const startDate = Date.now();
 
 
+
+export async function getSHA256(data: Buffer) {
+  const hash = crypto.createHash('sha256');
+  hash.update(data);
+  return hash.digest();
+}
+
 export function FromTimeSpanToHumanReadableMs(lapseMs) {
     const unitspart = Math.floor(lapseMs/1000);
     const decimalpart = lapseMs - unitspart*1000;
