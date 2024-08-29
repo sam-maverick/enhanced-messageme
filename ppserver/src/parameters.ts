@@ -97,7 +97,7 @@ export const IOS_SUPPORTED_VERSIONS = '>=14.8.1 || >=15.8.1 || >=16.7.5 || >=17.
 
 /**
  * https://developer.apple.com/documentation/devicecheck/validating_apps_that_connect_to_your_server
- * This parameter is propagated to the client.
+ * This parameter is propagated to the client in the Attestation phase.
  * When the client requests a nonce, the server returns the nonce but also returns this parameter. Then the
  * client generates the attestation token accordingly (for DEV/PROD).
  */
