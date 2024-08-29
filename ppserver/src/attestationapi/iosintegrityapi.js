@@ -31,11 +31,14 @@ export async function CheckAppAttestation(token, nonce_truth, keyId) {
                 EncodeFromB64ToBuffer(token)
             );
 
+            console.log("result:"+JSON.stringify(result));
+
             if ('verifyError' in result) {
                 // Return error to app.
                 // It should not use the generated keys for assertion.
-                LogMe(1, 'iOS attestation failed: '+result.errorMessage);
-                return {status: 'fail', message: result.errorMessage, publicKeyPem: '', receipt: ''};
+                const errorText = 'Error: ' + result.verifyError + '; details: '+result.errorMessage;
+                LogMe(1, 'iOS attestation failed: '+errorText);
+                return {status: 'fail', message: errorText, publicKeyPem: '', receipt: '' };
             } else {
 
                 // Note: Attestations do not contain security metrics
@@ -98,8 +101,9 @@ export async function CheckAppAssertion(token, nonce_truth, iosPublicKeyPem, ios
         if ('verifyError' in result) {
             // Request cannot be trusted!
             // Fail request from app (e.g. return HTTP 401 equivalent)
-            LogMe(1, 'iOS assertion failed: '+result.verifyError);
-            return {status: 'fail', message: result.verifyError, iosSignCount: undefined};
+            const errorText = 'Error: ' + result.verifyError + '; details: '+result.errorMessage;
+            LogMe(1, 'iOS assertion failed: '+errorText);
+            return {status: 'fail', message: errorText, iosSignCount: undefined};
         }
 
         // Check that signCount >= persisted value.
