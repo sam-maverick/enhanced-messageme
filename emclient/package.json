@@ -1,6 +1,6 @@
 {
   "name": "emclient",
-  "version": "2.22.136",
+  "version": "2.22.137",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "node ./update-system.js",
@@ -19,7 +19,7 @@
     "@types/react": "~18.2.46",
     "async-mutex": "^0.5.0",
     "cipher-base": "^1.0.4",
-    "expo": "~51.0.28",
+    "expo": "~51.0.31",
     "expo-build-properties": "~0.12.5",
     "expo-device": "~6.0.2",
     "expo-file-system": "^17.0.1",
