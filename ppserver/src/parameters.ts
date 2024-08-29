@@ -97,12 +97,9 @@ export const IOS_SUPPORTED_VERSIONS = '>=14.8.1 || >=15.8.1 || >=16.7.5 || >=17.
 
 /**
  * https://developer.apple.com/documentation/devicecheck/validating_apps_that_connect_to_your_server
- * Set this to true if you deploy the app via Xcode from your Mac, which pushes the app from your computer to the
- * device via a local cable or WiFi.
- * Set this to false if you deploy the app as an IPA file that you push to the App Store. Deploying the app as 
- * either Debug or Release in the eas.json does not seem to have any effect on whether the app is considered to be
- * running in Development or in Production. Same for Testflight versus Distribution in App Store Connect: It does
- * not seem to have any effect.
+ * This parameter is propagated to the client.
+ * When the client requests a nonce, the server returns the nonce but also returns this parameter. Then the
+ * client generates the attestation token accordingly (for DEV/PROD).
  */
 export const IOS_IS_DEVELOPMENT_ENVIRONMENT = true;
 
