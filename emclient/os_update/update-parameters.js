@@ -150,3 +150,6 @@ export const PARAM_PP__PPCLIENT_ANDROID_NAME = 'pt.lasige.safex.ppclient';
  */
 export const PARAM_IMPLEMENTATION_PNG_FASTCHECK_NONPRIVATE = 'y';
 
+//https://exiftool.org/forum/index.php?topic=2960.0
+//The first 8 bytes of the UserComment data specify the encoding.  For ASCII text, this is "ASCII\0\0\0".  For unknown encoding, use all zero bytes ("\0\0\0\0\0\0\0\0").
+export const PARAM_EXIF_ASCII_PREFIX = "ASCII\u0000\u0000\u0000";

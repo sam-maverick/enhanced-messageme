@@ -164,8 +164,9 @@ export async function PickPicture(PickPictureOptions) {
     UpdUtils.LogSys(LIBN, 0, 'Reading file');
 
     var dataUri = '';
-    
+
     fileContentsOriginalB64 = await FileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
+
     dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginalB64;
     /**
      *     switch (params.PARAM_IMPLEMENTATION_FILE_READWRITE) {

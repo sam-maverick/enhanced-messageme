@@ -5,7 +5,7 @@
 // NOTE: Setting this to anything other than 0 may significantly impact performance
 // NOTE: Each log call (console.log()) is limited to 4096 bytes, so you won't see the full contents of image files
 // See: https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
-export const PARAM_LOGGING_LEVEL = 0;  // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 1;  // Change accordingly to your preference
 
 /**
  * Name of the album where private pictures will be saved
@@ -28,3 +28,6 @@ PARAM_PRIVATE_PICTURES_ALBUM_NAME+
 \
 For pictures that are already in the PrivatePics album, we will update the privacy policies directly. If you select a single picture from the PrivatePics album, we will preselect the current privacy policies that it has.';
 
+//https://exiftool.org/forum/index.php?topic=2960.0
+//The first 8 bytes of the UserComment data specify the encoding.  For ASCII text, this is "ASCII\0\0\0".  For unknown encoding, use all zero bytes ("\0\0\0\0\0\0\0\0").
+export const PARAM_EXIF_ASCII_PREFIX = "ASCII\u0000\u0000\u0000";

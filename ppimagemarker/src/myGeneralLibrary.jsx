@@ -26,6 +26,8 @@ let LogMeUsername = false;
 
 
 
+
+
 export async function ReadMyFileStream (path, mode) {
   LogMe(1,'ReadMyFileStream: Called');
   let data = '';
@@ -121,6 +123,10 @@ export function EncodeFromUTF8ToB64 (str) {
 
 export function UpdateLogMeUsername (theusername) {
     LogMeUsername = theusername;
+}
+
+export function LogSys(libname, level, message) {
+  LogMe (level, libname+' '+message);
 }
 
 export function LogMe(level, message) {

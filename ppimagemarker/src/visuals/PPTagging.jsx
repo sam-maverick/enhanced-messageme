@@ -31,6 +31,7 @@ import {
     PARAM_PRIVATE_PICTURES_ALBUM_NAME,
     PARAM_PRIVATE_PICTURES_TMP_DIRNAME,
     PARAM_WELCOME_MESSAGE,
+    PARAM_EXIF_ASCII_PREFIX,
  } from '../parameters.js';
 
 import storage from '../storage/storageApi.js';
@@ -43,6 +44,7 @@ export const PPTaggingComponent = (props) => {
 
     const [initStatus, setInitStatus] = useState({ key: 'init' });
     const [privateAlbumID, setPrivateAlbumId] = useState({ key: 0 });
+    const [lastSelectedAlbumID, setLastSelectedPrivateAlbumId] = useState({ key: 0 });
     const [imagePermissionsGranted, setImagePermissionsGranted] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [processingMessage, setProcessingMessage] = useState();
@@ -121,7 +123,7 @@ export const PPTaggingComponent = (props) => {
                 let exifObj = piexif.load(dataUri);
                 LogMe(2,'exifObj original: '+JSON.stringify(exifObj));
     
-                let newValue = JSON.stringify({
+                let newValue = PARAM_EXIF_ASCII_PREFIX + JSON.stringify({
                     pictureType: 'private',
                     privacyPolicies: {
                         ViewOnce: selectionViewOnce,
@@ -148,7 +150,11 @@ export const PPTaggingComponent = (props) => {
                 // 
                 LogMe(1,'ExecuteTheMarking(): Deleting/Writing to files');
 
-                if (assets[i].albumId == privateAlbumID.key) {  // The picture is in the PrivatePics album
+                if (Platform.OS === 'android' && assets[i].albumId == privateAlbumID.key) {  
+                    // The picture is in the PrivatePics album and it is an Androi device => we can update the
+                    // files directly, rather than creating a new file. Caveat: Only works if this app instance
+                    // created the file. If you rebuild the app from DEV to PROD this may raise a file
+                    // permission error.
                     LogMe(1,'ExecuteTheMarking(): processing a picture that is in PrivatePics');
                     try {
                         await FileSystem.writeAsStringAsync(
@@ -162,23 +168,14 @@ export const PPTaggingComponent = (props) => {
                 } else {  // The picture is NOT in the PrivatePics album
                     LogMe(1,'ExecuteTheMarking(): processing a picture that is NOT in PrivatePics');
 
-                    // This is because iOS silently drops EXIF metadata from files with jpeg extension
-                    // Workaround:
-                    if (Platform.OS === 'ios') {
-                        if (fileExt=='jpeg') {
-                            fileExt = 'jpg';
-                        }
-                    }
-
                     let ImagePathTmp = FileSystem.documentDirectory + PARAM_PRIVATE_PICTURES_TMP_DIRNAME + '/' + uuid.v4() + '.' + fileExt;
-    
+
                     LogMe(1,'ExecuteTheMarking(): writeAsStringAsync');
                     await FileSystem.writeAsStringAsync(ImagePathTmp, base64ContentsWithInsertedMetadata, {encoding: 'base64'});
                     LogMe(1, 'ExecuteTheMarking(): Tmp file saved to workspace: ' + ImagePathTmp); 
         
                     LogMe(1,'ExecuteTheMarking(): CameraRoll.saveAsset');
-                    await CameraRoll.saveAsset(ImagePathTmp, { album: PARAM_PRIVATE_PICTURES_ALBUM_NAME } );
-    
+                    let retsave = await CameraRoll.saveAsset(ImagePathTmp, { type: 'photo', album: PARAM_PRIVATE_PICTURES_ALBUM_NAME } );
                 }
     
                 //await WriteMyFileStream(imageInCameraRoll.uri+'.temp.jpg', 'base64', false, base64ContentsWithInsertedMetadata);    
@@ -196,7 +193,7 @@ export const PPTaggingComponent = (props) => {
             ErrorAlert('Error while marking picture(s)', err);
         } finally {
             try {
-                if (assets[i].albumId == privateAlbumID.key) {
+                if (Platform.OS === 'android' && assets[i].albumId == privateAlbumID.key) {
                     // When the picture was in the PrivatePics album: Nothing to do
                 } else {
                     await FileSystem.deleteAsync(ImagePathTmp, {idempotent: true});
@@ -402,9 +399,19 @@ export const PPTaggingComponent = (props) => {
                                         ErrorAlert('Platform not supported: '+Platform.OS);  
                                         return; 
                                     }                    
-
                                     // Load appropriate preselected values
-                                    if (newassets.length == 1 && newassets[0].albumId == privateAlbumID.key) {
+                                    if (newassets.length == 1 // Only read privacy policies when there is 1 selected picture
+                                        && 
+                                        (
+                                            (
+                                                Platform.OS === 'android' && newassets[i].albumId == privateAlbumID.key
+                                            )
+                                            ||
+                                            (
+                                                Platform.OS === 'ios' && lastSelectedAlbumID.key == privateAlbumID.key
+                                            ) // Unfortunately, iOS does not give the name or ID of the album of the selected picture(s)                        
+                                        )
+                                    ) {  // The selected picture is from the PrivatePics album, so we load its current privacy policies
                                         LogMe(1, 'Loading current values');
                                         let fileExt = uriWithExtension.split('.').pop().toLowerCase();
                                         if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
@@ -417,15 +424,32 @@ export const PPTaggingComponent = (props) => {
                                             ErrorAlert('Image extension '+fileExt+' is not supported. Only jpg/jpeg and tiff images are supported.');
                                             return;
                                         }
-                                        let fileContentsOriginal = await FileSystem.readAsStringAsync(hopefullyReadableUri, {encoding: 'base64'});
+
+                                        // iOS does not allow to read image files directly from the camera roll unless they are 
+                                        // selected explicitly and individually with a native API (expo-image-multiple-picker uses 
+                                        // loose permissions to massively access the image gallery)
+                                        // Therefore, we work with a temporal copy
+                                        let uriInCacheLoadPolicies = FileSystem.cacheDirectory + "/" + uuid.v4() + "." + fileExt;
+                                        await FileSystem.copyAsync({
+                                            from: hopefullyReadableUri,
+                                            to: uriInCacheLoadPolicies,
+                                        });
+
+                                        let fileContentsOriginal = await FileSystem.readAsStringAsync(uriInCacheLoadPolicies, {encoding: 'base64'});
+
+                                        await FileSystem.deleteAsync(uriInCacheLoadPolicies, {idempotent: true});
+
                                         let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
                                         let exifObj = piexif.load(dataUri);
                                         LogMe(2,'exifObj: '+JSON.stringify(exifObj));
-                                    
+
                                         if (exifObj?.Exif) {
                                             LogMe(1,'Checking if picture is actually marked as private: ExifIFD.UserComment exists in metadata: '+exifObj['Exif'][piexif.ExifIFD.UserComment]);
                                             try {
-                                                metadata = JSON.parse(exifObj['Exif'][piexif.ExifIFD.UserComment]);
+                                                LogMe(1, "Raw EXIF data: "+JSON.stringify(exifObj['Exif']));
+                                                let metadataStr = exifObj['Exif'][piexif.ExifIFD.UserComment];
+                                                metadataStr = metadataStr.replace(PARAM_EXIF_ASCII_PREFIX, "");
+                                                metadata = JSON.parse(metadataStr);
                                                 if (metadata?.pictureType === 'private') {
                                                     LogMe(1,'The picture is indeed private!');
                                                 } else {
@@ -457,7 +481,7 @@ export const PPTaggingComponent = (props) => {
                                     }
 
                                     // Load appropriate informational message
-                                    if (newassets[0].albumId == privateAlbumID.key) {
+                                    if (Platform.OS === 'android' && newassets[0].albumId == privateAlbumID.key) {
                                         setSelectionInfoMessage('The privacy policies of the selected private pictures will be updated with the following values:');
                                     } else {
                                         setSelectionInfoMessage('The selected pictures will be duplicated to the PrivatePics album, and marked as `private` with the following policies:');
@@ -477,6 +501,7 @@ export const PPTaggingComponent = (props) => {
                                 multiple={true}
                                 onSelectAlbum={(album) => {
                                     LogMe(1,'PPTagging: User selected album: '+JSON.stringify(album));
+                                    lastSelectedAlbumID.key = album?.id;
                                     setAlbum(album);
                                     if (album?.title==PARAM_PRIVATE_PICTURES_ALBUM_NAME) {
                                         privateAlbumID.key = album?.id;
