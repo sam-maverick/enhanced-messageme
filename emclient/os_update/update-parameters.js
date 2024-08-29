@@ -117,7 +117,7 @@ export const PARAM_PP__PPCLIENT_ANDROID_NAME = 'pt.lasige.safex.ppclient';
  * 'l' for piexifjs.load.
  * 'd' for custom function, more efficient.
  */
-//export const PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR = 'd';
+//export const PARAM_IMPLEMENTATION_EXIF_PRIVATE_PICTURE_DETECTOR = 'l';
 
 /**
  * How files are loaded
