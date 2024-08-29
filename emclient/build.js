@@ -169,6 +169,8 @@ if (artifactname === 'ppclient') {
 
 echo('Running the build!');
 if (process.argv[2] === 'ipa') {
+  //https://github.com/facebook/react-native/issues/31507
+  // Use Release in eas.json when distributing via App Store
   myExec('eas build -p ios --non-interactive --profile previewrelease --local');
   env.RESULT = error();
   if (env.RESULT.toString() !== 'null') {
