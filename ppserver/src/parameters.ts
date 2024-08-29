@@ -100,6 +100,8 @@ export const IOS_SUPPORTED_VERSIONS = '>=14.8.1 || >=15.8.1 || >=16.7.5 || >=17.
  * This parameter is propagated to the client in the Attestation phase.
  * When the client requests a nonce, the server returns the nonce but also returns this parameter. Then the
  * client generates the attestation token accordingly (for DEV/PROD).
+ * Building the app as Debug or Release, or through Distribute or Testflight, does not seem to impact
+ * the selected environment; it only depends on this parameter.
  */
 export const IOS_IS_DEVELOPMENT_ENVIRONMENT = true;
 
