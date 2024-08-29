@@ -177,7 +177,7 @@ export const PPTaggingComponent = (props) => {
                     LogMe(1, 'ExecuteTheMarking(): Tmp file saved to workspace: ' + ImagePathTmp); 
         
                     LogMe(1,'ExecuteTheMarking(): CameraRoll.saveAsset');
-                    await CameraRoll.saveAsset(ImagePathTmp, { type: 'auto', album: PARAM_PRIVATE_PICTURES_ALBUM_NAME } );
+                    await CameraRoll.saveAsset(ImagePathTmp, { type: 'photo', album: PARAM_PRIVATE_PICTURES_ALBUM_NAME } );
     
                 }
     
