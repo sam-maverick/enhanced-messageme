@@ -97,8 +97,13 @@ export const IOS_SUPPORTED_VERSIONS = '>=14.8.1 || >=15.8.1 || >=16.7.5 || >=17.
 
 /**
  * https://developer.apple.com/documentation/devicecheck/validating_apps_that_connect_to_your_server
+ * Set this to true if you deploy the app via Xcode from your Mac, which pushes the app from your computer to the
+ * device via a local cable or WiFi.
+ * Set this to false if you deploy the app as an IPA file that you push to the App Store. Deploying the APP either
+ * as Debug or Release in the eas.json does not seem to have any effect on whether the app is considered to be
+ * running in Development or in Production.
  */
-export const IOS_IS_DEVELOPMENT_ENVIRONMENT = true;
+export const IOS_IS_DEVELOPMENT_ENVIRONMENT = false;
 
 /**
  * Maximum time between token generation, and token validation
