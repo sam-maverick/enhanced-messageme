@@ -161,6 +161,15 @@ export const PPTaggingComponent = (props) => {
                     }
                 } else {  // The picture is NOT in the PrivatePics album
                     LogMe(1,'ExecuteTheMarking(): processing a picture that is NOT in PrivatePics');
+
+                    // This is because iOS silently drops EXIF metadata from files with jpeg extension
+                    // Workaround:
+                    if (Platform.OS === 'ios') {
+                        if (fileExt=='jpeg') {
+                            fileExt = 'jpg';
+                        }
+                    }
+
                     let ImagePathTmp = FileSystem.documentDirectory + PARAM_PRIVATE_PICTURES_TMP_DIRNAME + '/' + uuid.v4() + '.' + fileExt;
     
                     LogMe(1,'ExecuteTheMarking(): writeAsStringAsync');

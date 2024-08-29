@@ -8,6 +8,21 @@
         "./plugins/android-manifest-requestLegacyExternalStorage.js"
       ],
       [
+        "./plugins/ios-itms90078-pushnotificationentitlementwarning.ts"
+      ],
+      [
+        "./plugins/ios-platform-version.ts"
+      ],
+      [
+        "./plugins/ios-podfile-development-team.ts"
+      ],
+      [
+        "./plugins/ios-xcode-development-team.ts"
+      ],
+      [
+        "./plugins/ios-codesigningallowed.ts"
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your contacts in private chats."
@@ -38,7 +53,7 @@
     "name": "ppimagemarker",
     "slug": "ppimagemarker",
     "scheme": "ppimagemarker",
-    "version": "2.12.50",
+    "version": "2.12.51",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -59,7 +74,7 @@
         "NSAllowsLocalNetworking": false,
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "21"
+      "buildNumber": "22"
     },
     "android": {
       "adaptiveIcon": {

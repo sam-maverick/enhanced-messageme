@@ -11,6 +11,21 @@
         "./plugins/jvm-memory.js"
       ],
       [
+        "./plugins/ios-itms90078-pushnotificationentitlementwarning.ts"
+      ],
+      [
+        "./plugins/ios-platform-version.ts"
+      ],
+      [
+        "./plugins/ios-podfile-development-team.ts"
+      ],
+      [
+        "./plugins/ios-xcode-development-team.ts"
+      ],
+      [
+        "./plugins/ios-codesigningallowed.ts"
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your contacts in private chats."
@@ -38,7 +53,7 @@
     "name": "enhmessageme",
     "slug": "enhmessageme",
     "scheme": "enhmsm",
-    "version": "2.22.269",
+    "version": "2.22.273",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
