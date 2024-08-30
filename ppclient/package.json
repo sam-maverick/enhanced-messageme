@@ -1,6 +1,6 @@
 {
   "name": "ppclient",
-  "version": "2.11.227",
+  "version": "2.11.229",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "node ./post-install.js",

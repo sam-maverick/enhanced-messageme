@@ -1,6 +1,5 @@
 import FileProvider from 'react-native-file-provider';
 import 'react-native-url-polyfill/auto';  // https://www.davidangulo.xyz/posts/use-url-class-in-react-native/
-//import { DocumentDirectoryPath } from 'react-native-fs';
 import * as Linking from 'expo-linking';
 import AppLink from 'react-native-app-link';
 import { Mutex, Semaphore, withTimeout, tryAcquire, E_ALREADY_LOCKED, E_TIMEOUT } from 'async-mutex';
@@ -24,18 +23,10 @@ import { LogMe } from '../src/myGeneralLibrary';
 const LIBN = '(emclient) (PrivatePictureAPI)';
 var mutexPrivatePictureAccess = withTimeout(new Mutex(), params.PARAM_PP__SELECT_TIMEOUT_MS);
 var PPreplyAuthenticationString = '';
-var PPselectorResult = new Error('Unitinitalized - internal error');  // null Means successful, otherwise it contains the error object
+var PPselectorResult = new Error('Unitinitalized - internal error');  // null means successful, otherwise it contains the error object
 var PPandroidContentUri = '';
 var PPTmpFilePath = '';
 var PPiosFileContents = '';
-/**
- * If you want to migrate this to another place (e.g., cacheDirectory), you must set the appropriate permissions 
- * to that folder for the FileProvider.
- * In a real world implementation of the architecture, this folder is not within the user space but within the OS,
- * and the file can be automatically deleted when they are no more references to it. If supported, it can also be a
- * virtual file in memory.
- */
-const tmpDir = FileSystem.documentDirectory;
 
 const png = require('png-metadata');
 const Buffer = require('buffer').Buffer;
@@ -58,7 +49,7 @@ Linking.addEventListener('url', async ({ url }) => {
         // Authentication successful
         if (URLofEvent.searchParams.get('result') === 'report') {
           let ReportingNotImplementedMessage = 'You requested to report the following picture:\n'+
-          URLofEvent.searchParams.get('RefimageUri')+'\n'+
+          URLofEvent.searchParams.get('RefImageUri')+'\n'+
           '\n'+
           'However, this function is not yet implemented.';
           await UpdUtils.AsyncAlert(ReportingNotImplementedMessage);
@@ -107,6 +98,21 @@ Linking.addEventListener('url', async ({ url }) => {
 });
 
 
+async function CreateTmpDirIfNotExists() {
+  UpdUtils.LogSys(LIBN, 0, 'Creating dir '+params.PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
+  // Create dir for exchanging files with PP client, if it does not exist
+  try {
+      await FileSystem.makeDirectoryAsync(params.PARAM_PP__APP_TMP_BASE_DIR + params.PARAM_PP__APP_TMP_FOLDER_NAME);
+  }
+  // Ignored -- Directory already exists
+  // We can't distinguish between 'directory already exists' and other types of errors
+  catch(err) { 
+    // Do nothing
+    UpdUtils.LogSys(LIBN, 1, 'Ignoring error');
+    UpdUtils.LogSys(LIBN, 2, err?.stack);
+  }
+  UpdUtils.LogSys(LIBN, 0, 'Dir operation finished');
+}
 
 
 /**
@@ -301,27 +307,15 @@ export async function PickPicture(PickPictureOptions) {
             throw Error('Image URI extension is not valid.');                   
         }            
 
+        await CreateTmpDirIfNotExists();
+
         // This will be our cache file
-        PPTmpFilePath = UpdUtils.normalizeEndingSlash(tmpDir) + params.PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
+        PPTmpFilePath = params.PARAM_PP__APP_TMP_BASE_DIR + params.PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
 
         //await Linking.openURL(URLofPPselectionService.toString());  // Need to await Linking.openURL() to properly catch errors
         if (Platform.OS === 'android') {
 
           // ANDROID ---------------------------------------------------------------------------
-
-          UpdUtils.LogSys(LIBN, 0, 'Creating dir '+params.PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
-          // Create dir for exchanging files with PP client, if it does not exist
-          try {
-              await FileSystem.makeDirectoryAsync(UpdUtils.normalizeEndingSlash(tmpDir) + params.PARAM_PP__APP_TMP_FOLDER_NAME);
-          }
-          // Ignored -- Directory already exists
-          // We can't distinguish between 'directory already exists' and other types of errors
-          catch(err) { 
-            // Do nothing
-            UpdUtils.LogSys(LIBN, 1, 'Ignoring error');
-            UpdUtils.LogSys(LIBN, 2, err?.stack);
-          }
-          UpdUtils.LogSys(LIBN, 0, 'Dir operation finished');
           
           UpdUtils.LogSys(LIBN, 1, 'Preparing temporary image file; this is the file with plain contents');
           // Prepare temporary image file with plain contents
@@ -363,7 +357,9 @@ export async function PickPicture(PickPictureOptions) {
 
           UpdUtils.LogSys(LIBN, 0, 'Preparing URL');
 
+          URLofPPselectionService.searchParams.append('fileUri', fileUriWithExtension);
           URLofPPselectionService.searchParams.append('fileContents', UpdUtils.SafeUrlEncodeForB64(
+            await
             ( async () => {
               return fileContentsOriginalB64;
               /**
@@ -438,7 +434,7 @@ export async function PickPicture(PickPictureOptions) {
             } 
             UpdUtils.LogSys(LIBN, 0, 'File URL-decoded');
             UpdUtils.LogSys(LIBN, 0, 'Writing to file');
-            await FileSystem.writeAsStringAsync(PPTmpFilePath, iosfilecontents, fileOptions.encoding);
+            await FileSystem.writeAsStringAsync(PPTmpFilePath, iosfilecontents, fileOptions);
             UpdUtils.LogSys(LIBN, 0, 'File written');
           }
           UpdUtils.LogSys(LIBN, 0, 'Returning');
@@ -582,8 +578,6 @@ export async function ShowPicture(imageUri) {
                     throw Error('The ppPq chunk indicates a PP platform nickname that is not in our allowed list.');
                 }
 
-                const documentDirectory = UpdUtils.normalizeEndingSlash(FileSystem.documentDirectory);
-
                 // Prepare and launch deep link
         
                 // NOTE: Deep link params are only available in the EAS build
@@ -604,24 +598,12 @@ export async function ShowPicture(imageUri) {
                     throw Error('Image URI extension is not valid.');                   
                 }       
 
+                await CreateTmpDirIfNotExists();
+
                 //await Linking.openURL(URLofPPselectionService.toString());  // Need to await Linking.openURL() to properly catch errors
                 if (Platform.OS === 'android') {
         
                     // ANDROID ---------------------------------------------------------------------------
-
-                    UpdUtils.LogSys(LIBN, 0, 'Creating dir '+params.PARAM_PP__APP_TMP_FOLDER_NAME+' if not exists');
-                    // Create dir for exchanging files with PP client, if it does not exist
-                    try {
-                        await FileSystem.makeDirectoryAsync(documentDirectory + params.PARAM_PP__APP_TMP_FOLDER_NAME);
-                    }
-                    // Ignored -- Directory already exists
-                    // We can't distinguish between 'directory already exists' and other types of errors
-                    catch(err) { 
-                      // Do nothing
-                      UpdUtils.LogSys(LIBN, 1, 'Ignoring error');
-                      UpdUtils.LogSys(LIBN, 2, err?.stack);
-                    }
-                    UpdUtils.LogSys(LIBN, 0, 'Done creating dir');
           
                     UpdUtils.LogSys(LIBN, 2, 'fileContentsOriginal: '+fileContentsOriginal);
                     UpdUtils.LogSys(LIBN, 1, 'fileContentsOriginal length: '+fileContentsOriginal.length);
@@ -629,7 +611,7 @@ export async function ShowPicture(imageUri) {
                     // Prepare temporary image file with wrapped contents
                     //UTF8 encoded strings cannot represent arbitrary binary values
                     //https://docs.snowflake.com/en/sql-reference/binary-input-output
-                    PPTmpFilePath = documentDirectory + params.PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
+                    PPTmpFilePath = params.PARAM_PP__APP_TMP_BASE_DIR + params.PARAM_PP__APP_TMP_FOLDER_NAME + '/' + uuidv4() + '.tmp.' + fileExt;
                     UpdUtils.LogSys(LIBN, 1, 'PPTmpFilePath='+PPTmpFilePath);
                     /**
                      * We need to copy the wrapped image file onto a temporary file in a specific directory. 

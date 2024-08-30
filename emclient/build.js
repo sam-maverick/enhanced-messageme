@@ -306,13 +306,34 @@ if (process.argv[2] === 'apk') {
 
 if (process.argv[2] === 'managed-ios-xcode') {
   echo('Running on device; make sure the device is connected');
-  myExec(`react-native run-ios`);
-  env.RESULT = error();
-  if (env.RESULT.toString() !== 'null') {
-    echo('Aborting on ' + env.RESULT + ', command failed:');
-    echo('react-native run-ios ...');
-    exit(1);
+  if (artifactname === 'ppclient') {
+    myExec(`react-native run-ios --port 8082`);
+    env.RESULT = error();
+    if (env.RESULT.toString() !== 'null') {
+      echo('Aborting on ' + env.RESULT + ', command failed:');
+      echo('react-native run-ios ...');
+      exit(1);
+    }
+  } else if (artifactname === 'ppimagemarker') {
+    myExec(`react-native run-ios --port 8083`);
+    env.RESULT = error();
+    if (env.RESULT.toString() !== 'null') {
+      echo('Aborting on ' + env.RESULT + ', command failed:');
+      echo('react-native run-ios ...');
+      exit(1);
+    }
+  } else {
+    myExec(`react-native run-ios`);
+    env.RESULT = error();
+    if (env.RESULT.toString() !== 'null') {
+      echo('Aborting on ' + env.RESULT + ', command failed:');
+      echo('react-native run-ios ...');
+      exit(1);
+    }
   }
+
+
+
 }
 
 if (process.argv[2] === 'managed-ios-expo') {

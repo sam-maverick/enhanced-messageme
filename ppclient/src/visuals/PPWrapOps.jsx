@@ -312,7 +312,7 @@ export const PPWrapOpsComponent = (props) => {
 
     async function ProcessUrlRequest (urlParams) {
         LogMe(0, 'ProcessUrlRequest() called');
-        LogMe(1, 'url: '+JSON.stringify(urlParams));
+        LogMe(2, 'url: '+JSON.stringify(urlParams));
         LogMe(1, 'url is of type: '+typeof(urlParams));
 
         LogMe(1, 'ProcessUrlRequest(): calling ClearWorkingData() before beginning operations');
@@ -543,7 +543,7 @@ export const PPWrapOpsComponent = (props) => {
                     LogMe(1, 'Extension is valid');            
                 }
                 
-                LogMe(2, 'plainPrivatePictureContents: '+plainPrivatePictureContents);
+                LogMe(2, 'plainPrivatePictureContents: '+JSON.stringify(plainPrivatePictureContents));
                 LogMe(1, 'plainPrivatePictureContents length: '+plainPrivatePictureContents.length);
                 if (PARAM_DEBUG_MODE)  { setReceivedPlainImageAsRead({uri: 'data:image/' + fileExt + ';base64,' + plainPrivatePictureContents}); }
     
@@ -669,7 +669,7 @@ export const PPWrapOpsComponent = (props) => {
                         let reportingResult = await ReportMaterial(pictureId); //
                         if (reportingResult === true) {
                             callbackURL.searchParams.append('result', 'report');    
-                            callbackURL.searchParams.append('RefImageUri', urlParams?.imageUriReference);    
+                            callbackURL.searchParams.append('RefImageUri', urlParams?.imageUriReference);      
                         } else {
                             callbackURL.searchParams.append('result', 'fail');    
                             callbackURL.searchParams.append('message', 'Sorry. There has been an error while trying to report this material to the server. Please try again later.');  // This may cause the calling messaging app to display an additional error message, depending on how it handles exceptions        
@@ -760,11 +760,12 @@ export const PPWrapOpsComponent = (props) => {
     }
 
 
-    const ReportMaterial = async (pictureID) => {
+    const ReportMaterial = async (mypictureID) => {
         LogMe(0, 'ReportMaterial()');
+        LogMe(1, 'ReportMaterial(): mypictureID:'+mypictureID);
         let retval;
         try {
-            retval = await ApiReportMaterialToServer(pictureID);
+            retval = await ApiReportMaterialToServer(mypictureID);
         } catch (err) {
             LogMe(1, 'Error when reporting to server: ' + err.message);
             await ErrorAlertAsync('Error when reporting to server. Try again later.', err);

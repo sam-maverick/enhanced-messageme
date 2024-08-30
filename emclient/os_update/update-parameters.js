@@ -1,5 +1,7 @@
 // Parameters of the Updated OS layer
 
+import * as FileSystem from 'expo-file-system';
+
 /**
  * Console logging.
  * -1=disabled, 0=performance metrics, 1=normal logging, 2=verbose debugging
@@ -97,10 +99,22 @@ export const PARAM_PP__CHARSET_AUTH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmno
 export const PARAM_PP__LENGTH_AUTH = 16;
 
 /**
- * Folder name where temporary image files are stored for exchange with other apps, within the messaging app.
- * Only applicable to Android.
+ * Folder name (last leaf) where temporary image files are stored for exchange with other apps, within the messaging app.
  */
 export const PARAM_PP__APP_TMP_FOLDER_NAME = 'ppSharedImages';
+
+/**
+ * Base directory (starting root) where temporary image files are stored for exchange with other apps, within the messaging app.
+ *
+ * CAUTION:
+ * If you want to migrate this to another place (e.g., cacheDirectory), you must set the appropriate permissions 
+ * to that folder for the Android FileProvider.
+ * In a real world implementation of the architecture, this folder is not within the user space but within the OS,
+ * and the file can be automatically deleted when they are no more references to it. If supported, it can also be a
+ * virtual file in memory.
+ */
+export const PARAM_PP__APP_TMP_BASE_DIR = FileSystem.documentDirectory;
+
 
 /**
  * Android name given to the messaging app

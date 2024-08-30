@@ -334,6 +334,9 @@ export async function UnwrapPicture (wrappedPictureObject, myAccountData) {
         'pictureId': replyObjectFromServer.replyDataObject.pictureId,
       };
 
+      LogMe(1, "UnwrapPicture(): privacyPolicies: "+JSON.stringify(returnObject.privacyPolicies));
+      LogMe(1, "UnwrapPicture(): pictureId: "+returnObject.pictureId);
+
       replyObjectFromServer = undefined;
 
     }
