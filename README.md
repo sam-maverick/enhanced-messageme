@@ -241,9 +241,9 @@ From the `ppserver/` folder,
 npm install
 ```
 
-# 4. Deploying digital certificates and key material
+# 4. Generating cryptographic material
 
-This section is to configure the certificates and key material for the ppclient app.
+This section is to configure the digital certificates and other cryptographic material for the ppclient app.
 
 **Create directory structure**
 
@@ -418,7 +418,7 @@ sudo systemctl status mongod
 
 Optionally, install the [MongoDB Compass](https://www.mongodb.com/products/tools/compass). It is a GUI for this database.
 
-# 7. Starting the servers
+# 7. Starting the application servers
 
 Install NestJS CLI tools, as explained in the [docs](https://docs.nestjs.com/):
 
@@ -446,85 +446,44 @@ npm start --reset-cache
 
 You should get a `Nest application successfully started`.
 
-# 8. Preparing for the EAS build for Android APK/AAB
+# 8. Preparing the EAS build tool
 
-Building the APK/AAB is known as a 'production build'. Here we will deploy the app as a bare React Native app. You will need to compile your project to generate the APK file. The [Expo Go 'Create your first build' guide](https://docs.expo.dev/build/setup/) provides the steps to use the EAS cloud service for the compilation. However, we prefer to compile locally, using the [Expo Go 'Local app development' guide](https://docs.expo.dev/guides/local-app-development/). Below is a summary of the steps you need to perform.
-
-We already have the Node.js, watchman, and Android Studio set up in previous steps. So now we have to install the JDK that we have downloaded from [here](https://wiki.openjdk.org/display/JDKUpdates/JDK+17u). NOTE: It does not work with Java 21.
-
-To install the JDK, just unpack it somewhere in your computer and add the path to the bin folder to the PATH environment variable, as we did in previous steps. In our case, the path is `/home/devuser/software/OpenJDK17/OpenJDK17U-jdk_x64_linux_hotspot_17.0.10_7/jdk-17.0.10+7/bin`
-
-After having restarted your computer, check:
-
-```
-java --version
-```
-
-In our environment, we have `openjdk 17.0.10 2024-01-16`
-
-Now, we have to follow steps 1 & 2 from the Expo Go 'Create your first build' guide, so:
-
-Install EAS. Despite not being stated in the official guide, we needed a sudo:
-
-```
-sudo npm install -g eas-cli
-```
-
-Then log in to your EAS account. If you do not have any, just create one at https://expo.dev. Please note that this is the EAS account; not your Android Developer account.
-
-```
-eas login
-```
-
-To prepare your environment for development builds, follow the steps explained in the '<u>Install with adb</u>' section of the [Expo Go 'Build APKs for Android Emulators and devices' guide](https://docs.expo.dev/build-reference/apk/#install-with-adb).
-
-# 9. Preparing for the EAS build for iOS
-
-**NOTE: You need a MacOS computer to compile the app for iOS.**
-
-According to this [guide](https://docs.expo.dev/build-reference/local-builds/), you first need to install fastlane:
-
-```
-brew install fastlane
-```
-
-According to [this guide](https://docs.expo.dev/build/setup/), "*If you have not generated a provisioning profile and/or distribution certificate yet, you can let EAS CLI take care of that for you by signing into your Apple Developer Program account and following the prompts.*"
-
-Install EAS:
-
-```
-npm install -g eas-cli
-```
-
-Then log in to your EAS account. If you do not have any, just create one at https://expo.dev. Please note that this is the EAS account; not your Apple Developer account. You will be asked about your Apple Developer account credentials later.
-
-```
-eas login
-```
+Building the APK/AAB/IPA files is known as 'bare' or a 'production build', depending on the source, which requires EAS. In contrast, managed builds insert a shell on our app and depend on a local Metro server. The [Expo Go 'Create your first build' guide](https://docs.expo.dev/build/setup/) provides the steps to use the EAS cloud service for the compilation. However, we prefer to compile locally, using the [Expo Go 'Local app development' guide](https://docs.expo.dev/guides/local-app-development/). Below is a summary of the steps you need to perform.
 
 
-You then need to follow the instructions [here](https://developer.apple.com/support/expiration/) to install the new Apple Worldwide Developer Relations Intermediate Certificate. Otherwise, you will get the following error when deploying the app: `Distribution certificate with fingerprint <...> hasn't been imported successfully`. Once you import the certificate, double-click on it from Keychain Access, expand Trust, and select "Use System Defaults" for "When using this certificate". If you select "Always trust" you may run into issues, as explained [here](https://forums.developer.apple.com/forums/thread/712043).
-
-# 10. Deploying the apps
-
-For deploying the apps, we provide a `build.js` script that performs all the necessary steps to perform a clean build of the app bundle. We use the **local build** of EAS rather than the server build. You do not need to (nor should) modify the `android` and `ios` folders under the ppimagemarker, emclient, and ppclient folders. Once the build is complete, it will automatically install it on the phone that is connected to your computer, if applicable. You can install ppimagemarker and emclient locally, but you will need to install the ppclient from the Apple/Android official stores by using the Android AAB production build or the iOS build; otherwise the app integrity API will fail. [This Expo guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories. This [Apple guide](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases) explains how to use TestFlight for beta builds.
-
-**Repeat all the steps below from the ppimagemarker, emclient, and ppclient folders, separately:**
 
 | Android                                                      |
 | ------------------------------------------------------------ |
-| **IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order)**. Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.<br /><br />For the development build for Android (can be used with a physical device), connect the phone to the computer and run the command below. This will run the app under the 'metro' shell<br />`node ./build.js managed-android patch nosavepatches`<br /><br />To generate the Android APK or AAB files for the production builds, run either:<br />`node ./build.js apk patch nosavepatches`<br />`node ./build.js aab patch nosavepatches`<br />NOTE: Since we are delegating app signing to Google servers, we need to deploy the ppclient through the Play Store for the attestation to work. |
+| We already have the Node.js, watchman, and Android Studio set up in previous steps. So now we have to install the JDK that we have downloaded from [here](https://wiki.openjdk.org/display/JDKUpdates/JDK+17u). NOTE: It does not work with Java 21.<br /><br />To install the JDK, just unpack it somewhere in your computer and add the path to the bin folder to the PATH environment variable, as we did in previous steps. In our case, the path is `/home/devuser/software/OpenJDK17/OpenJDK17U-jdk_x64_linux_hotspot_17.0.10_7/jdk-17.0.10+7/bin`<br /><br />After having restarted your computer, check:<br />`java --version`<br />In our environment, we have `openjdk 17.0.10 2024-01-16`<br /><br />Now, we have to follow steps 1 & 2 from the Expo Go 'Create your first build' guide, so:<br />Install EAS. Despite not being stated in the official guide, we needed a sudo:<br />`sudo npm install -g eas-cli`<br />Then log in to your EAS account. If you do not have any, just create one at https://expo.dev. Please note that this is the EAS account; not your Android Developer account.<br />`eas login`<br /><br />To prepare your environment for development builds, follow the steps explained in the '<u>Install with adb</u>' section of the [Expo Go 'Build APKs for Android Emulators and devices' guide](https://docs.expo.dev/build-reference/apk/#install-with-adb). |
 
 
 
 | iOS                                                          |
 | ------------------------------------------------------------ |
-| **IMPORTANT: The commands below make the Apple developer account credentials available to the EAS utility, which is a third party software. Although Apple accounts may be protected with a security layer of two-factor authentication, this still poses security risks. Please consult with a security expert before proceeding if you are unsure about the implications of this step.**<br /><br />Answer Y when asked "Do you want to log in to your Apple account" in the commands below. You will then have to enter your Apple Developer account credentials<br /><br />For the development build on an iOS simulator, the command is the one below. Note that this is only for development, since the ppclient app will not work in this mode<br />`node ./build.js managed-ios-expo patch nosavepatches`<br />You should be able to capture simulator logs with<br />`react-native log-ios`<br /><br />For the development build on a device, use the command below. This has the advantage that the app does not need to undergo the App Store process, and we do not need to use the Xcode Mac app. Make sure the device is connected to the Mac and that it is unlocked.<br />`node ./build.js managed-ios-xcode patch nosavepatches`<br />You can capture the logs from your Mac by closing the Metro server window and re-launching it with<br />`npx react-native start --experimental-debugger`<br /><br />Alternatively, you can build the app from the Xcode Mac app, and then run on the connected device. Run<br />`node ./build.js managed-ios-xcode patch nosavepatches`<br />and cancel when it says "Running the build!" (after the CocoaPods installation). Then, open the `ios/<appname>.xcworkspace` file with Xcode. Then, use these menu options:<br />`Product > Build for > Testing `<br />`Product > Run`<br />Building from Xcode has some advantages: (1) It provides detailed information in case there is an error during compilation, (2) it takes much shorter in case we want to test small modifications in the source code (we only need to Build and Run from Xcode, which only re-compiles the necessary files), and (3) it allows to show the logs given from within the native modules (Swift/ObjC) in addition to the React Native logs (`View > Debug Area > Activate Console` and `Show Debug Area`). Note that if you close the app and re-launch it from the phone, you will no longer see the logs in Xcode; you will need to re-run from Xcode. Also note that app integrity attestation does work in this mode because the app archive is also signed when deploying from Xcode (you can check by clicking on your app name on the left, and looking at the Signing & Capabilities tab).<br /><br />To compile for iOS for a production build, run the command below.<br />`node ./build.js ipa patch nosavepatches`<br /><br />When you try to build for iOS for the first time, you are asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build). |
+| **NOTE: You need a MacOS computer to compile the app for iOS.**<br /><br />According to this [guide](https://docs.expo.dev/build-reference/local-builds/), you first need to install fastlane:<br />`brew install fastlane`<br /><br />According to [this guide](https://docs.expo.dev/build/setup/), "*If you have not generated a provisioning profile and/or distribution certificate yet, you can let EAS CLI take care of that for you by signing into your Apple Developer Program account and following the prompts.*"<br />Install EAS:<br />`npm install -g eas-cli`<br />Then log in to your EAS account. If you do not have any, just create one at https://expo.dev. Please note that this is the EAS account; not your Apple Developer account. You will be asked about your Apple Developer account credentials later.<br />`eas login`<br /><br />You then need to follow the instructions [here](https://developer.apple.com/support/expiration/) to install the new Apple Worldwide Developer Relations Intermediate Certificate. Otherwise, you will get the following error when deploying the app: `Distribution certificate with fingerprint <...> hasn't been imported successfully`. Once you import the certificate, double-click on it from Keychain Access, expand Trust, and select "Use System Defaults" for "When using this certificate". If you select "Always trust" you may run into issues, as explained [here](https://forums.developer.apple.com/forums/thread/712043). |
 
-# 11. Acknowledgements
+# 9. Building the apps
+
+For deploying the apps, we provide a `build.js` script that performs all the necessary steps to perform a clean build of the app bundle, and start the Metro server for the managed builds, when applicable. We use the **local build** of EAS rather than the server build. You do not need to (nor should) modify the `android` and `ios` folders under the ppimagemarker, emclient, and ppclient folders.
+
+**Repeat all the steps below from the ppimagemarker, emclient, and ppclient folders, sequentially and from separate CLI terminals:**
+
+
+
+| Android                                                      |
+| ------------------------------------------------------------ |
+| **IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order)**. Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.<br /><br />For the development build for Android (can be used with a physical device), connect the phone to the computer and run the command below. This will run the app under the 'metro' shell<br />`node ./build.js managed-android patch nosavepatches`<br /><br />To generate the Android APK or AAB files for the production builds, run either:<br />`node ./build.js apk patch nosavepatches`<br />`node ./build.js aab patch nosavepatches`<br />Once the build is complete, our Android build.js script it will automatically install it on the phone that is connected to your computer, if applicable. <br />You can install ppimagemarker and emclient locally, but you will need to install the ppclient from the Google Android official store (Play Store) by using the Android AAB production build; otherwise the app integrity API will fail. Since we are delegating app signing to Google servers, we need to deploy the ppclient through the Play Store for the attestation to work. It is possible that Google Android lets to sign the app locally, but if so, this is out of scope for this guide.<br /><br />[This Expo guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories. |
+
+
+
+| iOS                                                          |
+| ------------------------------------------------------------ |
+| **IMPORTANT: The commands below make the Apple developer account credentials available to the EAS utility, which is a third party software. Although Apple accounts may be protected with a security layer of two-factor authentication, this still poses security risks. Please consult with a security expert before proceeding if you are unsure about the implications of this step.**<br /><br />Answer Y when asked "Do you want to log in to your Apple account" in the commands below. You will then have to enter your Apple Developer account credentials<br /><br />For the development build on an iOS simulator, the command is the one below. Note that this is only for development, since the ppclient app will not work in this mode<br />`node ./build.js managed-ios-expo patch nosavepatches`<br />You should be able to capture simulator logs with<br />`react-native log-ios`<br /><br />For the development build on a device, use the command below. This has the advantage that the app does not need to undergo the App Store process, and we do not need to use the Xcode Mac app. Make sure the device is connected to the Mac and that it is unlocked.<br />`node ./build.js managed-ios-xcode patch nosavepatches`<br />You can capture the logs from your Mac by closing the Metro server window and re-launching it with<br />`npx react-native start --experimental-debugger`<br />Remember that the `npx react-native` command must be ran from the applicable folder (ppimagemarker, emclient, or ppclient). Even when running the app from Xcode on Mac, the managed build requires the Metro server to be running for it to capture logs and apply code updates live.<br /><br />Alternatively, you can build the app from the Xcode Mac app, and then run on the connected device. Run<br />`node ./build.js managed-ios-xcode patch nosavepatches`<br />and cancel when it says "Running the build!" (after the CocoaPods installation). Then, open the `ios/<appname>.xcworkspace` file with Xcode. Then, use these menu options:<br />`Product > Build for > Testing `<br />`Product > Run`<br />Building from Xcode has some advantages: (1) It provides detailed information in case there is an error during compilation, (2) it takes much shorter in case we want to test small modifications in the source code (we only need to Build and Run from Xcode, which only re-compiles the necessary files), and (3) it allows to show the logs given from within the native modules (Swift/ObjC) in addition to the React Native logs (`View > Debug Area > Activate Console` and `Show Debug Area`). Note that if you close the app and re-launch it from the phone, you will no longer see the logs in Xcode; you will need to re-run from Xcode. Also note that app integrity attestation does work in this mode because the app archive is also signed when deploying from Xcode (you can check by clicking on your app name on the left, and looking at the Signing & Capabilities tab).<br /><br />To compile for iOS for a production build, run the command below.<br />`node ./build.js ipa patch nosavepatches`<br /><br />When you try to build for iOS for the first time, you are asked about the Apple developer credentials you want to use. If you need to change the credentials after they have been cached by EAS, I recommend you check [this reference](https://stackoverflow.com/questions/72883150/how-to-logout-from-appleid-on-expo-build).<br /><br />[This Expo guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories. This [Apple guide](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases) explains how to use TestFlight for beta builds. |
+
+# 10. Acknowledgements
 
 The project that gave rise to these results received the support of a fellowship from ”la Caixa” Foundation (ID 100010434). The fellowship code is LCF/BQ/DI22/11940036. This work was also supported by FCT through the LASIGE Research Unit (UIDB/00408/2020 and UIDP/00408/2020).
 
-# 12. License
+# 11. License
 
 This work is licensed under CC BY 4.0. See [LICENSE](LICENSE) for more details.
