@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as FileSystem from 'expo-file-system';
 
 import * as ImagePicker from 'expo-image-picker';
+import { LogMe } from '../src/myGeneralLibrary';
 
 
 
@@ -126,12 +127,24 @@ export async function PickPicture(PickPictureOptions) {
      return result;
   }
 
-  fileUri = result.assets[0].uri;
-  fileOptions = {encoding: 'base64'};
+  LogMe(1, "result.assets[0]: "+JSON.stringify(result.assets[0]));
 
+  let fileUri;
+  const fileUriWithExtension = result.assets[0].uri;;
+  const fileOptions = {encoding: 'base64'};
+
+  if (Platform.OS === 'android') {
+    fileUri = result.assets[0].uri;
+  } else if (Platform.OS === 'ios') {
+    fileUri = 'ph://' + result.assets[0].assetId;
+    // If we pick the uri property, we can read the file but iOS silently drops the metadata. This is probably
+    // because the API that gives access to files via manual selection is more restrictive that the APIs that
+    // allow apps with full gallery permissions to read files. On the flip side, only the uri property has the 
+    // extension
+  }
+
+  LogMe(1, "fileUri: "+fileUri);
   
-  UpdUtils.LogSys(LIBN, 0, 'readAsStringAsync() called');
-
   // Uncomment this block only if necessary, as it incurs in 0.01 ms overhead  
   //let fileinfo = await FileSystem.getInfoAsync(fileUri, {size: true});
   //UpdUtils.LogSys(LIBN, 0, 'Original File size, in bytes: ' + fileinfo.size);
@@ -148,10 +161,13 @@ export async function PickPicture(PickPictureOptions) {
       KeepOpenTimer: '',
     }
   }; // Just for Type consistency
+  
+  let fileExt;
 
   try {
   
-    let fileExt = fileUri?.split('.')?.pop()?.toLowerCase();
+    fileExt = fileUriWithExtension?.split('.')?.pop()?.toLowerCase();
+    LogMe(1, "fileExt: "+fileExt);
     if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
     if ( ! UpdUtils.IsValidImageExtensionAndContentType(fileExt)) {              
       throw Error('Image URI extension is not valid: '+fileExt);  
@@ -162,10 +178,31 @@ export async function PickPicture(PickPictureOptions) {
     }
     // Get exif data as object. jpegData must be a string that starts with "data:image/jpeg;base64,"(DataURL), "\xff\xd8", or "Exif".
     UpdUtils.LogSys(LIBN, 0, 'Reading file');
-
+    
     var dataUri = '';
 
-    fileContentsOriginalB64 = await FileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
+    if (Platform.OS === 'android') {
+
+      fileContentsOriginalB64 = await FileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
+
+    } else if (Platform.OS === 'ios') {
+
+      // iOS does not allow to read image files directly from the camera roll unless they are 
+      // selected explicitly and individually with a native API (expo-image-multiple-picker uses 
+      // loose permissions to massively access the image gallery)
+      // Therefore, we work with a temporal copy
+      let uriInCacheLoadPolicies = FileSystem.cacheDirectory + "/" + uuidv4() + "." + fileExt;
+      await FileSystem.copyAsync({
+          from: fileUri,
+          to: uriInCacheLoadPolicies,
+      });
+
+      fileContentsOriginalB64 = await FileSystem.readAsStringAsync(uriInCacheLoadPolicies, {encoding: 'base64'});
+
+      await FileSystem.deleteAsync(uriInCacheLoadPolicies, {idempotent: true});    
+    }
+  
+    UpdUtils.LogSys(LIBN, 0, 'readAsStringAsync() called');
 
     dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginalB64;
     /**
@@ -260,7 +297,6 @@ export async function PickPicture(PickPictureOptions) {
         URLofPPselectionService.searchParams.append('privacyPolicies', UpdUtils.SafeUrlEncodeForB64(UpdUtils.EncodeFromBinaryToB64(JSON.stringify(metadata.privacyPolicies))));
         URLofPPselectionService.searchParams.append('operationName', 'wrap');
         // We assume that the extension coincides with the ISO content-type            
-        let fileExt = fileUri.split('.').pop();
         if ( ! UpdUtils.IsValidImageExtensionAndContentType(fileExt)) {
             throw Error('Image URI extension is not valid.');                   
         }            
@@ -326,6 +362,7 @@ export async function PickPicture(PickPictureOptions) {
           // iOS ---------------------------------------------------------------------------
 
           UpdUtils.LogSys(LIBN, 0, 'Preparing URL');
+
           URLofPPselectionService.searchParams.append('fileContents', UpdUtils.SafeUrlEncodeForB64(
             ( async () => {
               return fileContentsOriginalB64;
@@ -463,7 +500,7 @@ export async function PickPicture(PickPictureOptions) {
     UpdUtils.LogSys(LIBN, 0, 'Processing a NON-private picture *.*.*.*.');
     let retvalnonprivate = {};
     retvalnonprivate.assets = [{}];
-    retvalnonprivate.assets[0].uri = fileUri;
+    retvalnonprivate.assets[0].uri = fileUriWithExtension;
     UpdUtils.LogSys(LIBN, 0, 'Returning');
     return retvalnonprivate;
   }

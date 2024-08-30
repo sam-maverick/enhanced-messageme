@@ -93,6 +93,10 @@ export const PPTaggingComponent = (props) => {
                     return; 
                 }
 
+                LogMe(2, "assets[i]: "+JSON.stringify(assets[i]));
+                LogMe(2, "hopefullyReadableUri: "+hopefullyReadableUri);
+                LogMe(2, "uriWithExtension: "+uriWithExtension);
+
                 let fileExt = uriWithExtension.split('.').pop().toLowerCase();
                 if (fileExt=='jpg') { fileExt='jpeg' }  // piexif.insert() library replaces jpg by jpeg
                 if (!IsValidImageExtensionAndContentType(fileExt)) {
@@ -118,7 +122,7 @@ export const PPTaggingComponent = (props) => {
 
                 let fileContentsOriginal = await FileSystem.readAsStringAsync(uriInCache, {encoding: 'base64'});
                 let dataUri = 'data:image/'+fileExt+';base64,'+fileContentsOriginal;
-                LogMe(2,'ExecuteTheMarking(): dataUri: ----'+dataUri);
+                //LogMe(2,'ExecuteTheMarking(): dataUri: ----'+dataUri);
                 LogMe(1,'ExecuteTheMarking(): piexif.load');
                 let exifObj = piexif.load(dataUri);
                 LogMe(2,'exifObj original: '+JSON.stringify(exifObj));
@@ -398,7 +402,12 @@ export const PPTaggingComponent = (props) => {
                                     } else {
                                         ErrorAlert('Platform not supported: '+Platform.OS);  
                                         return; 
-                                    }                    
+                                    }    
+
+                                    LogMe(2, "newassets[0]: "+JSON.stringify(newassets[0]));
+                                    LogMe(2, "hopefullyReadableUri: "+hopefullyReadableUri);
+                                    LogMe(2, "uriWithExtension: "+uriWithExtension);
+                    
                                     // Load appropriate preselected values
                                     if (newassets.length == 1 // Only read privacy policies when there is 1 selected picture
                                         && 

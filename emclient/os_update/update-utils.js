@@ -20,10 +20,11 @@ export function LogSys (a,b,c) {
 export function SafeUrlEncodeForB64 (s) {  // s is supposed to be in base64 format
   //https://stackoverflow.com/questions/1374753/passing-base64-encoded-strings-in-url
   LogSys(LIBN, 0,'SafeUrlEncodeForB64() called');
-  retval = s
-  .replaceAll('+','-')
-  .replaceAll('/','_')
-  .replaceAll('=','.')
+  const str = String(s);
+  retval = str
+  .replace(/\+/g,'-')
+  .replace(/\//g,'_')
+  .replace(/=/g,'.')
   ;
   LogSys(LIBN, 0,'SafeUrlEncodeForB64() finished');
   return retval;
@@ -31,10 +32,11 @@ export function SafeUrlEncodeForB64 (s) {  // s is supposed to be in base64 form
 
 export function SafeUrlDecodeForB64 (s) {  //
   LogSys(LIBN, 0,'SafeUrlDecodeForB64() called');
-  retval = s
-  .replaceAll('-','+')
-  .replaceAll('_','/')
-  .replaceAll('.','=')
+  const str = String(s);
+  retval = str
+  .replace(/-/g,'+')
+  .replace(/_/g,'/')
+  .replace(/\./g,'=')
   ;  // reverse URL-safe formatting for base64
   LogSys(LIBN, 0,'SafeUrlDecodeForB64() finished');
   return retval
