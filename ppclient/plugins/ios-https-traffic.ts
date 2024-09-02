@@ -9,7 +9,7 @@ const withInfoPlistHttpConfigurations = (config, id) => {
 /*
 
     // Check: ../src/parameters
-    const PARAM_SERVER_HOSTNAME = 'ppserver-gen.localnet';
+    const PARAM_SERVER_HOSTNAME = 'ppserver-gen.localnet.this_must_be_a_tld.org';
 
 
 

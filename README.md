@@ -69,12 +69,12 @@ bind-interfaces
 interface=ap0
 ```
 
-Add these entry to your `/etc/hosts`:
+Add the entry below to your `/etc/hosts`. NOTE: For the certificate pinning to work in iOS, you'll need to use a standard TLD.
 
 ```
 # Use 192.168.12.1 when running on network; 10.0.2.2 when running on emulator
 # Run `systemctl dnsmasq restart` to apply changes
-192.168.12.1    ppserver-gen.localnet
+192.168.12.1    ppserver-gen.localnet.this_must_be_a_tld.org
 ```
 
 Note that "gen" must correspond to the `PP_PLATFORM_NICKNAME` parameter in `ppclient/src/parameters.js`
@@ -351,10 +351,10 @@ For iOS certificate pinning, execute this command from the `ppclient` directory:
 sed '1d;$d' <(openssl x509 -in assets/custom/ca_cert.cer -pubkey  -noout -outform der) | base64 -d | openssl sha256 | sed  s:SHA2-256\(stdin\)=.:: | openssl base64 -A >  assets/custom/ca_cert_pubkey_sha256_base64.txt
 ```
 
-Manually edit the `plugins/ios-https-traffic.ts` with a text editor, and modify the `PARAM_SERVER_HOSTNAME` with the domain name of your server (e.g., ppserver-gen.localnet). You may want to check the `src/parameters.js` file to verify the correct value.
+Manually edit the `plugins/ios-https-traffic.ts` with a text editor, and modify the `PARAM_SERVER_HOSTNAME` with the domain name of your server (e.g., ppserver-gen.localnet.this_must_be_a_tld.org). You may want to check the `src/parameters.js` file to verify the correct value.
 
 NOTES:
-Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet..., which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build.
+Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet.this_must_be_a_tld.org, which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build.
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
@@ -436,7 +436,7 @@ You should get a `Nest application successfully started`.
 
 You can load this URL from a local browser on the server, to check that it works:
 
-http://ppserver-gen-phy.localnet:3020/test/doNothing
+http://ppserver-gen-phy.localnet.this_must_be_a_tld.org:3020/test/doNothing
 
 From the **`emserver/`** folder, start the server:
 

@@ -101,9 +101,9 @@ req_extensions = v3_req # The extensions to add to a certificate request
 #organizationalUnitName		= Organizational Unit Name
 #organizationalUnitName_default	= Unspecified
 
-commonName			= Common Name (use ppserver-<ppnickname>.localnet where <ppnickname> is the PP_PLATFORM_NICKNAME you configured in parameters.js of your ppclient)
+commonName			= Common Name (use ppserver-<ppnickname>.localnet.this_must_be_a_tld.org where <ppnickname> is the PP_PLATFORM_NICKNAME you configured in parameters.js of your ppclient)
 commonName_max			= 64
-commonName_default		= ppserver-gen.localnet
+commonName_default		= ppserver-gen.localnet.this_must_be_a_tld.org
 
 #emailAddress			= Email Address
 #emailAddress_max		= 64
@@ -133,7 +133,7 @@ keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 
 # New SAN field; required in modern browsers
 #subjectAltName = DNS:example.com,DNS:www.example.com
-subjectAltName = DNS:ppserver-gen.localnet
+subjectAltName = DNS:ppserver-gen.localnet.this_must_be_a_tld.org
 
 
 [ proxy_cert_ext ]

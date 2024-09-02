@@ -51,7 +51,7 @@ export const PARAM_SHOW_EXTRA_INFO = false;
  */
 export const PP_PLATFORM_NICKNAME = 'gen';
 
-export const PARAM_SERVER_HOSTNAME = `ppserver-${PP_PLATFORM_NICKNAME}` + '.localnet';
+export const PARAM_SERVER_HOSTNAME = `ppserver-${PP_PLATFORM_NICKNAME}` + '.localnet.this_must_be_a_tld.org';
 
 export const PARAM_SERVER_API_URL = 
 'http://' + // Change to http or https accordingly to your environment
