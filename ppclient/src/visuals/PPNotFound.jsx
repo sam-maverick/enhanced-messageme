@@ -6,7 +6,7 @@ import * as Linking from 'expo-linking';
 import { HeaderBackButton } from "@react-navigation/elements";
 
 import { styles } from './myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
 
 
 

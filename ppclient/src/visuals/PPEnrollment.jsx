@@ -12,9 +12,9 @@ import * as Integrity from 'expo-app-integrity';
 import { TabsComponent } from './Tabs.jsx';
 
 import { styles } from './myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, ErrorAlertAsync, LogMe, UpdateLogMeUsername, AsyncAlert } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, ErrorAlertAsync, LogMe, UpdateLogMeUsername, AsyncAlert } from '../myGeneralLibrary.jsx';
 
-import storage from '../storage/storageApi.js';
+import * as storage from '../storage/storageApi.js';
 
 import { 
     PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, 
@@ -90,8 +90,9 @@ export const PPEnrollmentComponent = (props) => {
         cloneOfProps.AccountData.iosKeyName = name;
         try {
             const storagenewdata = {
-                key: 'accountData', // Note: Do not use underscore("_") in key!
-                data: cloneOfProps.AccountData,
+                key: 'accountData',
+                value: cloneOfProps.AccountData,
+                options: {},
             };
             await storage.save(storagenewdata);
             LogMe(1,'Saved to storage: '+JSON.stringify(name));
@@ -113,8 +114,9 @@ export const PPEnrollmentComponent = (props) => {
         cloneOfProps.AccountData.enrollmentAttempted = newState;
         try {
             const storagenewdata = {
-                key: 'accountData', // Note: Do not use underscore("_") in key!
-                data: cloneOfProps.AccountData,
+                key: 'accountData',
+                value: cloneOfProps.AccountData,
+                options: {},
             };
             await storage.save(storagenewdata);
             LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));
@@ -145,8 +147,9 @@ export const PPEnrollmentComponent = (props) => {
         cloneOfProps.AccountData.enrollmentCompleted = newState;  
         try {
             const storagenewdata = {
-                key: 'accountData', // Note: Do not use underscore("_") in key!
-                data: cloneOfProps.AccountData,
+                key: 'accountData',
+                value: cloneOfProps.AccountData,
+                options: {},
             };
             await storage.save(storagenewdata);
             LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));

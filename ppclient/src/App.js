@@ -35,7 +35,7 @@ import { PPIntegrityComponent } from "./visuals/PPIntegrity.jsx";
 import { PPEnrollmentComponent } from "./visuals/PPEnrollment.jsx";
 import { PPNotFoundComponent } from "./visuals/PPNotFound.jsx";
 
-import { EraseLocalData, ErrorAlert, InitialisationActions, LogMe, UpdateLogMeUsername, AsyncAlert } from './myGeneralLibrary.jsx';
+import { ErrorAlert, InitialisationActions, LogMe, UpdateLogMeUsername, AsyncAlert } from './myGeneralLibrary.jsx';
 import { storage } from './storage/storageApi.js';
 import { styles, LoadingComponent } from './visuals/myVisualsLibrary.jsx';
 

@@ -4,7 +4,7 @@ import { StyleSheet, Button, Text, TextInput, View, Alert } from 'react-native';
 
 
 import { styles } from './myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
 
 
 

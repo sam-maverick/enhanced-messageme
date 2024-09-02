@@ -12,9 +12,9 @@ import * as Integrity from 'expo-app-integrity';
 import { TabsComponent } from './Tabs.jsx';
 
 import { styles } from './myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername, InitialisationActions } from '../myGeneralLibrary.jsx';
 
-import storage from '../storage/storageApi.js';
+import * as storage from '../storage/storageApi.js';
 
 import { ApiTestNetworkConnection } from '../network/networkApi.js';
 
@@ -84,7 +84,8 @@ export const PPSettingsComponent = (props) => {
             //setCurrentScreenInMainComponent('PPReload');                    
             //setCurrentScreenInMainComponent('Register');  
             props.navigation.navigate('PPReload');
-            await EraseLocalData();
+            await storage.deleteKey({ key: 'accountData', options: {} });
+            await InitialisationActions();
             if (__DEV__) {
                 DevSettings.reload(); // Only in DEV
             } else {
@@ -121,8 +122,9 @@ export const PPSettingsComponent = (props) => {
 
         try {
             const storagenewdata = {
-                key: 'accountData', // Note: Do not use underscore("_") in key!
-                data: cloneOfProps.AccountData,
+                key: 'accountData',
+                value: cloneOfProps.AccountData,
+                options: {},
             };
             await storage.save(storagenewdata);
             LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));

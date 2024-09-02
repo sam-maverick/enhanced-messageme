@@ -44,7 +44,6 @@ import {
     EncodeFromBinaryToB64, 
     EncodeFromB64ToUTF8,
     EncodeFromUTF8ToB64,
-    EraseLocalData, 
     ErrorAlert, 
     ErrorAlertAsync, 
     ErrorAlertAsyncReport,
@@ -60,7 +59,7 @@ import {
     FromTimeSpanToHumanReadableString,
  } from '../myGeneralLibrary.jsx';
 
-import storage from '../storage/storageApi.js';
+import * as storage from '../storage/storageApi.js';
 import { PPEnrollmentComponent } from './PPEnrollment.jsx';
 import { PPFinishedComponent } from './PPFinished.jsx';
 import { CountdownComponent } from './Countdown.jsx';
@@ -333,30 +332,31 @@ export const PPWrapOpsComponent = (props) => {
         LogMe(0, 'ProcessUrlRequest(): Getting profile information');
         try {
             const storagenewdata = {
-                syncInBackground: false,        
+                options: {},        
                 key: 'accountData',
             };
             let retStorage = await storage.load(storagenewdata);
             LogMe(1,'Loaded from storage: '+JSON.stringify(retStorage));
             
-            // Previously stored values
-            accountData.key = { ...retStorage };
-            UpdateLogMeUsername(retStorage.username);
-    
+            if (retStorage === null) {
+                LogMe(2, 'Setting defaults for in-memory accountData');
+                // Default volatile startup values
+                accountData.key = {
+                  'username': '',
+                  'PPIcookie': '',
+                  'PPEcookie': '',
+                  'enrollmentAttempted': false,
+                  'enrollmentCompleted': false,
+                  'iosKeyName': '',
+                };    
+            } else {
+                // Previously stored values
+                accountData.key = { ...retStorage };
+                UpdateLogMeUsername(retStorage.username);
+            }   
+             
         } catch(error) {
-
-            LogMe(2, 'Setting defaults for in-memory accountData');
-
-            // Default volatile startup values
-            accountData.key = {
-              'username': '',
-              'PPIcookie': '',
-              'PPEcookie': '',
-              'enrollmentAttempted': false,
-              'enrollmentCompleted': false,
-              'iosKeyName': '',
-        };
-
+            LogMe(1, 'ProcessUrlRequest() storage error');
             try {
                 await InitialisationActions();   
             } catch(error) {
@@ -366,22 +366,11 @@ export const PPWrapOpsComponent = (props) => {
                 var_screenToShow='jobcompleted';
                 return;
             }
-    
-            // any exception including data not found goes to catch()
-            switch (error.name) {
-              case 'NotFoundError':
-                LogMe(1, 'ProcessUrlRequest() storage NotFoundError');
-                break;
-              case 'ExpiredError':
-                LogMe(1, 'ProcessUrlRequest() storage ExpiredError');
-                break;
-              default:
-                await ErrorAlertAsync(error.message, error);  // Storage error
-                await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
-                setScreenToShow('jobcompleted'); 
-                var_screenToShow='jobcompleted'; 
-                return;
-            }
+            await ErrorAlertAsync(error.message, error);  // Storage error
+            await ClearWorkingData({mode: 'full', androidContentUri: urlParams?.fileUri});                
+            setScreenToShow('jobcompleted'); 
+            var_screenToShow='jobcompleted'; 
+            return;
         }
         LogMe(0, 'ProcessUrlRequest(): Profile information loaded');
 

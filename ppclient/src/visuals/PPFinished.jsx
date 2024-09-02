@@ -8,7 +8,7 @@ import { DevSettings} from 'react-native';  // Use only in DEV
 import { TabsComponent } from './Tabs.jsx';
 
 import { styles } from './myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
 
 import storage from '../storage/storageApi.js';
 

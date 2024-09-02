@@ -10,9 +10,9 @@ import * as Integrity from 'expo-app-integrity';
 import { TabsComponent } from './Tabs.jsx';
 
 import { styles } from './myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
 
-import storage from '../storage/storageApi.js';
+import * as storage from '../storage/storageApi.js';
 
 //import {  } from '../parameters.js';
 
@@ -214,8 +214,9 @@ export const PPIntegrityComponent = (props) => {
                             cloneOfProps.AccountData.iosKeyName = name;
                             try {
                                 const storagenewdata = {
-                                    key: 'accountData', // Note: Do not use underscore("_") in key!
-                                    data: cloneOfProps.AccountData,
+                                    key: 'accountData',
+                                    value: cloneOfProps.AccountData,
+                                    options: {},
                                 };
                                 await storage.save(storagenewdata);
                                 LogMe(1,'Saved to storage: '+JSON.stringify(name));
@@ -236,7 +237,9 @@ export const PPIntegrityComponent = (props) => {
                     </View>
 
                     <View style={styles.leftleft}>
-                        <Text>Key-pair name ('' means none) </Text>
+                        <Text>Key-pair name ('' means none):</Text>
+                    </View>
+                    <View style={styles.leftleft}>
                         <Text style={{fontWeight: "bold"}}>{propsState.AccountData.iosKeyName}</Text>
                     </View>
                     <View style={styles.leftleft}>

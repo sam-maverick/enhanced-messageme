@@ -5,8 +5,6 @@ const Buffer = require('buffer').Buffer;
 import React, {useState} from 'react';
 import { StyleSheet, Button, Text, TextInput, View, SafeAreaView, Alert, Platform } from 'react-native';
 
-//import Storage from 'react-native-storage';
-
 import * as FileSystem from 'expo-file-system';
 import * as RNQB64 from 'react-native-quick-base64';
 import * as base64 from 'base-64';
@@ -14,9 +12,6 @@ import * as utf8 from 'utf8';
 import { Asset } from 'expo-asset';
 
 import { PARAM_LOGGING_LEVEL, PARAM_GOOGLE_CLOUD_PROJECT_NUMBER, PARAM_PP__CRYPTO } from './parameters.js';
-
-
-import storage from './storage/storageApi.js';
 
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { encode } from 'punycode';
@@ -373,22 +368,6 @@ export async function InitialisationActions() {
       await AsyncAlert('PARAM_PP__CRYPTO.null_crypto is enabled. This means that the private pictures will not be encrypted!', 'WARNING');
     }      
     
-}
-
-export async function  EraseLocalData() {
-    LogMe(1, 'EraseLocalData()');
-    // delete images folder
-    try {
-        // Delete key-value pairs from storage
-        //await AsyncStorage.clear();
-        await storage.clearMap();
-        await storage.clearAll();  // Undocumented function but necessary, otherwise old data reappears
-        await InitialisationActions();
-    }
-    catch(error) {
-        //console.error(error);
-        ErrorAlert(error.message, error);  // Some error
-    };    
 }
 
 

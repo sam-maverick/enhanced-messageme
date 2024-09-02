@@ -11,8 +11,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 
-import { EraseLocalData, ErrorAlert, InitialisationActions, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
-import storage from '../storage/storageApi.js';
+import { ErrorAlert, InitialisationActions, LogMe, UpdateLogMeUsername } from '../myGeneralLibrary.jsx';
+import * as storage from '../storage/storageApi.js';
 import { styles, LoadingComponent } from './myVisualsLibrary.jsx';
 
 
@@ -40,39 +40,30 @@ export const PPInitComponent = ({ route, navigation }) => {
 
             try {
                 const storagenewdata = {
-                    syncInBackground: false,        
+                    options: {},        
                     key: 'accountData',
                 };
                 let retStorage = await storage.load(storagenewdata);
                 LogMe(1,'Loaded from storage: '+JSON.stringify(retStorage));
                 
-                // Previously stored values
-                accountData.key = { ...retStorage };
-                UpdateLogMeUsername(retStorage.username);
-      
+                if (retStorage === null) {
+                    LogMe(2, 'Setting defaults for in-memory accountData');
+                    // Default volatile startup values
+                    accountData.key = {
+                      'username': 'ppuser',  
+                      'PPIcookie': '',  
+                      'PPEcookie': '',  
+                      'enrollmentAttempted': false,  
+                      'enrollmentCompleted': false,  
+                      'iosKeyName': '',
+                    };    
+                } else {
+                    // Previously stored values
+                    accountData.key = { ...retStorage };
+                    UpdateLogMeUsername(retStorage.username);
+                }      
             } catch(error) {
-  
-                LogMe(2, 'Setting defaults for in-memory accountData');
-  
-                // Default volatile startup values
-                accountData.key = {
-                  'username': 'ppuser',  
-                  'PPIcookie': '',  
-                  'PPEcookie': '',  
-                  'enrollmentAttempted': false,  
-                  'enrollmentCompleted': false,  
-                  'iosKeyName': '',
-                };
-  
-                // any exception including data not found goes to catch()
-                switch (error.name) {
-                  case 'NotFoundError':
-                    break;
-                  case 'ExpiredError':
-                    break;
-                  default:
-                    ErrorAlert(error.message, error);  // Storage error
-                }
+                ErrorAlert(error.message, error);  // Storage error
             }
 
             navigation.navigate(

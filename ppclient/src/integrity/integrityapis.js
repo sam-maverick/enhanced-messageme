@@ -3,7 +3,7 @@ import * as AppIntegrityAndroidStandard from 'app-integrity-android-standard';
 import * as Integrity from 'expo-app-integrity';
 
 import { ErrorAlert, LogMe, UpdateLogMeUsername, EncodeFromFullrangeBinaryToB64 } from '../myGeneralLibrary.jsx';
-import storage from '../storage/storageApi.js';
+import * as storage from '../storage/storageApi.js';
 
 import { PARAM_GOOGLE_CLOUD_PROJECT_NUMBER } from '../parameters.js';
 
@@ -143,8 +143,9 @@ export async function CheckIntegrity(environment, someProps, saveMyProps, setAtt
   // In practice, the cookie is only useful in iOS assertions
   try {
       const storagenewdata = {
-          key: 'accountData', // Note: Do not use underscore("_") in key!
-          data: cloneAccountData,
+          key: 'accountData',
+          value: cloneAccountData,
+          options: {},
       };
       await storage.save(storagenewdata);
       LogMe(1,'Saved to storage: '+JSON.stringify(storagenewdata));
