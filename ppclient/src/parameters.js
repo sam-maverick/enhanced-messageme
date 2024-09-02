@@ -51,10 +51,10 @@ export const PARAM_SHOW_EXTRA_INFO = false;
  */
 export const PP_PLATFORM_NICKNAME = 'gen';
 
-export const PARAM_SERVER_HOSTNAME = `ppserver-${PP_PLATFORM_NICKNAME}` + '.localnet.this_must_be_a_tld.org';
+export const PARAM_SERVER_HOSTNAME = `ppserver-${PP_PLATFORM_NICKNAME}` + '.localnetwork.org';
 
 export const PARAM_SERVER_API_URL = 
-'http://' + // Change to http or https accordingly to your environment
+'https://' + // Change to http or https accordingly to your environment
   PARAM_SERVER_HOSTNAME +
   ':3020'; // Change port if needed
 
@@ -66,7 +66,7 @@ export const PARAM_SERVER_API_URL =
  * See:
  * https://stackoverflow.com/questions/8888654/android-set-max-length-of-logcat-messages
  */
-export const PARAM_LOGGING_LEVEL = 1;  // Change accordingly to your preference
+export const PARAM_LOGGING_LEVEL = 2;  // Change accordingly to your preference
 
 export const PARAM_GOOGLE_CLOUD_PROJECT_NUMBER = 48509944813;
 

@@ -13,7 +13,29 @@ The client apps have been developed with [Expo Go](https://expo.dev/go) and [Rea
 
 We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links and if you make small adaptations. On Kali, we experienced hangs during the EAS build, so you may want to try Ubuntu instead for better stability. For building iOS apps, you will need a Mac computer. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
 
-# 1. Preparing the network environment
+# 1. Editing configuration files
+
+Edit the configuration files according to your needs and your environment:
+
+`emclient/src/parameters.js` 
+
+`emserver/src/parameters.ts`
+
+`ppclient/src/parameters.js`
+
+`ppserver/src/parameters.ts`
+
+`ppserver/.env`
+
+`ppimagemarker/src/parameters.js`
+
+Edit `ppclient/plugins/ios-xcode-development-team.js` and `ppclient/plugins/ios-podfile-development-team.js` and replace `DEVELOPMENT_TEAM = XXX` with the appropriate value (the certificate of this team will be used to sign the app code). This is for iOS build. You can check your Team ID [here](https://developer.apple.com/account#MembershipDetailsCard).
+
+Edit `ppclient/plugins/android-manifest-https-traffic__files/network_security_config.xml` and replace localnetwork.org by the base domain whose connections must be protected by certificate pinning (that domain and all subdomains will be protected). You must use a domain name that uses a TLD (e.g., you can't use things like server.localnet); otherwise the certificate pinning for iOS will not work with TrustKit. You will also see an entry for localhost but that entry is necessary for the Metro communication; and it is also necessary to allow HTTP connections for the same reason. You can eliminate that entry and disable HTTP if you do not plan on using managed builds.
+
+You must also change the name, slug, package and bundleIdentifier of `ppclient/app.json`, and the PARAM_PP\__SERVICE_PLAYSTOREID and  PARAM_PP__SERVICE_IOSAPPID parameters in `emclient/os_update/update-parameters.js` if you want to upload the app in the Android or Apple app repositories.
+
+# 2. Preparing the network environment
 
 If you do not intend to use physical devices, then skip to next section.
 
@@ -69,12 +91,12 @@ bind-interfaces
 interface=ap0
 ```
 
-Add the entry below to your `/etc/hosts`. NOTE: For the certificate pinning to work in iOS, you'll need to use a standard TLD.
+Add the entry below to your `/etc/hosts`. NOTE: For the certificate pinning to work in iOS, you'll need to use a standard TLD, as per TrustKit restrictions.
 
 ```
 # Use 192.168.12.1 when running on network; 10.0.2.2 when running on emulator
 # Run `systemctl dnsmasq restart` to apply changes
-192.168.12.1    ppserver-gen.localnet.this_must_be_a_tld.org
+192.168.12.1    ppserver-gen.localnetwork.org
 ```
 
 Note that "gen" must correspond to the `PP_PLATFORM_NICKNAME` parameter in `ppclient/src/parameters.js`
@@ -85,11 +107,13 @@ To start the DHCP server, run:
 systemctl start dnsmasq
 ```
 
-To make the service start automatically when you boot up your computer, run:
+Note that dnsmasq must start after create_ap since its configuration references a network interface created after create_ap is started. To make the service start automatically when you boot up your computer, run:
 
 ```
 systemctl enable dnsmasq
 ```
+
+**IMPORTANT**: You need to run `systemctl restart dnsmasq` whenever you make changes to `/etc/hosts` and want to apply the changes.
 
 *NOTE: From our experience, by looking at the [Wireshark](https://www.wireshark.org/) traces, create_ap bridges the DHCP Discover request frames received from ap0 to our eth0. If you have a DHCP server in your Ethernet network, it will offer IP addresses to the phones within the subnet range of your Ethernet. In other words, your phone will receive two DHCP Offer messages: One from the DHCP server of your computer, and one from the DHCP of your Ethernet network. Because your computer will probably reply faster, this issue will likely come unnoticed. If you run into network issues, you may want to use static IP addresses instead, or to otherwise filter the DHCP frames.*
 
@@ -97,7 +121,7 @@ You should now be able to connect via WiFi from your phone. Once connected, chec
 
 Also, throughout this guide, remember to open any necessary ports of the firewall of your computer's OS, if applicable.
 
-# 2. Installing the development environment
+# 3. Installing the development environment
 
 Follow the steps to [install Expo](https://docs.expo.dev/get-started/installation/). See the notes below if you need more help.
 
@@ -188,7 +212,7 @@ In our environment, we have version `1.22.21`
 
 You should now be ready to use Expo.
 
-# 3. Installing Node.js modules
+# 4. Installing Node.js modules
 
 **Preparing the global modules and environment variables**
 
@@ -241,7 +265,7 @@ From the `ppserver/` folder,
 npm install
 ```
 
-# 4. Generating cryptographic material
+# 5. Generating cryptographic material
 
 This section is to configure the digital certificates and other cryptographic material for the ppclient app.
 
@@ -256,7 +280,7 @@ mkdir secrets/https/srv 2> /dev/null
 
 **CA deployment for TLS**
 
-If you ever generate a new key but reuse an ancient CN for the CA, then do not create a new serial. You must reuse the old serial because otherwise Firefox complains about reusing serial numbers (it considers two CA's with the same CN to be the same CA). From the ppserver directory,
+We will be using a private CA. If you ever generate a new key but reuse an ancient CN for the CA, then do not create a new serial. You must reuse the old serial because otherwise Firefox complains about reusing serial numbers (it considers two CA's with the same CN to be the same CA). From the ppserver directory,
 
 ```
 echo "01" > ./secrets/https/ca/crlnumber
@@ -339,10 +363,10 @@ This is it for the server. If you observer src/main.ts you will see that our Nes
 
 **Certificate pinning for TLS**
 
-For Android certificate pinning, execute this command from the `ppserver` directory
+For Android certificate pinning, execute this command from the `ppclient` directory
 
 ```
-cp ./secrets/https/ca/ca_cert.cer ../ppclient/assets/custom/ca_cert.cer
+cp ../ppserver/secrets/https/ca/ca_cert.cer ./assets/custom/ca_cert.cer
 ```
 
 For iOS certificate pinning, execute this command from the `ppclient` directory:
@@ -351,10 +375,10 @@ For iOS certificate pinning, execute this command from the `ppclient` directory:
 sed '1d;$d' <(openssl x509 -in assets/custom/ca_cert.cer -pubkey  -noout -outform der) | base64 -d | openssl sha256 | sed  s:SHA2-256\(stdin\)=.:: | openssl base64 -A >  assets/custom/ca_cert_pubkey_sha256_base64.txt
 ```
 
-Manually edit the `plugins/ios-https-traffic.ts` with a text editor, and modify the `PARAM_SERVER_HOSTNAME` with the domain name of your server (e.g., ppserver-gen.localnet.this_must_be_a_tld.org). You may want to check the `src/parameters.js` file to verify the correct value.
+Manually edit the `plugins/ios-https-traffic.ts` with a text editor, and modify the `PARAM_SERVER_HOSTNAME` with the domain name of your server (e.g., ppserver-gen.localnetwork.org). You may want to check the `src/parameters.js` file to verify the correct value.
 
 NOTES:
-Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to https://ppserver-gen.localnet.this_must_be_a_tld.org, which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build.
+Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to [https://ppserver-gen.localnetwork.org](https://ppserver-gen.localnetwork.org), which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build.
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
@@ -363,26 +387,6 @@ This is as simple as
 ```
 node ./genkeys-wrapping.js
 ```
-
-# 5. Editing configuration files
-
-Edit the configuration files according to your needs and your environment:
-
-`emclient/src/parameters.js` 
-
-`emserver/src/parameters.ts`
-
-`ppclient/src/parameters.js`
-
-`ppserver/src/parameters.ts`
-
-`ppserver/.env`
-
-`ppimagemarker/src/parameters.js`
-
-Edit `ppclient/plugins/ios-xcode-development-team.js` and `ppclient/plugins/ios-podfile-development-team.js` and replace `DEVELOPMENT_TEAM = XXX` with the appropriate value (the certificate of this team will be used to sign the app code). This is for iOS build. You can check your Team ID [here](https://developer.apple.com/account#MembershipDetailsCard).
-
-You must also change the name, slug, package and bundleIdentifier of `ppclient/app.json`, and the PARAM_PP\__SERVICE_PLAYSTOREID and  PARAM_PP__SERVICE_IOSAPPID parameters in `emclient/os_update/update-parameters.js` if you want to upload the app in the Android or Apple app repositories.
 
 # 6. Installing MongoDB
 
@@ -436,7 +440,7 @@ You should get a `Nest application successfully started`.
 
 You can load this URL from a local browser on the server, to check that it works:
 
-http://ppserver-gen-phy.localnet.this_must_be_a_tld.org:3020/test/doNothing
+[http://ppserver-gen-phy.localnetwork.org:3020/test/doNothing](http://ppserver-gen-phy.localnetwork.org:3020/test/doNothing)
 
 From the **`emserver/`** folder, start the server:
 
@@ -472,7 +476,7 @@ For deploying the apps, we provide a `build.js` script that performs all the nec
 
 | Android                                                      |
 | ------------------------------------------------------------ |
-| **IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order)**. Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.<br /><br />For the development build for Android (can be used with a physical device), connect the phone to the computer and run the command below. This will run the app under the 'metro' shell<br />`node ./build.js managed-android patch nosavepatches`<br /><br />To generate the Android APK or AAB files for the production builds, run either:<br />`node ./build.js apk patch nosavepatches`<br />`node ./build.js aab patch nosavepatches`<br />Once the build is complete, our Android build.js script it will automatically install it on the phone that is connected to your computer, if applicable. <br />You can install ppimagemarker and emclient locally, but you will need to install the ppclient from the Google Android official store (Play Store) by using the Android AAB production build; otherwise the app integrity API will fail. Since we are delegating app signing to Google servers, we need to deploy the ppclient through the Play Store for the attestation to work. It is possible that Google Android lets to sign the app locally, but if so, this is out of scope for this guide.<br /><br />[This Expo guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories. |
+| **IMPORTANT: On Android, always install emclient before ppclient, otherwise you will run into [this issue](https://stackoverflow.com/questions/11730085/android-custom-permission-fails-based-on-app-install-order)**. Once both are installed, you can update/redeploy them in any order as long as you do not uninstall them.<br /><br />For the development build for Android (can be used with a physical device), connect the phone to the computer and run the command below. This will run the app under the 'metro' shell<br />`node ./build.js managed-android patch nosavepatches`<br /><br />To generate the Android APK or AAB files for the production builds, run either:<br />`node ./build.js apk patch nosavepatches`<br />`node ./build.js aab patch nosavepatches`<br />Once the build is complete, our Android build.js script it will automatically install it on the phone that is connected to your computer, if applicable. <br />You can install ppimagemarker and emclient locally, but you will need to install the ppclient from the Google Android official store (Play Store) by using the Android AAB production build; otherwise the app integrity API will fail. Since we are delegating app signing to Google servers, we need to deploy the ppclient through the Play Store for the attestation to work. It is possible that Google Android lets to sign the app locally, but if so, this is out of scope for this guide.<br /><br />[This Expo guide](https://docs.expo.dev/submit/) explains how to publish in Apple's and Google's app software repositories.<br />For Android debugging of system messages you may want to use `adb logcat -c ; adb logcat`. |
 
 
 
