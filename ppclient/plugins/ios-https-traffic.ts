@@ -6,11 +6,14 @@ const withInfoPlistHttpConfigurations = (config, id) => {
   return withInfoPlist(config, async(config) => {
 
     const fs = require('fs');
-/*
+// /*
 
     // Check: ../src/parameters
-    const PARAM_SERVER_HOSTNAME = 'ppserver-gen.localnet.this_must_be_a_tld.org';
+    const PARAM_SERVER_PINNED_DOMAIN = 'localnetwork.org';
 
+    // This is a public key hash of a throw-away CA (a CA we generated and deleted)
+    // This is because TrustKit obliges us to specify a backup CA
+    const throwAwayCaPubkeyHash = 'BOXZ+XSbXpFtJgXb9X8uUWhx+YA8dX3y1nqFUmez3UE=';
 
 
 
@@ -18,8 +21,7 @@ const withInfoPlistHttpConfigurations = (config, id) => {
 
     const pubkey256hashb64 = fs.readFileSync('assets/custom/ca_cert_pubkey_sha256_base64.txt', {encoding: 'utf8'});
 
-    console.warn('(--)(--)(--)(--)(--)(--)(--)(--)(--)(--)(--)');
-    console.warn('pubkey256hashb64=--'+pubkey256hashb64+'--');
+    //console.warn('pubkey256hashb64=*'+pubkey256hashb64+'*');
     
 
 
@@ -37,8 +39,8 @@ const withInfoPlistHttpConfigurations = (config, id) => {
   
       fs.writeFileSync('ios/Podfile', PodfileModifiedContents, {encoding: 'utf8'});
   
-      console.warn('PodfileModifiedContents:');
-      console.warn(PodfileModifiedContents);
+      //console.warn('PodfileModifiedContents:');
+      //console.warn(PodfileModifiedContents);
   
     }
 
@@ -55,13 +57,13 @@ const withInfoPlistHttpConfigurations = (config, id) => {
   @{\n\
     kTSKSwizzleNetworkDelegates: @YES,\n\
     kTSKPinnedDomains: @{\n\
-        @"' + PARAM_SERVER_HOSTNAME + '" : @{\n\
+        @"' + PARAM_SERVER_PINNED_DOMAIN + '" : @{\n\
             kTSKIncludeSubdomains: @YES,\n\
-            kTSKEnforcePinning: @YES,\n\
+            kTSKEnforcePinning: @NO,\n\
             kTSKDisableDefaultReportUri: @YES,\n\
             kTSKPublicKeyHashes : @[\n\
               @"' + pubkey256hashb64 + '",\n\
-              @"' + pubkey256hashb64 + '",\n\
+              @"' + throwAwayCaPubkeyHash + '",\n\
             ],\n\
         },\n\
     }};\n\
@@ -81,7 +83,7 @@ const withInfoPlistHttpConfigurations = (config, id) => {
   
     }
 
-*/
+//*/
     return config;
   });
 };
@@ -92,5 +94,3 @@ module.exports = createRunOncePlugin(
   '1.0.0'
 );
 
-// https://stackoverflow.com/questions/72171458/how-to-add-values-to-app-json-for-android-in-expo-managed-workflow
-// https://stackoverflow.com/questions/75013370/create-a-expo-config-plugin-file-to-modify-android-manifest

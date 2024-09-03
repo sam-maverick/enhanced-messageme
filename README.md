@@ -31,9 +31,9 @@ Edit the configuration files according to your needs and your environment:
 
 Edit `ppclient/plugins/ios-xcode-development-team.js` and `ppclient/plugins/ios-podfile-development-team.js` and replace `DEVELOPMENT_TEAM = XXX` with the appropriate value (the certificate of this team will be used to sign the app code). This is for iOS build. You can check your Team ID [here](https://developer.apple.com/account#MembershipDetailsCard).
 
-Edit `ppclient/plugins/android-manifest-https-traffic__files/network_security_config.xml` and replace localnetwork.org by the base domain whose connections must be protected by certificate pinning (that domain and all subdomains will be protected). You must choose a domain name that has a standard TLD (e.g., you can't use things like server.localnet); otherwise the certificate pinning for iOS will not work with TrustKit. You will also see an entry for localhost but that entry is necessary for the Metro communication; and it is also necessary to allow HTTP connections for the same reason. You can eliminate that entry and disable HTTP if you do not plan on using managed builds.
+Choose a nickname for your server by editing the PP_PLATFORM_NICKNAME parameter in `ppclient/src/parameters.js`. Then choose a domain name suffix with the PP_PLATFORM_DNS_SUFFIX parameter. You must choose a suffix that has a standard TLD (e.g., you can't use things like server.localnet); otherwise the certificate pinning for iOS will not work with TrustKit. Then, your ppserver domain name will automatically be constructed on the basis of that (e.g. ppserver-gen.localnetwork.org), as you can see in PARAM_SERVER_HOSTNAME. Edit `ppclient/plugins/android-manifest-https-traffic__files/network_security_config.xml` and replace localnetwork.org by the base domain whose connections you want to be protected by certificate pinning (that domain and all subdomains will be protected). Likewise, edit the PARAM_SERVER_PINNED_DOMAIN parameter in `ppclient/plugins/ios-https-traffic.ts` and replace localnetwork.org with the same value. You will also see an entry for localhost but that entry is necessary for the Metro communication; and it is also necessary to allow HTTP connections for the same reason. You can eliminate that entry and disable HTTP if you do not plan on using managed builds. Edit `ppserver/openssl-srv.conf` and set the commonName, commonName_default, and subjectAltName parameters accordingly.
 
-You must also change the name, slug, package and bundleIdentifier of `ppclient/app.json`, and the PARAM_PP\__SERVICE_PLAYSTOREID and  PARAM_PP__SERVICE_IOSAPPID parameters in `emclient/os_update/update-parameters.js` if you want to upload the app in the Android or Apple app repositories.
+You must also change the name, slug, package and bundleIdentifier of `ppclient/app.json`, and the PARAM_PP__SERVICE_PLAYSTOREID and  PARAM_PP__SERVICE_IOSAPPID parameters in `emclient/os_update/update-parameters.js` if you want to upload the app in the Android or Apple app repositories.
 
 # 2. Preparing the network environment
 
@@ -327,10 +327,10 @@ mkdir secrets/https/srv
 openssl ecparam -genkey -name prime256v1 -out ./secrets/https/srv/srv_priv.key
 ```
 
-Generate new certificate and CSR for the server
+Generate new certificate and CSR for the server. Note that despite server certificates signed by private CAs theoretically do not have a limit on the length of their validity period in Apple (see [this reference](https://support.apple.com/en-gb/102028)), we have seen that, in practice, the 398-day limit applies our case (this is possibly a caveat specific about how TrustKit is implemented).
 
 ```
-openssl req -config ./openssl-srv.cnf -new -nodes -days 1460 -key ./secrets/https/srv/srv_priv.key -out ./secrets/https/srv/srv_csr.csr
+openssl req -config ./openssl-srv.cnf -new -nodes -days 397 -key ./secrets/https/srv/srv_priv.key -out ./secrets/https/srv/srv_csr.csr
 ```
 
 We sign the CSR with our CA
@@ -369,20 +369,20 @@ For Android certificate pinning, execute this command from the `ppclient` direct
 cp ../ppserver/secrets/https/ca/ca_cert.cer ./assets/custom/ca_cert.cer
 ```
 
-For iOS certificate pinning, execute this command from the `ppclient` directory:
+For iOS certificate pinning, execute this command from the `ppclient` directory after the above command:
 
 ```
-sed '1d;$d' <(openssl x509 -in assets/custom/ca_cert.cer -pubkey  -noout -outform der) | base64 -d | openssl sha256 | sed  s:SHA2-256\(stdin\)=.:: | openssl base64 -A >  assets/custom/ca_cert_pubkey_sha256_base64.txt
+openssl x509 -in ./assets/custom/ca_cert.cer -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -A -base64 >  assets/custom/ca_cert_pubkey_sha256_base64.txt
 ```
 
-Manually edit the `plugins/ios-https-traffic.ts` with a text editor, and modify the `PARAM_SERVER_HOSTNAME` with the domain name of your server (e.g., ppserver-gen.localnetwork.org). You may want to check the `src/parameters.js` file to verify the correct value.
+If necessary, edit `ppclient/plugins/android-manifest-https-traffic__files/network_security_config.xml` and replace localnetwork.org by the base domain whose connections you want to be protected by certificate pinning (that domain and all subdomains will be protected). Likewise, edit the PARAM_SERVER_PINNED_DOMAIN parameter in `ppclient/plugins/ios-https-traffic.ts` and replace localnetwork.org with the same value.
 
 NOTES:
 Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to [https://ppserver-gen.localnetwork.org](https://ppserver-gen.localnetwork.org), which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build.
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
-This is as simple as
+From the `ppclient` directory, run:
 
 ```
 node ./genkeys-wrapping.js
