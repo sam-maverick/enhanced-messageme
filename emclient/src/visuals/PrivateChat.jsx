@@ -417,7 +417,7 @@ export const PrivateChatComponent = props => {
             LogMe(1, 'IP permissions granted');
         } else {
             LogMe(1, 'IP permissions not granted');
-            await AsyncAlert('The system indicates that you did not grant privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
+            await AsyncAlert('', 'The system indicates that you did not grant privileges to access the pictures in the shared media library. This app needs this permission to operate. Please give the permissions by re-launching the app or by opening the system settings of your phone.');
             return null;
         } 
         

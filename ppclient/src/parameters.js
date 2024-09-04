@@ -56,9 +56,10 @@ export const PP_PLATFORM_DNS_SUFFIX = 'localnetwork.org';
 export const PARAM_SERVER_HOSTNAME = `ppserver-${PP_PLATFORM_NICKNAME}` + '.' + PP_PLATFORM_DNS_SUFFIX;
 
 export const PARAM_SERVER_API_URL = 
-'https://' + // Change to http or https accordingly to your environment
+'https://' + // Change to http// or https// accordingly to your environment
   PARAM_SERVER_HOSTNAME +
-  ':3020'; // Change port if needed
+  ':' +
+  '3020'; // Change port if needed
 
 /**
  *  Console logging.

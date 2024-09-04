@@ -53,7 +53,7 @@
     "name": "enhmessageme",
     "slug": "enhmessageme",
     "scheme": "enhmsm",
-    "version": "2.22.278",
+    "version": "2.22.282",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -93,7 +93,7 @@
         "android.permission.READ_MEDIA_IMAGES"
       ],
       "package": "pt.lasige.safex.enhmessageme",
-      "versionCode": 246
+      "versionCode": 250
     },
     "web": {
       "favicon": "./assets/favicon.png"

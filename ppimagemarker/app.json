@@ -53,7 +53,7 @@
     "name": "ppimagemarker",
     "slug": "ppimagemarker",
     "scheme": "ppimagemarker",
-    "version": "2.12.59",
+    "version": "2.12.61",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -89,7 +89,7 @@
         "android.permission.ACCESS_MEDIA_LOCATION"
       ],
       "package": "pt.lasige.safex.ppimagemarker",
-      "versionCode": 300
+      "versionCode": 301
     },
     "web": {
       "favicon": "./assets/favicon.png"

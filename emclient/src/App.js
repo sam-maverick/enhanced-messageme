@@ -19,7 +19,7 @@ import { registerRootComponent } from 'expo';
 import { PARAM_IMAGES_DIRNAME } from './parameters.js';
 
 import { styles } from './visuals/myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, InitialisationActions, LogMe, UpdateLogMeUsername } from './myGeneralLibrary.jsx';
+import { EraseLocalData, ErrorAlert, AsyncErrorAlert, InitialisationActions, LogMe, UpdateLogMeUsername } from './myGeneralLibrary.jsx';
 
 import storage from './storage/storageApi.js';
 
@@ -88,7 +88,7 @@ export default function App() {
                     let resApi = await ApiCheckAccount(retStorage.cookie);
 
                     if (!resApi.isSuccessful && resApi.resultMessage==='Cookie not found on the server.') {
-                        ErrorAlert('Sorry, your account was not found on the server. Probably, the DB has been reset. Your local chat history will be deleted and you will have to register again.');
+                        await AsyncErrorAlert('Sorry, your account was not found on the server. Probably, the DB has been reset. Your local chat history will be deleted and you will have to register again.');
  
                         try {
                             await EraseLocalData();
