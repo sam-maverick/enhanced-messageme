@@ -457,7 +457,7 @@ export const PPTaggingComponent = (props) => {
                                             try {
                                                 LogMe(1, "Raw EXIF data: "+JSON.stringify(exifObj['Exif']));
                                                 let metadataStr = exifObj['Exif'][piexif.ExifIFD.UserComment];
-                                                metadataStr = metadataStr.replace(PARAM_EXIF_ASCII_PREFIX, "");
+                                                metadataStr = metadataStr.replace(PARAM_EXIF_ASCII_PREFIX, '');
                                                 metadata = JSON.parse(metadataStr);
                                                 if (metadata?.pictureType === 'private') {
                                                     LogMe(1,'The picture is indeed private!');

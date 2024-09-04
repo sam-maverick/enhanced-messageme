@@ -1,5 +1,5 @@
 diff --git a/node_modules/piexifjs/piexif.js b/node_modules/piexifjs/piexif.js
-index d0b9c85..be88568 100644
+index d0b9c85..60cdc5b 100644
 --- a/node_modules/piexifjs/piexif.js
 +++ b/node_modules/piexifjs/piexif.js
 @@ -23,6 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -7,7 +7,7 @@ index d0b9c85..be88568 100644
  */
  
 +import * as UpdUtils from '../../os_update/update-utils';
-+import { PARAM_IMPLEMENTATION_PNG_FASTCHECK_NONPRIVATE } from '../../os_update/update-parameters';
++import { PARAM_IMPLEMENTATION_PNG_FASTCHECK_NONPRIVATE, PARAM_EXIF_ASCII_PREFIX } from '../../os_update/update-parameters';
 +const LIBN = '(emclient) (piexif.js)';
 +
  (function () {
@@ -137,7 +137,7 @@ index d0b9c85..be88568 100644
      that.load = function (data) {
          var input_data;
          if (typeof (data) == "string") {
-@@ -529,6 +650,58 @@ SOFTWARE.
+@@ -529,6 +650,56 @@ SOFTWARE.
              return ifd_dict;
          },
  
@@ -169,7 +169,7 @@ index d0b9c85..be88568 100644
 +                    if (tag === that.ExifIFD.UserComment) {
 +                        UpdUtils.LogSys(LIBN, 1, 'ExifIFD.UserComment tag found: '+ifd_dict[tag]);
 +                        try {
-+                            var userCommentObj = JSON.parse(ifd_dict[tag]);
++                            var userCommentObj = JSON.parse(String(ifd_dict[tag]).replace(PARAM_EXIF_ASCII_PREFIX, ''));
 +                            if (userCommentObj?.pictureType==='private') {
 +                                UpdUtils.LogSys(LIBN, 1, 'pictureType===private detected');
 +                                return {isPrivatePicture: true, metadata: userCommentObj};
@@ -179,8 +179,6 @@ index d0b9c85..be88568 100644
 +                        } catch (err) {
 +                            UpdUtils.LogSys(LIBN, 1, 'Error while parsing tag from string to object: '+err.message);
 +                        }
-+                        console.log('MATCH:'+ifd_dict[tag]);
-+                        console.log(typeof ifd_dict[tag]);
 +                    }
 +                }
 +            }

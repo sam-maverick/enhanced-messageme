@@ -89,7 +89,7 @@
         "android.permission.ACCESS_MEDIA_LOCATION"
       ],
       "package": "pt.lasige.safex.ppimagemarker",
-      "versionCode": 301
+      "versionCode": 302
     },
     "web": {
       "favicon": "./assets/favicon.png"
