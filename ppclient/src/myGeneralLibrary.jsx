@@ -29,6 +29,9 @@ const MillisSecond = 1000;
 
 const startDate = Date.now();
 
+export var DebugText = '';
+
+
 
 export function FromTimeSpanToHumanReadableString(lapseMs) {
     if (lapseMs >= (MillisDay)) {
@@ -262,6 +265,7 @@ export function LogMe(level, message) {
           HRspan = ' '.repeat(difflen) + HRspan;
         }
         console.log(HRspan + ' (ppclient) '+usernameHeader + message);
+        DebugText = DebugText + HRspan + '\t' + '(ppclient) ' + message + '\n';
     }
 }
 

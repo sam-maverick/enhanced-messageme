@@ -4,6 +4,7 @@ import { StyleSheet, Button, Text, TextInput, View, Alert, ScrollView, Platform 
 import * as Device from 'expo-device';
 import RNRestart from 'react-native-restart';  // Use only in PROD
 import { DevSettings} from 'react-native';  // Use only in DEV
+import Clipboard from '@react-native-clipboard/clipboard';
 
 //import { useNavigation } from '@react-navigation/native';
 
@@ -12,7 +13,7 @@ import * as Integrity from 'expo-app-integrity';
 import { TabsComponent } from './Tabs.jsx';
 
 import { styles } from './myVisualsLibrary.jsx';
-import { ErrorAlert, LogMe, UpdateLogMeUsername, InitialisationActions } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername, InitialisationActions, DebugText } from '../myGeneralLibrary.jsx';
 
 import * as storage from '../storage/storageApi.js';
 
@@ -259,6 +260,12 @@ export const PPSettingsComponent = (props) => {
                         </View>
 
                         <ExtraInfoComponent/>
+
+                        <Text />
+
+                        <View style={styles.leftleft}>
+                        <Button title='Copy logs to clipboard' onPress={() => Clipboard.setString(DebugText)} />
+                        </View>                        
 
                     </ScrollView>
                 </View>

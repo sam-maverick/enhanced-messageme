@@ -1,6 +1,6 @@
 {
   "name": "emclient",
-  "version": "2.22.139",
+  "version": "2.22.141",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "node ./update-system.js",
@@ -16,6 +16,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/react-native-fontawesome": "^0.3.0",
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-clipboard/clipboard": "^1.14.1",
     "@types/react": "~18.2.46",
     "async-mutex": "^0.5.0",
     "cipher-base": "^1.0.4",

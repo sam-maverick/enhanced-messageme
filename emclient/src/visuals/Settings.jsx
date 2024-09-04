@@ -4,13 +4,10 @@ import { StyleSheet, Button, Text, TextInput, View, Alert, ScrollView, Platform 
 import * as Device from 'expo-device';
 import RNRestart from 'react-native-restart';  // Use only in PROD
 import { DevSettings} from 'react-native';  // Use only in DEV
-
-//import Storage from 'react-native-storage';
-//import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import Clipboard from '@react-native-clipboard/clipboard';
 
 import { styles } from './myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, LogMe } from '../myGeneralLibrary.jsx';
+import { EraseLocalData, ErrorAlert, LogMe, DebugText } from '../myGeneralLibrary.jsx';
 import { TabsComponent } from './Tabs.jsx';
 
 import storage from '../storage/storageApi.js';
@@ -23,6 +20,7 @@ import { ApiResetFactoryDB } from '../network/networkApi.js';
 export const SettingsComponent = props => {
 
     const [initStatus, setInitStatus] = useState({ key: 'init' });
+    const [debugText, setDebugText] = useState(DebugText);
 
     useEffect( () => {  // This is executed when the app is launched
         async function didMount() { // Do not change the name of this function
@@ -39,6 +37,7 @@ export const SettingsComponent = props => {
 
     async function ComponentRefresh() {  // Invoked every time this screen is loaded
         LogMe(1, 'Refreshing Settings Component');
+
         if (initStatus.key === 'init') {
             LogMe(1, 'Initialising Settings Component');
             initStatus.key = 'updated'; //update without rendering
@@ -193,6 +192,12 @@ export const SettingsComponent = props => {
                         </View>
                         <View style={styles.leftleft}>
                         <Text>Used in Settings.jsx and App.js.</Text>
+                        </View>
+
+                        <Text />
+
+                        <View style={styles.leftleft}>
+                        <Button title='Copy logs to clipboard' onPress={() => Clipboard.setString(DebugText)} />
                         </View>
 
                     </ScrollView>

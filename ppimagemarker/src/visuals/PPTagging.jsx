@@ -413,7 +413,7 @@ export const PPTaggingComponent = (props) => {
                                         && 
                                         (
                                             (
-                                                Platform.OS === 'android' && newassets[i].albumId == privateAlbumID.key
+                                                Platform.OS === 'android' && newassets[0].albumId == privateAlbumID.key
                                             )
                                             ||
                                             (

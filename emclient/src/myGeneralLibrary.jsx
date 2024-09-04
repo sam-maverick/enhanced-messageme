@@ -21,6 +21,9 @@ let LogMeUsername = false;
 const startDate = Date.now();
 
 
+export var DebugText = '';
+
+
 export function UpdateLogMeUsername (theusername) {
     LogMeUsername = theusername;
 }
@@ -41,6 +44,7 @@ export function LogMe(level, message) {
           HRspan = ' '.repeat(difflen) + HRspan;
         }
         console.log(HRspan + ' (msmclient) '+usernameHeader + message);
+        DebugText = DebugText + HRspan + '\t' + '(msmclient) ' +  + message + '\n';
     }
 }
 

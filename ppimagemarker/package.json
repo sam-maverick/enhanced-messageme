@@ -1,6 +1,6 @@
 {
   "name": "ppimagemarker",
-  "version": "2.12.48",
+  "version": "2.12.49",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "patch-package",
