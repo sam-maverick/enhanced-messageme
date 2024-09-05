@@ -267,6 +267,12 @@ export const PPSettingsComponent = (props) => {
                         <Button title='Copy logs to clipboard' onPress={() => Clipboard.setString(DebugText)} />
                         </View>                        
 
+                        <Text />
+
+                        <View style={styles.leftleft}>
+                        <Button title='Clear logs' onPress={ () => DebugText = '' } />
+                        </View>
+
                     </ScrollView>
                 </View>
                 <View style={styles.leftleft}>

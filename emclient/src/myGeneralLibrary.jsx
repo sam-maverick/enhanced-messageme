@@ -44,7 +44,7 @@ export function LogMe(level, message) {
           HRspan = ' '.repeat(difflen) + HRspan;
         }
         console.log(HRspan + ' (msmclient) '+usernameHeader + message);
-        DebugText = DebugText + HRspan + '\t' + '(msmclient) ' +  + message + '\n';
+        DebugText = DebugText + HRspan + '\t' + '(msmclient) ' + message + '\n';
     }
 }
 
