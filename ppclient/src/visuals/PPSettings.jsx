@@ -13,7 +13,7 @@ import * as Integrity from 'expo-app-integrity';
 import { TabsComponent } from './Tabs.jsx';
 
 import { styles } from './myVisualsLibrary.jsx';
-import { ErrorAlert, LogMe, UpdateLogMeUsername, InitialisationActions, DebugText } from '../myGeneralLibrary.jsx';
+import { ErrorAlert, LogMe, UpdateLogMeUsername, InitialisationActions, DebugText, ClearDebugText } from '../myGeneralLibrary.jsx';
 
 import * as storage from '../storage/storageApi.js';
 
@@ -270,7 +270,7 @@ export const PPSettingsComponent = (props) => {
                         <Text />
 
                         <View style={styles.leftleft}>
-                        <Button title='Clear logs' onPress={ () => DebugText = '' } />
+                        <Button title='Clear logs' onPress={ () => ClearDebugText() } />
                         </View>
 
                     </ScrollView>

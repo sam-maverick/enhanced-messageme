@@ -32,20 +32,24 @@ export function LogSys(libname, level, message) {
     LogMe (level, libname+' '+message);
 }
 
+export function ClearDebugText() {
+  DebugText = '';
+}
+
 export function LogMe(level, message) {
-    if (level <= PARAM_LOGGING_LEVEL) {
-        let usernameHeader = '';
-        if (! LogMeUsername === false) {
-            usernameHeader = '['+LogMeUsername+']: ';
-        }
-        let HRspan = FromTimeSpanToHumanReadableMs(Date.now() - startDate);
-        const difflen = 3 - HRspan.length;
-        if (difflen>0) {
-          HRspan = ' '.repeat(difflen) + HRspan;
-        }
-        console.log(HRspan + ' (msmclient) '+usernameHeader + message);
-        DebugText = DebugText + HRspan + '\t' + '(msmclient) ' + message + '\n';
-    }
+  if (level <= PARAM_LOGGING_LEVEL) {
+      let usernameHeader = '';
+      if (! LogMeUsername === false) {
+          usernameHeader = '['+LogMeUsername+']: ';
+      }
+      let HRspan = FromTimeSpanToHumanReadableMs(Date.now() - startDate);
+      const difflen = 3 - HRspan.length;
+      if (difflen>0) {
+        HRspan = ' '.repeat(difflen) + HRspan;
+      }
+      console.log(HRspan + ' (msmclient) '+usernameHeader + message);
+      DebugText = DebugText + HRspan + '\t' + '(msmclient) ' + message + '\n';
+  }
 }
 
 export const AsyncAlert = async (title, message) => new Promise((resolve) => {

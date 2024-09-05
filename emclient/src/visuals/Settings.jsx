@@ -7,7 +7,7 @@ import { DevSettings} from 'react-native';  // Use only in DEV
 import Clipboard from '@react-native-clipboard/clipboard';
 
 import { styles } from './myVisualsLibrary.jsx';
-import { EraseLocalData, ErrorAlert, LogMe, DebugText } from '../myGeneralLibrary.jsx';
+import { EraseLocalData, ErrorAlert, LogMe, DebugText, ClearDebugText } from '../myGeneralLibrary.jsx';
 import { TabsComponent } from './Tabs.jsx';
 
 import storage from '../storage/storageApi.js';
@@ -203,7 +203,7 @@ export const SettingsComponent = props => {
                         <Text />
 
                         <View style={styles.leftleft}>
-                        <Button title='Clear logs' onPress={ () => DebugText = '' } />
+                        <Button title='Clear logs' onPress={ () => ClearDebugText() } />
                         </View>
 
                     </ScrollView>

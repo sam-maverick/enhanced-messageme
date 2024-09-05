@@ -253,6 +253,10 @@ export function UpdateLogMeUsername (theusername) {
     LogMeUsername = theusername;
 }
 
+export function ClearDebugText() {
+  DebugText = '';
+}
+
 export function LogMe(level, message) {
     if (level <= PARAM_LOGGING_LEVEL) {
         let usernameHeader = '';
