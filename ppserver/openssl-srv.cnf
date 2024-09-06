@@ -128,8 +128,10 @@ commonName_default		= ppserver-gen.localnetwork.org
 
 # Extensions to add to a certificate request
 
-basicConstraints = CA:FALSE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+basicConstraints = critical, CA:FALSE
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+#TrustKit in iOS 17 requires extendedKeyUsage, otherwise it throws a ServerAuthEKU error
+extendedKeyUsage = serverAuth
 
 # New SAN field; required in modern browsers
 #subjectAltName = DNS:example.com,DNS:www.example.com

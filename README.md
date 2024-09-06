@@ -327,7 +327,8 @@ mkdir secrets/https/srv
 openssl ecparam -genkey -name prime256v1 -out ./secrets/https/srv/srv_priv.key
 ```
 
-Generate new certificate and CSR for the server. Note that despite server certificates signed by private CAs theoretically do not have a limit on the length of their validity period in Apple (see [this reference](https://support.apple.com/en-gb/102028)), we have seen that, in practice, the 398-day limit applies our case (this is possibly a caveat specific about how TrustKit is implemented).
+Generate new certificate and CSR for the server.
+CAVEAT: Although server certificates signed by private CAs theoretically do not have a limit on the length of their validity period in Apple (see [this reference](https://support.apple.com/en-gb/102028)), we have seen that, in practice, a 398-day limit applies all CA types (see this [forum](https://discussions.apple.com/thread/255147831)).
 
 ```
 openssl req -config ./openssl-srv.cnf -new -nodes -days 397 -key ./secrets/https/srv/srv_priv.key -out ./secrets/https/srv/srv_csr.csr
@@ -336,7 +337,7 @@ openssl req -config ./openssl-srv.cnf -new -nodes -days 397 -key ./secrets/https
 We sign the CSR with our CA
 
 ```
-openssl ca -config ./openssl-ca.cnf -days 1460 -out ./secrets/https/srv/srv_cert.cer -infiles ./secrets/https/srv/srv_csr.csr
+openssl ca -config ./openssl-ca.cnf -days 397 -out ./secrets/https/srv/srv_cert.cer -infiles ./secrets/https/srv/srv_csr.csr
 ```
 
 We attach the CA certificate to the certificate chain of the server certificate

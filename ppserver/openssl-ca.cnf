@@ -201,12 +201,12 @@ authorityKeyIdentifier=keyid:always,issuer:always
 # extensions.
 #basicConstraints = critical,CA:true
 # So we do this instead.
-basicConstraints = CA:true,pathlen:0
+basicConstraints = critical, CA:true, pathlen:0
 
 # Key usage: this is typical for a CA certificate. However since it will
 # prevent it being used as an test self-signed certificate it is best
 # left out by default.
-keyUsage = digitalSignature, nonRepudiation, keyAgreement, keyCertSign, cRLSign, keyEncipherment, dataEncipherment
+keyUsage = critical, digitalSignature, keyCertSign, cRLSign
 
 # Some might want this also
 nsCertType = sslCA, emailCA
