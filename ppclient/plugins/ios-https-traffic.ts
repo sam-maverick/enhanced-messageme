@@ -5,6 +5,8 @@ const { createRunOncePlugin, withInfoPlist } = require('expo/config-plugins');
 const withInfoPlistHttpConfigurations = (config, id) => {
   return withInfoPlist(config, async(config) => {
 
+    console.warn('withInfoPlistHttpConfigurations started');
+
     const fs = require('fs');
 // /*
 
@@ -26,26 +28,6 @@ const withInfoPlistHttpConfigurations = (config, id) => {
 
 
 
-    // Modifications to the Podfile
-
-    let PodfileOriginalContents = fs.readFileSync('ios/Podfile', {encoding: 'utf8'});
-
-    if ( ! PodfileOriginalContents.includes('pod \'TrustKit\'')) {
-      let PodfileModifiedContents = PodfileOriginalContents.replace(
-        '  use_expo_modules!', 
-        '  use_expo_modules!\n\n\
-  pod \'TrustKit\''
-      );
-  
-      fs.writeFileSync('ios/Podfile', PodfileModifiedContents, {encoding: 'utf8'});
-  
-      //console.warn('PodfileModifiedContents:');
-      //console.warn(PodfileModifiedContents);
-  
-    }
-
-
-
 
     // Modifications AppDelegate.mm
 
@@ -59,7 +41,7 @@ const withInfoPlistHttpConfigurations = (config, id) => {
     kTSKPinnedDomains: @{\n\
         @"' + PARAM_SERVER_PINNED_DOMAIN + '" : @{\n\
             kTSKIncludeSubdomains: @YES,\n\
-            kTSKEnforcePinning: @NO,\n\
+            kTSKEnforcePinning: @YES,\n\
             kTSKDisableDefaultReportUri: @YES,\n\
             kTSKPublicKeyHashes : @[\n\
               @"' + pubkey256hashb64 + '",\n\

@@ -3,7 +3,7 @@ const { createRunOncePlugin, withNothing } = require('@expo/config-plugins');
  
 const withJvmMemory = config => {
   // Do not use console.log, as gradle takes it as the return config value
-  console.warn('calling withJvmMemory');
+  console.warn('withJvmMemory started');
  
   try {
     var fs = require('fs');

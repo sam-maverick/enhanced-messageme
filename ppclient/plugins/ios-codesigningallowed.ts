@@ -6,6 +6,8 @@ const { createRunOncePlugin, withInfoPlist } = require('expo/config-plugins');
 const withInfoPlistCodeSigningAllowed = (config, id) => {
   return withInfoPlist(config, async(config) => {
 
+    console.warn('withInfoPlistCodeSigningAllowed started');
+    
     const fs = require('fs');
 
     // Modifications to the Podfile

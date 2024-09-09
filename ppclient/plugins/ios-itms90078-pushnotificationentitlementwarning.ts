@@ -5,6 +5,8 @@ const { createRunOncePlugin, withInfoPlist } = require('expo/config-plugins');
 const withInfoPlistPushNotificationEntitlement = (config, id) => {
   return withInfoPlist(config, async(config) => {
 
+    console.warn('withInfoPlistPushNotificationEntitlement started');
+
     const fs = require('fs');
     
 
