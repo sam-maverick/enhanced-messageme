@@ -6,6 +6,8 @@ const { createRunOncePlugin, withInfoPlist } = require('expo/config-plugins');
 const withInfoPlistPlatformVersion = (config, id) => {
   return withInfoPlist(config, async(config) => {
 
+    console.warn('withInfoPlistPlatformVersion started');
+
     const fs = require('fs');
 
     // Modifications to the Podfile

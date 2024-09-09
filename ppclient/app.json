@@ -29,6 +29,9 @@
         "./plugins/jvm-memory.js"
       ],
       [
+        "./plugins/post_podinstall_ios_trustkit_plugin.ts"
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
@@ -57,7 +60,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro-gen",
-    "version": "2.11.504",
+    "version": "2.11.524",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -74,12 +77,22 @@
       "bundleIdentifier": "pt.lasige.safex.ppclient",
       "infoPlist": {
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "localnetwork.org": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            },
+            "localhost": {
+              "NSIncludesSubdomains": false,
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
         },
         "NSLocalNetworkUsageDescription": "This app may access the local network in Development environments",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "56"
+      "buildNumber": "69"
     },
     "android": {
       "adaptiveIcon": {

@@ -6,6 +6,8 @@ const { createRunOncePlugin, withInfoPlist } = require('expo/config-plugins');
 const withInfoPlistDevelopmentTeam = (config, id) => {
   return withInfoPlist(config, async(config) => {
 
+    console.warn('withInfoPlistDevelopmentTeam started');
+
     // 
 
     /**

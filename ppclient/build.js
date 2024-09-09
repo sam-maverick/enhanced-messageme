@@ -133,7 +133,8 @@ echo('Deleting ios folder');
 rm('-rf', './ios/');
 
 
-echo('Prebuild cleanup');
+echo('Prebuild');
+echo('This will create android/ios dirs if they do not exist, will execute plugins, and will install CocoaPods for iOS if you are on Mac');
 myExec('npx expo prebuild');
 env.RESULT = error();
 if (env.RESULT.toString() !== 'null') {
