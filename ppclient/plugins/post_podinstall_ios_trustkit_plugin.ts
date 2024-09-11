@@ -55,16 +55,76 @@ pod \'TrustKit\''
 
   if ( ! TKfileOriginalContents.includes('//return TSKTrustEvaluationFailedInvalidCertificateChain;')) {
     let TKfileModifiedContents = TKfileOriginalContents.replace('\
+    if ((trustResult != kSecTrustResultUnspecified) && (trustResult != kSecTrustResultProceed))\n\
+    {\n\
+        // Default SSL validation failed\n\
+        CFDictionaryRef evaluationDetails = SecTrustCopyResult(serverTrust);\n\
+        TSKLog(@"Error: default SSL validation failed for %@: %@", serverHostname, evaluationDetails);\n\
+        CFRelease(evaluationDetails);\n\
         CFRelease(serverTrust);\n\
         return TSKTrustEvaluationFailedInvalidCertificateChain;\n\
+    }\n\
 \
-', 
+'
+, 
 '\
+    if ((trustResult != kSecTrustResultUnspecified) && (trustResult != kSecTrustResultProceed))\n\
+    {\n\
+        // Default SSL validation failed\n\
+        CFDictionaryRef evaluationDetails = SecTrustCopyResult(serverTrust);\n\
+        TSKLog(@"Error: default SSL validation failed for %@: %@", serverHostname, evaluationDetails);\n\
+        TSKLog(@"Now checking if this a recoverable error");\n\
+        \n\
+        CFStringRef key = CFSTR("TrustResultDetails");\n\
+        CFTypeRef value = CFSTR("key not found");\n\
+        \n\
+        NSString *keyString = (__bridge NSString *)key;\n\
+        //NSDictionary *settings = (__bridge NSDictionary *)evaluationDetails;\n\
+        //TSKLog(@"valueForKey: %@ inDict: %@ value: %@",keyString,settings,settings[keyString]);\n\
+\n\
+        Boolean AnchorTrustedIssueFound = false;\n\
+        if (CFDictionaryGetValueIfPresent(evaluationDetails, key, &value)) {\n\
+            NSString *valueString = (__bridge NSString *)value;\n\
+            NSArray *valueArray = (NSArray *)valueString; // Internal type seems to be NSCFArray\n\
+            for (id object in valueArray) {\n\
+                // do something with object\n\
+                NSDictionary *trustResultDetailsDic = (NSDictionary *) object; // Internal type seems to be NSCFDictionary\n\
+                NSString *TRDkey;\n\
+               for(TRDkey in trustResultDetailsDic){\n\
+                   if ([TRDkey isEqualToString:@"AnchorTrusted"] && [trustResultDetailsDic objectForKey: TRDkey]) {\n\
+                       TSKLog(@"Acceptable: AnchorTrusted = 0");\n\
+                       AnchorTrustedIssueFound = true;\n\
+                   } else {\n\
+                       TSKLog(@"Error: Found unacceptable SSL validation issue in trust result details: Key: %@, Value: %@", TRDkey, [trustResultDetailsDic objectForKey: TRDkey]);\n\
+                       CFRelease(evaluationDetails);\n\
+                       CFRelease(serverTrust);\n\
+                       return TSKTrustEvaluationFailedInvalidCertificateChain;\n\
+                   }\n\
+               }\n\
+            }\n\
+        } else {\n\
+            TSKLog(@"Error: Key not found in evaluation details: %@", keyString);\n\
+            CFRelease(evaluationDetails);\n\
+            CFRelease(serverTrust);\n\
+            return TSKTrustEvaluationFailedInvalidCertificateChain;\n\
+        }\n\
+        \n\
+        if (! AnchorTrustedIssueFound) {\n\
+            TSKLog(@"Error: Inconsistency; An SSL issue was raised but no details were given by the evaluation library. This might indicate that the library specifications have changed. We expected to find AnchorTrusted = 0");\n\
+            CFRelease(evaluationDetails);\n\
+            CFRelease(serverTrust);\n\
+            return TSKTrustEvaluationFailedInvalidCertificateChain;\n\
+        }\n\
+\n\
+        //CFRelease(evaluationDetails);\n\
         //CFRelease(serverTrust);\n\
         //return TSKTrustEvaluationFailedInvalidCertificateChain;\n\
+    }\n\
 \
 '
     );
+
+    //https://forums.developer.apple.com/forums/thread/50441
 
     fs.writeFileSync('ios/Pods/TrustKit/TrustKit/Pinning/ssl_pin_verifier.m', TKfileModifiedContents, {encoding: 'utf8'});
 
@@ -108,6 +168,8 @@ pod \'TrustKit\''
 
 /*  
   // This works only for DEBUG (METRO ENVIRONMENT)
+
+  // https://medium.com/@rushitjivani/how-to-ignore-ssl-for-react-native-android-ios-4942e10ea667
 
   // Modifications AppDelegate.mm
 
