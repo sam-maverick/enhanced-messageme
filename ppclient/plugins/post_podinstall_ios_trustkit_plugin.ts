@@ -55,6 +55,7 @@ pod \'TrustKit\''
 
   if ( ! TKfileOriginalContents.includes('//return TSKTrustEvaluationFailedInvalidCertificateChain;')) {
     let TKfileModifiedContents = TKfileOriginalContents.replace('\
+<<<<<<< HEAD
     if ((trustResult != kSecTrustResultUnspecified) && (trustResult != kSecTrustResultProceed))\n\
     {\n\
         // Default SSL validation failed\n\
@@ -120,12 +121,24 @@ pod \'TrustKit\''
         //CFRelease(serverTrust);\n\
         //return TSKTrustEvaluationFailedInvalidCertificateChain;\n\
     }\n\
+=======
+        CFRelease(serverTrust);\n\
+        return TSKTrustEvaluationFailedInvalidCertificateChain;\n\
+\
+', 
+'\
+        //CFRelease(serverTrust);\n\
+        //return TSKTrustEvaluationFailedInvalidCertificateChain;\n\
+>>>>>>> 1976c56c552df936c1bd5dcd7acdbde2a1a3a8bd
 \
 '
     );
 
+<<<<<<< HEAD
     //https://forums.developer.apple.com/forums/thread/50441
 
+=======
+>>>>>>> 1976c56c552df936c1bd5dcd7acdbde2a1a3a8bd
     fs.writeFileSync('ios/Pods/TrustKit/TrustKit/Pinning/ssl_pin_verifier.m', TKfileModifiedContents, {encoding: 'utf8'});
 
     //console.warn('TKfileModifiedContents:');
@@ -169,8 +182,11 @@ pod \'TrustKit\''
 /*  
   // This works only for DEBUG (METRO ENVIRONMENT)
 
+<<<<<<< HEAD
   // https://medium.com/@rushitjivani/how-to-ignore-ssl-for-react-native-android-ios-4942e10ea667
 
+=======
+>>>>>>> 1976c56c552df936c1bd5dcd7acdbde2a1a3a8bd
   // Modifications AppDelegate.mm
 
   let AppDelegateOriginalContents = fs.readFileSync('ios/ppclient/AppDelegate.mm', {encoding: 'utf8'});
