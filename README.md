@@ -343,7 +343,7 @@ CAVEAT: Although server certificates signed by private CAs theoretically do not 
 openssl req -config ./openssl-srv.cnf -new -nodes -days 397 -key ./secrets/https/srv/srv_priv.key -out ./secrets/https/srv/srv_csr.csr
 ```
 
-We sign the CSR with our CA
+We sign the CSR with our CA (the 'days' specified here will be the ones effective)
 
 ```
 openssl ca -config ./openssl-ca.cnf -days 397 -out ./secrets/https/srv/srv_cert.cer -infiles ./secrets/https/srv/srv_csr.csr
@@ -388,7 +388,7 @@ openssl x509 -in ./assets/custom/ca_cert.cer -pubkey -noout | openssl pkey -pubi
 If necessary, edit `ppclient/plugins/android-manifest-https-traffic__files/network_security_config.xml` and replace localnetwork.org by the base domain whose connections you want to be protected by certificate pinning (that domain and all subdomains will be protected). Likewise, edit the PARAM_SERVER_PINNED_DOMAIN parameter in `ppclient/plugins/ios-https-traffic.ts` and replace localnetwork.org with the same value.
 
 NOTES:
-Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to [https://ppserver-gen.localnetwork.org](https://ppserver-gen.localnetwork.org), which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build.
+Because the CA certificate is embedded within ppclient's app assets, there is no need to install the CA in the system as a trusted user certificate. That would only be necessary if we were to use a browser to connect to [https://ppserver-gen.localnetwork.org](https://ppserver-gen.localnetwork.org), which is not the case. When you will build the ppclient app, it will automatically configure the certificate pinning for Android via the android-manifest-https-traffic.js plugin, and it will configure the certificate pinning for iOS via the ios-https-traffic.js plugin. Those plugins are executed on every build. In iOS there is not much support for user provided CAs; therefore the TrustKit pod has been patched to allow for custom CA certificates (AnchorTrusted=0) while keeping the rest of SSL sanity checks performed in the default profile of ATS (some scripts are provided in `ppserver/tls-security-testing` for crafting malicious certificates for testing purposes). Note, though, that part of the used information is not officially documented by Apple.
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
