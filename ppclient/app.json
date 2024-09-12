@@ -17,6 +17,9 @@
         "./plugins/ios-podfile-development-team.ts"
       ],
       [
+        "./plugins/ios-podfile-rct-metro-port.ts"
+      ],
+      [
         "./plugins/ios-xcode-development-team.ts"
       ],
       [
@@ -29,7 +32,7 @@
         "./plugins/jvm-memory.js"
       ],
       [
-        "./plugins/post_podinstall_ios_trustkit_plugin.ts"
+        "./plugins/post_podinstall.ts"
       ],
       [
         "expo-build-properties",

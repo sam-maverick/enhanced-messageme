@@ -20,6 +20,9 @@
         "./plugins/ios-podfile-development-team.ts"
       ],
       [
+        "./plugins/ios-podfile-rct-metro-port.ts"
+      ],
+      [
         "./plugins/ios-xcode-development-team.ts"
       ],
       [

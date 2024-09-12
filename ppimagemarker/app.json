@@ -17,10 +17,16 @@
         "./plugins/ios-podfile-development-team.ts"
       ],
       [
+        "./plugins/ios-podfile-rct-metro-port.ts"
+      ],
+      [
         "./plugins/ios-xcode-development-team.ts"
       ],
       [
         "./plugins/ios-codesigningallowed.ts"
+      ],
+      [
+        "./plugins/post_podinstall.ts"
       ],
       [
         "expo-image-picker",
@@ -53,7 +59,7 @@
     "name": "ppimagemarker",
     "slug": "ppimagemarker",
     "scheme": "ppimagemarker",
-    "version": "2.12.61",
+    "version": "2.12.76",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

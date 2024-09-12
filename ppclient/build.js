@@ -325,6 +325,8 @@ if (process.argv[2] === 'apk') {
 if (process.argv[2] === 'managed-ios-xcode') {
   echo('Running on device; make sure the device is connected');
   if (artifactname === 'ppclient') {
+    myExec(`export RCT_METRO_PORT=8082`);
+    myExec(`echo $RCT_METRO_PORT`);
     myExec(`react-native run-ios --port 8082`);
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
@@ -333,6 +335,8 @@ if (process.argv[2] === 'managed-ios-xcode') {
       exit(1);
     }
   } else if (artifactname === 'ppimagemarker') {
+    myExec(`export RCT_METRO_PORT=8083`);
+    myExec(`echo $RCT_METRO_PORT`);
     myExec(`react-native run-ios --port 8083`);
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
@@ -341,7 +345,9 @@ if (process.argv[2] === 'managed-ios-xcode') {
       exit(1);
     }
   } else {
-    myExec(`react-native run-ios`);
+    myExec(`export RCT_METRO_PORT=8081`);
+    myExec(`echo $RCT_METRO_PORT`);
+    myExec(`react-native run-io --port 8081`);
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
       echo('Aborting on ' + env.RESULT + ', command failed:');

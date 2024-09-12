@@ -184,7 +184,12 @@ if (process.argv[2] === 'ipa') {
   //https://github.com/facebook/react-native/issues/31507
   // Use Release in eas.json when distributing via App Store
 
-  myExec('eas build -p ios --non-interactive --profile previewrelease --local');
+  if (process.argv[5] !== 'debug' && process.argv[5] !== 'release') {
+    echo('For IPA builds, you need to specify a 4th parameter that can be either \'debug\' or \'release\'');
+    exit(1);
+  }
+  
+  myExec('eas build -p ios --non-interactive --profile preview'+process.argv[5] + ' --local');
   env.RESULT = error();
   if (env.RESULT.toString() !== 'null') {
     echo('Aborting on ' + env.RESULT + ', command failed:');
@@ -259,8 +264,7 @@ if (process.argv[2] === 'managed-ios-expo') {
       exit(1);
     }
   } else {
-    myExec('npx expo run:ios --port 8081');
-    //myExec('npm run ios -c');
+    myExec('npm run ios -c');
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
       echo('Aborting on ' + env.RESULT + ', command failed:');
@@ -321,6 +325,8 @@ if (process.argv[2] === 'apk') {
 if (process.argv[2] === 'managed-ios-xcode') {
   echo('Running on device; make sure the device is connected');
   if (artifactname === 'ppclient') {
+    myExec(`export RCT_METRO_PORT=8082`);
+    myExec(`echo $RCT_METRO_PORT`);
     myExec(`react-native run-ios --port 8082`);
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
@@ -329,6 +335,8 @@ if (process.argv[2] === 'managed-ios-xcode') {
       exit(1);
     }
   } else if (artifactname === 'ppimagemarker') {
+    myExec(`export RCT_METRO_PORT=8083`);
+    myExec(`echo $RCT_METRO_PORT`);
     myExec(`react-native run-ios --port 8083`);
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
@@ -337,7 +345,9 @@ if (process.argv[2] === 'managed-ios-xcode') {
       exit(1);
     }
   } else {
-    myExec(`react-native run-ios --port 8081`);
+    myExec(`export RCT_METRO_PORT=8081`);
+    myExec(`echo $RCT_METRO_PORT`);
+    myExec(`react-native run-io --port 8081`);
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
       echo('Aborting on ' + env.RESULT + ', command failed:');
