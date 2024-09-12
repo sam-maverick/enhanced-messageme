@@ -97,11 +97,14 @@ export const IOS_SUPPORTED_VERSIONS = '>=14.8.1 || >=15.8.1 || >=16.7.5 || >=17.
 
 /**
  * https://developer.apple.com/documentation/devicecheck/validating_apps_that_connect_to_your_server
- * This parameter is propagated to the client in the Attestation phase.
- * When the client requests a nonce, the server returns the nonce but also returns this parameter. Then the
- * client generates the attestation token accordingly (for DEV/PROD).
- * Building the app as Debug or Release, or through Distribute or Testflight, does not seem to impact
- * the selected environment; it only depends on this parameter.
+ * This parameter is used to tell the server whether the received iOS attestation is expected to be for DEV or
+ * for PROD environment. Apple keeps a separate database for each environment.
+ * 
+ * Building the app as Debug or Release seems to be what determines the environment that the app will select for
+ * generating the keys in the attestation phase. A mismatch between this parameter and the build type will result
+ * in a fail_aaguid_mismatch error in the attestation phase.
+ * 
+ * Deploying via Xcode or via App Store does not seem to impact this parameter.
  */
 export const IOS_IS_DEVELOPMENT_ENVIRONMENT = true;
 
