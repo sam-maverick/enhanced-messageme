@@ -98,7 +98,9 @@ export const IOS_SUPPORTED_VERSIONS = '>=14.8.1 || >=15.8.1 || >=16.7.5 || >=17.
 /**
  * https://developer.apple.com/documentation/devicecheck/validating_apps_that_connect_to_your_server
  * This parameter is used to tell the server whether the received iOS attestation is expected to be for DEV or
- * for PROD environment. Apple keeps a separate database for each environment.
+ * for PROD environment. Apple keeps a separate database for each environment. It is advised to use DEV for testing
+ * and experimentation purposes, since a high volume of attestations in PROD can lead to false positives in the security
+ * checks performed by other apps, since there are global counters.
  * 
  * Building the app as Debug or Release seems to be what determines the environment that the app will select for
  * generating the keys in the attestation phase. A mismatch between this parameter and the build type will result
