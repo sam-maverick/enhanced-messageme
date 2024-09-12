@@ -28,6 +28,7 @@ const withAndroidManifestHttpConfigurations = config => {
       );    
     } catch (err) {
       console.warn('Error when copying network_security_config.xml: '+err.message);
+      process.exit(1);
     }
 
     try {
@@ -44,6 +45,7 @@ const withAndroidManifestHttpConfigurations = config => {
       );    
     } catch (err) {
       console.warn('Error when copying ca_cert.cer: '+err.message);
+      process.exit(1);
     }
 
     return config;

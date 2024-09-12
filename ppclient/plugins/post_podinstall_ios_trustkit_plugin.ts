@@ -42,6 +42,8 @@ pod \'TrustKit\''
 
   // Modifications to the TrustKit
 
+  //https://forums.developer.apple.com/forums/thread/50441
+
   /**
    * WARNING: This modification makes SSL insecure by not verifying against the system trust store
    * It remains a question whether it checks the validity of the chained signatures - to be tested/checked!!
@@ -124,7 +126,10 @@ pod \'TrustKit\''
 '
     );
 
-    //https://forums.developer.apple.com/forums/thread/50441
+    if ( ! TKfileModifiedContents.includes('                       TSKLog(@"Error: Found unacceptable SSL validation issue in trust result details: Key: %@, Value: %@", TRDkey, [trustResultDetailsDic objectForKey: TRDkey]);')) {
+      console.error('Error with patching TrustKit. We expected the patch to be applied or to be already present. Did you recently upgrade TrustKit? Maybe the original code has changed. You\'ll need to adapt the patch');
+      process.exit(1);
+    }
 
     fs.writeFileSync('ios/Pods/TrustKit/TrustKit/Pinning/ssl_pin_verifier.m', TKfileModifiedContents, {encoding: 'utf8'});
 

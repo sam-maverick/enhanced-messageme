@@ -21,6 +21,11 @@ const withInfoPlistXcodeDevelopmentTeam = (config, id) => {
 				ENABLE_BITCODE = '
       );
   
+      if ( ! PodfileModifiedContents.includes('DEVELOPMENT_TEAM = ')) {
+        console.error('Error: We expected the patch to be applied or to be already present.');
+        process.exit(1);
+      }
+  
       fs.writeFileSync('ios/ppclient.xcodeproj/project.pbxproj', PodfileModifiedContents, {encoding: 'utf8'});
   
       //console.warn('PodfileModifiedContents:');

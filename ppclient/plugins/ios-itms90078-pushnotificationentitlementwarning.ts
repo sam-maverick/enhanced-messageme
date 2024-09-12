@@ -30,6 +30,11 @@ const withInfoPlistPushNotificationEntitlement = (config, id) => {
 '
     );
 
+    if ( ! AppDelegateModifiedContents.includes('//  return [super application:application didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];')) {
+      console.warn('We expected the patch to be applied or to be already present (1).');
+      process.exit(1);
+    }
+
     AppDelegateModifiedContents = AppDelegateModifiedContents.replace('- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error\n\
 {\n\
   return [super application:application didFailToRegisterForRemoteNotificationsWithError:error];\n\
@@ -41,6 +46,11 @@ const withInfoPlistPushNotificationEntitlement = (config, id) => {
 //}\n\
 '
     );
+
+    if ( ! AppDelegateModifiedContents.includes('//  return [super application:application didFailToRegisterForRemoteNotificationsWithError:error];')) {
+      console.warn('We expected the patch to be applied or to be already present (2).');
+      process.exit(1);
+    }
 
     AppDelegateModifiedContents = AppDelegateModifiedContents.replace('- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler\n\
 {\n\
@@ -54,7 +64,11 @@ const withInfoPlistPushNotificationEntitlement = (config, id) => {
 '
     );
 
-
+    if ( ! AppDelegateModifiedContents.includes('//  return [super application:application didReceiveRemoteNotification:userInfo fetchCompletionHandler:completionHandler];')) {
+      console.warn('We expected the patch to be applied or to be already present (3).');
+      process.exit(1);
+    }
+    
     fs.writeFileSync('ios/ppclient/AppDelegate.mm', AppDelegateModifiedContents, {encoding: 'utf8'});
   
     //console.warn('AppDelegateModifiedContents:');

@@ -46,6 +46,11 @@ const withInfoPlistDevelopmentTeam = (config, id) => {
     end\n'
       );
   
+      if ( ! PodfileModifiedContents.includes('config.build_settings["DEVELOPMENT_TEAM"] = ')) {
+        console.error('Error: We expected the patch to be applied or to be already present.');
+        process.exit(1);
+      }
+
       fs.writeFileSync('ios/Podfile', PodfileModifiedContents, {encoding: 'utf8'});
   
       //console.warn('PodfileModifiedContents:');

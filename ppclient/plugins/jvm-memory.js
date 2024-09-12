@@ -1,5 +1,7 @@
 const { createRunOncePlugin, withNothing } = require('@expo/config-plugins');
 
+
+// ToDo: Migrate this plugin to a createRunOncePlugin,withAndroidManifest plugin
  
 const withJvmMemory = config => {
   // Do not use console.log, as gradle takes it as the return config value

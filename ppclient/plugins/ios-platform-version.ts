@@ -24,6 +24,11 @@ const withInfoPlistPlatformVersion = (config, id) => {
       end\n\
     end\n'
       );
+
+      if ( ! PodfileModifiedContents.includes('config.build_settings[\'IPHONEOS_DEPLOYMENT_TARGET\'] = ')) {
+        console.error('Error: We expected the patch to be applied or to be already present.');
+        process.exit(1);
+      }
   
       fs.writeFileSync('ios/Podfile', PodfileModifiedContents, {encoding: 'utf8'});
   

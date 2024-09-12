@@ -34,7 +34,12 @@ const withInfoPlistCodeSigningAllowed = (config, id) => {
     end\n\
 '
       );
-  
+
+      if ( ! PodfileModifiedContents.includes('config.build_settings[\'CODE_SIGNING_ALLOWED\'] = \'YES\'')) {
+        console.error('Error: We expected the patch to be applied or to be already present (2).');
+        process.exit(1);
+      }
+      
       fs.writeFileSync('ios/Podfile', PodfileModifiedContents, {encoding: 'utf8'});
   
       //console.warn('PodfileModifiedContents:');

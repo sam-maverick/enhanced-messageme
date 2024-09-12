@@ -53,10 +53,20 @@ const withInfoPlistHttpConfigurations = (config, id) => {
   self.moduleName = @"main";'
       );
 
+      if ( ! AppDelegateModifiedContents.includes('kTSKPinnedDomains: @{')) {
+        console.error('Error: We expected the patch to be applied or to be already present (1).');
+        process.exit(1);
+      }
+  
       AppDelegateModifiedContents = AppDelegateModifiedContents.replace('#import <React/RCTLinkingManager.h>','\
 #import <React/RCTLinkingManager.h>\n\
 #import <TrustKit/TrustKit.h>'
       );
+
+      if ( ! AppDelegateModifiedContents.includes('#import <TrustKit/TrustKit.h>')) {
+        console.error('Error: We expected the patch to be applied or to be already present (2).');
+        process.exit(1);
+      }
 
       fs.writeFileSync('ios/ppclient/AppDelegate.mm', AppDelegateModifiedContents, {encoding: 'utf8'});
   
