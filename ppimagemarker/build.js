@@ -170,8 +170,20 @@ if (artifactname === 'ppclient') {
 
 echo('Running the build!');
 if (process.argv[2] === 'ipa') {
+  //https://stackoverflow.com/questions/32251123/missing-push-notification-entitlement
+  echo();
+  echo('=========================================================================================');
+  echo('The iOS EAS build triggers an ITMS-90078 warning. You will receive an email after ');
+  echo('submission to the App Store. This is only a warning and will not prevent deploying your ');
+  echo('app as normal. Our ios-itms90078-pushnotificationentitlementwarning.ts plugin does not ');
+  echo('seem to prevent this; there are likely several libraries involved.');
+  echo('Check: https://stackoverflow.com/questions/32251123/missing-push-notification-entitlement');
+  echo('=========================================================================================');
+  echo();  
+
   //https://github.com/facebook/react-native/issues/31507
   // Use Release in eas.json when distributing via App Store
+
   myExec('eas build -p ios --non-interactive --profile previewrelease --local');
   env.RESULT = error();
   if (env.RESULT.toString() !== 'null') {

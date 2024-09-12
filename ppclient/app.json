@@ -60,7 +60,7 @@
     "name": "ppclient",
     "slug": "ppclient",
     "scheme": "pripro-gen",
-    "version": "2.11.530",
+    "version": "2.11.532",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -92,7 +92,7 @@
         "NSLocalNetworkUsageDescription": "This app may access the local network in Development environments",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "72"
+      "buildNumber": "74"
     },
     "android": {
       "adaptiveIcon": {

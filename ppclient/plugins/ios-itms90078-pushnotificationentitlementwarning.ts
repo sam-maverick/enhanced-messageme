@@ -10,6 +10,22 @@ const withInfoPlistPushNotificationEntitlement = (config, id) => {
     const fs = require('fs');
     
 
+    // Deactivated because the ITMS90078 warning is triggered anyway.
+    // Likely, there are other libraries that trigger this warning
+
+    // From https://stackoverflow.com/questions/32251123/missing-push-notification-entitlement
+    /**
+     * The app validator checks for an implementation of the UIApplicationDelegate method 
+     * application:didRegisterForRemoteNotificationsWithDeviceToken: in the app. 
+     * You'll get the warning you described if your app delegate implements that method
+     * and there is no aps-environment entitlement.
+     * It's possible that a third-party library you're using has implemented that method even 
+     * though your app doesn't do anything with push notifications. In that case you can just 
+     * ignore the warning. It's there to let developers who do use push notifications know if 
+     * they might have signed their app incorrectly."
+     */
+
+/*
 
 
     // Modifications AppDelegate.mm
@@ -74,7 +90,7 @@ const withInfoPlistPushNotificationEntitlement = (config, id) => {
     //console.warn('AppDelegateModifiedContents:');
     //console.warn(AppDelegateModifiedContents);
   
-
+*/
 
 
     return config;
