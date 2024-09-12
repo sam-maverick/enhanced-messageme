@@ -59,7 +59,7 @@
     "name": "ppimagemarker",
     "slug": "ppimagemarker",
     "scheme": "ppimagemarker",
-    "version": "2.12.76",
+    "version": "2.12.79",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -80,7 +80,7 @@
         "NSAllowsLocalNetworking": false,
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "24"
+      "buildNumber": "26"
     },
     "android": {
       "adaptiveIcon": {
