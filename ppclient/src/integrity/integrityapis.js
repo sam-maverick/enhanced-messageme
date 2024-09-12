@@ -56,9 +56,9 @@ export async function iosAppAttestRequest(keyID, challenge) {
  * Integrity.generateAssertion returns an assertion token in Base64 format
  */
 export async function iosAppAssertRequest(keyID, challenge) {
-  const attnobj = await Integrity.generateAssertion(keyID, challenge);
+  const assnobj = await Integrity.generateAssertion(keyID, challenge);
   LogMe(2, "iosAppAssertRequest / attnobj: "+attnobj);
-  return attnobj;
+  return assnobj;
 }
 
 

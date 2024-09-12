@@ -259,7 +259,8 @@ if (process.argv[2] === 'managed-ios-expo') {
       exit(1);
     }
   } else {
-    myExec('npm run ios -c');
+    myExec('npx expo run:ios --port 8081');
+    //myExec('npm run ios -c');
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
       echo('Aborting on ' + env.RESULT + ', command failed:');
@@ -336,7 +337,7 @@ if (process.argv[2] === 'managed-ios-xcode') {
       exit(1);
     }
   } else {
-    myExec(`react-native run-ios`);
+    myExec(`react-native run-ios --port 8081`);
     env.RESULT = error();
     if (env.RESULT.toString() !== 'null') {
       echo('Aborting on ' + env.RESULT + ', command failed:');

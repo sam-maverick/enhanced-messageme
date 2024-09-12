@@ -96,19 +96,26 @@ export const IOS_TEAM_ID = 'L549K3FQ5X';  // Does not change when creating new a
 export const IOS_SUPPORTED_VERSIONS = '>=14.8.1 || >=15.8.1 || >=16.7.5 || >=17.3.1 || >=18.x';
 
 /**
+ * This parameter only affects iOS.
  * https://developer.apple.com/documentation/devicecheck/validating_apps_that_connect_to_your_server
  * This parameter is used to tell the server whether the received iOS attestation is expected to be for DEV or
- * for PROD environment. Apple keeps a separate database for each environment. It is advised to use DEV for testing
- * and experimentation purposes, since a high volume of attestations in PROD can lead to false positives in the security
- * checks performed by other apps, since there are global counters.
+ * for PROD environment. Apple keeps a separate database for each environment.
  * 
- * Building the app as Debug or Release seems to be what determines the environment that the app will select for
- * generating the keys in the attestation phase. A mismatch between this parameter and the build type will result
- * in a fail_aaguid_mismatch error in the attestation phase.
+ * This must match the environment in which the phone operates. If the app is deployed vuia Xcode, then it is a 
+ * Development environment; Production otherwise. NOTE:
+ * https://developer.apple.com/documentation/devicecheck/preparing-to-use-the-app-attest-service
+ * If instead you want to use the App Attest production servers during development, add the App Attest Environment  
+ * [https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_devicecheck_appattest-environment] 
+ * entitlement to your app’s entitlements file, and set the associated value to production. Regardless of how you 
+ * set the entitlement, your app always operates in production mode after distribution, whether through TestFlight, 
+ * the App Store, or the Apple Developer Enterprise Program.
  * 
- * Deploying via Xcode or via App Store does not seem to impact this parameter.
+ * If this parameter does not match the environment of the phone, the ppclient will get a fail_aaguid_mismatch error
+ * during enrollment when attesting its generated key.
+ * 
+ * Deploying as Debug or as Release, does not seem to impact this parameter.
  */
-export const IOS_IS_DEVELOPMENT_ENVIRONMENT = true;
+export const IOS_IS_DEVELOPMENT_ENVIRONMENT = false;
 
 /**
  * Maximum time between token generation, and token validation
