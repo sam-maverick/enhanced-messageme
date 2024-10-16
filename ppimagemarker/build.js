@@ -127,20 +127,28 @@ require('./increment_version_app_json.js')(process.argv[3]);
 //fi
 
 
-echo('Deleting android folder');
-rm('-rf', './android/');
-echo('Deleting ios folder');
-rm('-rf', './ios/');
-
-
 echo('Prebuild');
 echo('This will create android/ios dirs if they do not exist, will execute plugins, and will install CocoaPods for iOS if you are on Mac');
-myExec('npx expo prebuild');
-env.RESULT = error();
-if (env.RESULT.toString() !== 'null') {
-  echo('Aborting on ' + env.RESULT + ', command failed:');
-  echo('npx expo prebuild ...');
-  exit(1);
+if (process.argv[2] === 'apk' || process.argv[2] === 'aab' || process.argv[2] === 'managed-android') {
+  echo('Deleting android folder');
+  rm('-rf', './android/');
+  myExec('npx expo prebuild --platform android');
+  env.RESULT = error();
+  if (env.RESULT.toString() !== 'null') {
+    echo('Aborting on ' + env.RESULT + ', command failed:');
+    echo('npx expo prebuild android ...');
+    exit(1);
+  }
+} else {
+  echo('Deleting ios folder');
+  rm('-rf', './ios/');
+  myExec('npx expo prebuild --platform ios');
+  env.RESULT = error();
+  if (env.RESULT.toString() !== 'null') {
+    echo('Aborting on ' + env.RESULT + ', command failed:');
+    echo('npx expo prebuild ios ...');
+    exit(1);
+  }
 }
 
 //echo "Applying patches of patch-package"

@@ -539,6 +539,15 @@ export async function ShowPicture(imageUri) {
         fileContentsOriginal = await FileSystem.readAsStringAsync(imageUri, {encoding: 'base64'});
         UpdUtils.LogSys(LIBN, 0, 'File loaded');
         UpdUtils.LogSys(LIBN, 0, 'Checking file type');
+
+        // If it is in JPEG format, then it is definitely not a private picture
+
+        if (fileContentsOriginal.length<4)  { throw new Error('Tiny file; it can\'t hold a picture'); }
+        const magicjpegB64 = fileContentsOriginal.substring(0, 4);
+        if (magicjpegB64 === '/9j/')  { throw new Error('It is a JPEG file; therefore it can\'t be a wrapped private picture'); }
+
+        // Assuming it is in PNG, we check here that it has the chunk metadata expected for a wrapped private picture        
+        
         let s = UpdUtils.EncodeFromB64ToBinary(fileContentsOriginal);
 
         UpdUtils.LogSys(LIBN, 1, 'Parsing PNG metadata');
