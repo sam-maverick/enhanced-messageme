@@ -1,13 +1,14 @@
-Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware dubbed PP platform for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features (such as the disappearing images or the time-expiring messages).
+Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features (such as the disappearing images).
 
 This project is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/) (CC BY 4.0, Joel Samper and Bernardo Ferreira), which is a no-frills playground messaging app that we take as our base onto which we deploy the middleware. Both projects are for testing and academic purposes.
 
 You can deploy the Enhanced Messageme project on a single computer. It is composed of:
 
-- emclient: This is a messaging app that features the ability to exchange text and pictures over private chats among users.  For the client, you can use either emulators or physical devices. NOTE: If you want to run phone emulators, it is highly recommended to deploy this project on a bare metal machine, not a virtual machine.
-- emserver: The server of the messaging platform
-- ppclient: A middleware that handles private pictures exchanged through the messaging app, and that uses remote attestation API to verify software integrity and to enforce privacy policies.
-- ppserver: The server of the PP platform
+- emclient: The modified Messageme app, compliant with the PrivatePictureAPI. This API is essentially what you will find under the `os_update` folder, and it is in charge of bridging the messaging app with the ppclient app via two methods: PickPicture and ShowPicture. More practically, emclient is a messaging app that features the ability to exchange text and pictures over private chats among users.  For the client, you can use either emulators or physical devices. NOTE: If you want to run phone emulators, it is highly recommended to deploy this project on a bare metal machine, not a virtual machine.
+- emserver: The server of the messaging platform.
+- ppclient: The app client of the PA (Privacy Agent) platform. It is a middleware that handles private pictures exchanged through the messaging app, and that uses remote attestation API to verify software integrity and to enforce privacy policies.
+- ppserver: The server of the PA platform.
+- ppimagemarker: This is the ImageMarker utility, which adds a special EXIF metadata to selected pictures of the phone gallery, for the user to indicate which pictures are 'private pictures', i.e., they must be protected. This app also allows to assign privacy policies to each picture: View Once, Expiration Date, and Keep-Open Timer.
 
 The client apps have been developed with [Expo Go](https://expo.dev/go) and [React Native](https://reactnative.dev/), so that you can run them on Android and iOS devices. The servers have been developed with [NestJS](https://nestjs.com/) and use a [MongoDB](https://www.mongodb.com) self-hosted database in the backend.
 
