@@ -393,7 +393,7 @@ Because the CA certificate is embedded within ppclient's app assets, there is no
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
-From the `ppclient` directory, run:
+From the `ppserver` directory, run:
 
 ```
 node ./genkeys-wrapping.js
