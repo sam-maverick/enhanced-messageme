@@ -26,18 +26,18 @@ Edit the configuration files according to your needs and your environment:
 
 `ppserver/src/parameters.ts`
 
-`ppserver/.env`
-
 `ppimagemarker/src/parameters.js`
+
+Edit `ppserver/example1.env` and rename it as `ppserver/.env`
 
 Edit `ppclient/plugins/ios-xcode-development-team.js` and `ppclient/plugins/ios-podfile-development-team.js` and replace `DEVELOPMENT_TEAM = XXX` with the appropriate value (the certificate of this team will be used to sign the app code). This is for iOS build. You can check your Team ID [here](https://developer.apple.com/account#MembershipDetailsCard).
 
 
 Choose a nickname for your server by editing the PP_PLATFORM_NICKNAME parameter in `ppclient/src/parameters.js`. Then choose a domain name suffix with the PP_PLATFORM_DNS_SUFFIX parameter. You must choose a suffix that has a standard TLD (e.g., you can't use things like server.localnet); otherwise the certificate pinning for iOS will not work with TrustKit. Then, your ppserver domain name will automatically be constructed on the basis of that (e.g. ppserver-gen.localnetwork.org), as you can see in PARAM_SERVER_HOSTNAME.
 
-- ANDROID:
+- ANDROID target:
   Edit `ppclient/plugins/android-manifest-https-traffic__files/network_security_config.xml` and replace localnetwork.org by the base domain whose connections you want to be protected by certificate pinning (that domain and all subdomains will be protected). You will also see an entry for localhost but that entry is necessary for the Metro communication; and it is also necessary to allow HTTP connections for the same reason. You can eliminate that entry and disable HTTP if you do not plan on using managed builds.
-- iOS:
+- iOS target:
   Likewise, edit the PARAM_SERVER_PINNED_DOMAIN parameter in `ppclient/plugins/ios-https-traffic.ts` and replace localnetwork.org with the same value. Analogous to Android, NSAllowsArbitraryLoads is set to true in `ppclient/app.json` to allow for the Metro communication, which is in plain HTTP.
 
 Edit `ppserver/openssl-srv.conf` and set the commonName, commonName_default, and subjectAltName parameters accordingly.

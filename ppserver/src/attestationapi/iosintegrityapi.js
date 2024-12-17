@@ -4,6 +4,19 @@ import { PARAM_LOGGING_LEVEL, IOS_BUNDLE_ID, IOS_TEAM_ID, IOS_IS_DEVELOPMENT_ENV
 import { verifyAttestation, verifyAssertion } from 'appattest-checker-node';
 
 
+/**
+ * 
+ * IMPORTANT INFORMATION for developers regarding iOS attestations:
+ * 
+ * In iOS, attestation should be "typically performed once per user and device". Remember that in iOS
+ * terminology, 'attestation' refers to the onboarding of users, while 'assertion' refers to performing 
+ * a remote attestation operation. This differs from Android's terminology, where 'attestation' refers 
+ * to performing a remote attestation operation, and there is no onboarding (although Standard requests
+ * require to perform a warmup before).
+ * Check: https://developer.apple.com/documentation/devicecheck/preparing_to_use_the_app_attest_service
+ * 
+ */
+
 
 
 /**
