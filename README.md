@@ -370,7 +370,7 @@ OPTIONAL: Convert to PKCS. It will ask us to provide a PSK to protect the privat
 #openssl pkcs12 -export -in ./secrets/https/srv/srv_pem_pubpri.pem -out ./secrets/https/srv/srv_pkcs_pubpri.pem
 ```
 
-This is it for the server. If you observer src/main.ts you will see that our NestJS server will read the certificate files we just generated.
+This is it for the server. If you observe src/main.ts you will see that our NestJS server will read the certificate files we just generated.
 
 **Certificate pinning for TLS**
 
