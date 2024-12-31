@@ -138,6 +138,7 @@ Follow the steps to [install Expo](https://docs.expo.dev/get-started/installatio
 For the **Node.js** installation, we used the [installation script](https://github.com/nodesource/distributions#ubuntu-versions):
 
 ```
+sudo apt-get install curl
 curl -fsSL https://deb.nodesource.com/setup_21.x | sudo -E bash - &&\
 sudo apt-get install -y nodejs
 ```
@@ -170,7 +171,7 @@ We can then clone this repo:
 git clone https://github.com/sam-maverick/enhanced-messageme
 ```
 
-For **watchman**, first install curl with
+For **watchman**, if not yet installed, first install curl with
 
 ```
 sudo apt-get install curl 
