@@ -280,7 +280,7 @@ npm install
 This section is to configure the digital certificates and other cryptographic material for the ppclient app.
 
 **Create directory structure**
-
+From the ppserver directory:
 ```
 mkdir secrets 2> /dev/null
 mkdir secrets/https 2> /dev/null
