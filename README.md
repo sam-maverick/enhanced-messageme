@@ -281,7 +281,7 @@ This section is to configure the digital certificates and other cryptographic ma
 
 **Create directory structure**
 
-From the ppserver directory:
+From the `ppserver` directory:
 ```
 mkdir secrets 2> /dev/null
 mkdir secrets/https 2> /dev/null
@@ -291,7 +291,7 @@ mkdir secrets/https/srv 2> /dev/null
 
 **CA deployment for TLS**
 
-We will be using a private CA. If you ever generate a new key but reuse an ancient CN for the CA, then do not create a new serial. You must reuse the old serial because otherwise Firefox complains about reusing serial numbers (it considers two CA's with the same CN to be the same CA). From the ppserver directory,
+We will be using a private CA. If you ever generate a new key but reuse an ancient CN for the CA, then do not create a new serial. You must reuse the old serial because otherwise Firefox complains about reusing serial numbers (it considers two CA's with the same CN to be the same CA). From the `ppserver` directory,
 
 ```
 echo "01" > ./secrets/https/ca/crlnumber
@@ -331,10 +331,10 @@ OPTIONAL: We convert from B64 to binary DER (e.g., Firefox doesn't like B64):
 
 **Server's digital certificate deployment for TLS**
 
-Generate private key using ECC
+Generate private key using ECC. From the `ppserver` directory:
 
 ```
-mkdir secrets/https/srv
+mkdir secrets/https/srv 2> /dev/null
 openssl ecparam -genkey -name prime256v1 -out ./secrets/https/srv/srv_priv.key
 ```
 
@@ -375,7 +375,7 @@ This is it for the server. If you observe src/main.ts you will see that our Nest
 
 **Certificate pinning for TLS**
 
-For Android certificate pinning, execute this command from the `ppclient` directory
+For Android certificate pinning, execute this command from the `ppclient` directory:
 
 ```
 cp ../ppserver/secrets/https/ca/ca_cert.cer ./assets/custom/ca_cert.cer
@@ -394,7 +394,7 @@ Because the CA certificate is embedded within ppclient's app assets, there is no
 
 **Configuring the key-pair for wrapping and unwrapping of the private pictures within the PP platform**
 
-From the `ppserver` directory, run:
+From the `ppserver` directory:
 
 ```
 node ./genkeys-wrapping.js
