@@ -4,7 +4,7 @@ This project is based on a fork of [Messageme](https://github.com/sam-maverick/m
 
 You can deploy the Enhanced Messageme project on a single computer. It is composed of:
 
-- emclient: The modified Messageme app, compliant with the PrivatePictureAPI. This API is essentially what you will find under the `os_update` folder, and it is in charge of bridging the messaging app with the ppclient app via two methods: PickPicture and ShowPicture. More practically, emclient is a messaging app that features the ability to exchange text and pictures over private chats among users.  For the client, you can use either emulators or physical devices. NOTE: If you want to run phone emulators, it is highly recommended to deploy this project on a bare metal machine, not a virtual machine.
+- emclient: The modified Messageme app, compliant with the PrivatePictureAPI. This API is essentially what you will find under the `os_update` folder, and it is in charge of bridging the messaging app with the ppclient app via two methods: PickPicture and ShowPicture. More practically, emclient is a messaging app that features the ability to exchange text and pictures over private chats among users.  For the client, you can use either emulators or physical devices. NOTE: If you want to run phone emulators, it is highly recommended to deploy this project on a bare metal machine, not a virtual machine. 
 - emserver: The server of the messaging platform.
 - ppclient: The app client of the PA (Privacy Agent) platform. It is a middleware that handles private pictures exchanged through the messaging app, and that uses remote attestation API to verify software integrity and to enforce privacy policies.
 - ppserver: The server of the PA platform.
