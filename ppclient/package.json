@@ -1,6 +1,6 @@
 {
   "name": "ppclient",
-  "version": "2.11.296",
+  "version": "2.11.298",
   "main": "./src/App.js",
   "scripts": {
     "postinstall": "node ./post-install.js",
@@ -23,7 +23,7 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "@types/react": "~18.2.46",
-    "app-integrity-android-standard": "^1.49.0",
+    "app-integrity-android-standard": "^1.50.0",
     "async-mutex": "^0.5.0",
     "base-64": "^1.0.0",
     "cipher-base": "^1.0.4",

@@ -1,18 +1,18 @@
 Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features (such as the disappearing images).
 
-This project is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/) (CC BY 4.0, Joel Samper and Bernardo Ferreira), which is a no-frills playground messaging app that we take as our base onto which we deploy the middleware. Both projects are for testing and academic purposes.
+This project is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/) (CC BY 4.0, Joel Samper and Bernardo Ferreira). Messageme is a no-frills playground messaging app that we take as our base onto which we deploy the middleware. Both projects are for testing and academic purposes.
 
-You can deploy the Enhanced Messageme project on a single computer. It is composed of:
+Enhanced Messageme is composed of:
 
-- emclient: The modified Messageme app, compliant with the PrivatePictureAPI. This API is essentially what you will find under the `os_update` folder, and it is in charge of bridging the messaging app with the ppclient app via two methods: PickPicture and ShowPicture. More practically, emclient is a messaging app that features the ability to exchange text and pictures over private chats among users.  For the client, you can use either emulators or physical devices. NOTE: If you want to run phone emulators, it is highly recommended to deploy this project on a bare metal machine, not a virtual machine. 
-- emserver: The server of the messaging platform.
-- ppclient: The app client of the PA (Privacy Agent) platform. It is a middleware that handles private pictures exchanged through the messaging app, and that uses remote attestation API to verify software integrity and to enforce privacy policies.
-- ppserver: The server of the PA platform.
+- emclient: This is the modified Messageme app, compliant with the PrivatePictureAPI. This API is essentially what you will find under the `os_update` folder, and it is in charge of bridging the messaging app with the ppclient app via two methods: PickPicture and ShowPicture. More practically, emclient is a messaging app that features the ability to exchange text and pictures over private chats among users.  For the client, you can use either emulators or physical devices. NOTE: If you want to run phone emulators, it is highly recommended to deploy this project on bare metal, not a virtual machine.
+- emserver: This is the server of the messaging platform.
+- ppclient: This is the client app of the PA (Privacy Agent) platform. It is a middleware that handles private pictures exchanged through the messaging app, and that uses remote attestation API to verify software integrity and to enforce privacy policies.
+- ppserver: This is the server of the PA platform.
 - ppimagemarker: This is the ImageMarker utility, which adds a special EXIF metadata to selected pictures of the phone gallery, for the user to indicate which pictures are 'private pictures', i.e., they must be protected. This app also allows to assign privacy policies to each picture: View Once, Expiration Date, and Keep-Open Timer.
 
-The client apps have been developed with [Expo Go](https://expo.dev/go) and [React Native](https://reactnative.dev/), so that you can run them on Android and iOS devices. The servers have been developed with [NestJS](https://nestjs.com/) and use a [MongoDB](https://www.mongodb.com) self-hosted database in the backend.
+You can deploy this project on a single computer. The client apps have been developed with [Expo Go](https://expo.dev/go) and [React Native](https://reactnative.dev/), so that you can run them on Android and iOS devices. The servers have been developed with [NestJS](https://nestjs.com/) and use a [MongoDB](https://www.mongodb.com) self-hosted database in the backend.
 
-We have tested most things on a fresh install of Kali Linux, but you should be able to deploy it on any platform if you follow the provided reference links and if you make small adaptations. On Kali, we experienced hangs during the EAS build, so you may want to try Ubuntu instead for better stability. For building iOS apps, you will need a Mac computer. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
+We have tested most things on Ubuntu 24.04. For building iOS apps, you will need a Mac computer. The steps we suggest are meant for an isolated lab environment, meaning that it's on your responsibility to check their impact on your particular computing and networking environment.
 
 # 1. Editing configuration files
 
@@ -49,7 +49,18 @@ You must also change the name, slug, package and bundleIdentifier of `ppclient/a
 
 If you do not intend to use physical devices, then skip to next section.
 
-You first set up your computer to act as a WiFi Access Point for the phones to connect to. In our lab, the computer is connected to the Internet via an Ethernet cable (interface eth0). We used [create_ap](https://github.com/oblique/create_ap/) in NAT mode, so that the phones can reach both the computer and the Internet without configuring any routing on the computer. Note that create_ap is not maintained any more but the other tools we tried did not work in our system. Below is our template for `/etc/create_ap.conf`, which creates a hidden WiFi.
+You first set up your computer to act as a WiFi Access Point for the phones to connect to. In our lab, the computer is connected to the Internet via an Ethernet cable. We used [create_ap](https://github.com/oblique/create_ap/) in NAT mode, so that the phones can reach both the computer and the Internet without configuring any routing on the computer. Install ifconfig (`sudo apt install ifconfig`) and use the command `ifconfig` to get the interface names.
+
+The installation commands are:
+
+```
+apt install hostapd
+git clone https://github.com/oblique/create_ap
+cd create_ap
+make install
+```
+
+Below is our `/etc/create_ap.conf`, which creates a hidden WiFi access point. 
 
 ```
 CHANNEL=default
@@ -58,7 +69,7 @@ WPA_VERSION=2
 
 ETC_HOSTS=0
 NO_DNS=1
-NO_DNSMASQ=1
+NO_DNSMASQ=0
 
 HIDDEN=1
 MAC_FILTER=0
@@ -79,9 +90,7 @@ PASSPHRASE=changeme
 
 *NOTE: From our experience, by looking at the [Wireshark](https://www.wireshark.org/) traces, create_ap intercepts DNS requests and uses /etc/resolv.conf to forward those requests to external DNS servers. This is not shown in netstat; we suppose that create_ap intercepts the traffic to the virtual interface at the low level. This is also undocumented. To avoid this behavior, use the suggested ETC_HOSTS, NO_DNS and NO_DNSMASQ parameters. With those parameters configured as we suggest, DNS requests are captured by the dnsmasq service.* 
 
-Note that the virtual interface ap0 is created, which links to the wlan0 physical interface. Assign an IP address to ap0, within a new subnet (we used 192.168.12.1/24 in our environment).
-
-To start the Access Point, run:
+To start the access point, run:
 
 ```
 systemctl start create_ap
@@ -93,12 +102,47 @@ To make the service start automatically when you boot up your computer, run:
 systemctl enable create_ap
 ```
 
-Next, configure your computer to act as a DHCP and DNS server, for it to serve addresses within ap0's subnet. We used [dnsmasq](https://wiki.archlinux.org/title/dnsmasq). These are the main configuration options of our `/etc/dnsmasq.conf`:
+Note that, in some systems, a virtual interface like 'ap0' is created, which links to the wlan0 physical interface; whereas in other systems the access point is mapped directly to the physical interface (e.g., 'wlp0s20f3'). Using your access point interface name (ap0, wlp0s20f3, or whatever you have), assign it an IP address:
+
+```
+ifconfig ap0 192.168.12.1
+ifconfig ap0 netmask 255.255.255.0
+```
+
+
+
+Next, configure your computer to act as a DHCP and DNS server, for it to serve addresses within ap0's subnet. We use [dnsmasq](https://wiki.archlinux.org/title/dnsmasq).
+
+First, make sure that your `/etc/resolv.conf` only contains a loopback address as for nameserver (i.e., no external DNS servers).
+
+These are the installation commands:
+
+```
+systemctl start systemd-resolved.service
+systemctl enable systemd-resolved.service
+sudo apt install dnsmasq
+```
+
+These are the main configuration options of our `/etc/dnsmasq.conf`:
 
 ```
 dhcp-range=192.168.12.100,192.168.12.199,255.255.255.0,12h
 bind-interfaces
+# It is very important that you specify the interface to listen to,
+# so that you avoid network issues on your other interfaces (e.g.,#
+# if your eth0 interface is connected to your campus network, you
+# will not want to serve IP addresses from your DHCP there)
 interface=ap0
+# Add as many server entries as DNS resolvers you may want to use
+# You may use your corporate DNS servers if you want
+server=8.8.8.8
+### Leave the rest of the options unchanged!
+```
+
+Then,
+
+```
+systemctl restart NetworkManager.service
 ```
 
 Add the entry below to your `/etc/hosts`. NOTE: For the certificate pinning to work in iOS, you'll need to use a standard TLD, as per TrustKit restrictions.
@@ -111,11 +155,15 @@ Add the entry below to your `/etc/hosts`. NOTE: For the certificate pinning to w
 
 Note that "gen" must correspond to the `PP_PLATFORM_NICKNAME` parameter in `ppclient/src/parameters.js`
 
+*NOTE: From our experience, by looking at the [Wireshark](https://www.wireshark.org/) traces, create_ap bridges the DHCP Discover request frames received from ap0 to our eth0. If you have a DHCP server in your Ethernet network, it will offer IP addresses to the phones within the subnet range of your Ethernet. In other words, your phone will receive two DHCP Offer messages: One from the DHCP server of your computer, and one from the DHCP of your Ethernet network. Because your computer will probably reply faster, this issue will likely come unnoticed. If you run into network issues, you may want to use static IP addresses instead, or to otherwise filter the DHCP frames.*
+
 To start the DHCP server, run:
 
 ```
 systemctl start dnsmasq
 ```
+
+**IMPORTANT**: You need to run `systemctl restart dnsmasq` whenever you make changes to `/etc/hosts` and want to apply the changes.
 
 Note that dnsmasq must start after create_ap since its configuration references a network interface created after create_ap is started. To make the service start automatically when you boot up your computer, run:
 
@@ -123,13 +171,11 @@ Note that dnsmasq must start after create_ap since its configuration references 
 systemctl enable dnsmasq
 ```
 
-**IMPORTANT**: You need to run `systemctl restart dnsmasq` whenever you make changes to `/etc/hosts` and want to apply the changes.
 
-*NOTE: From our experience, by looking at the [Wireshark](https://www.wireshark.org/) traces, create_ap bridges the DHCP Discover request frames received from ap0 to our eth0. If you have a DHCP server in your Ethernet network, it will offer IP addresses to the phones within the subnet range of your Ethernet. In other words, your phone will receive two DHCP Offer messages: One from the DHCP server of your computer, and one from the DHCP of your Ethernet network. Because your computer will probably reply faster, this issue will likely come unnoticed. If you run into network issues, you may want to use static IP addresses instead, or to otherwise filter the DHCP frames.*
 
 You should now be able to connect via WiFi from your phone. Once connected, check that you have Internet access and that you can ping the computer (there are many free apps to do so).
 
-Also, throughout this guide, remember to open any necessary ports of the firewall of your computer's OS, if applicable.
+Also, throughout this guide, remember to open any necessary ports of the firewall of your computer's OS, if necessary.
 
 # 3. Installing the development environment
 
@@ -163,8 +209,6 @@ Check:
 git --version
 ```
 
-In our environment, we have `git version 2.34.1`
-
 We can then clone this repo:
 
 ```
@@ -183,15 +227,13 @@ Then install [brew](https://brew.sh/) with
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-<u>REMINDER</u>: Don't forget to follow the Next Steps that are indicated at the end of the output of the brew installation.
+<u>REMINDER</u>: Don't forget to follow the **Next Steps** that are indicated at the end of the output of the brew installation.
 
 Check:
 
 ```
 brew -v
 ```
-
-In our environment, we have `Homebrew 4.2.4`
 
 Install watchman with
 
@@ -210,7 +252,7 @@ In our environment, we have `version: 2023.12.04.00`
 Install **yarn** with
 
 ```
-npm install --global yarn
+sudo npm install --global yarn
 ```
 
 Check:
@@ -218,8 +260,6 @@ Check:
 ```
 yarn --version
 ```
-
-In our environment, we have version `1.22.21`
 
 You should now be ready to use Expo.
 
@@ -232,11 +272,12 @@ You should now be ready to use Expo.
 First of all, from any folder,
 
 ```
-npm install -g shelljs
-npm install -g react-native-asset
+sudo npm install -g shelljs
+sudo npm install -g react-native-asset
+sudo npm install -g react-native-cli
 ```
 
-Then, you will have to run the command below <u>every time you open a new console</u>. This is to configure some required environment variables that cannot be set from within a Node script file. We provide an equivalent script for Linux, Mac and Windows, although we have not tested the Windows script.
+Then, you will have to run the command below <u>**every time you open a new console**</u>. This is to configure some required environment variables that cannot be set from within a Node script file. We provide an equivalent script for Linux, Mac and Windows, although we have not tested the Windows script.
 
 ```
 . ./setenv.linux.sh
@@ -244,7 +285,7 @@ Then, you will have to run the command below <u>every time you open a new consol
 
 **Installing the modules**
 
-Now we can install the required modules. Notice that some are `yarn` while others are `npm`.
+Now we can install the required modules. Note that some are `yarn` while others are `npm`.
 
 From the `emclient/` folder,
 
@@ -406,7 +447,7 @@ node ./genkeys-wrapping.js
 Download the [Community Server](https://www.mongodb.com/try/download/community) and install it:
 
 ```
-sudo dpkg -i mongodb-org-server_7.0.5_amd64.deb
+sudo dpkg -i mongodb-org-server_x.y.z_amd64.deb
 ```
 
 Check:
@@ -427,12 +468,6 @@ Start the service:
 sudo systemctl start mongod
 ```
 
-Check the service:
-
-```
-sudo systemctl status mongod
-```
-
 Optionally, install the [MongoDB Compass](https://www.mongodb.com/products/tools/compass). It is a GUI for this database.
 
 # 7. Starting the application servers
@@ -440,7 +475,7 @@ Optionally, install the [MongoDB Compass](https://www.mongodb.com/products/tools
 Install NestJS CLI tools, as explained in the [docs](https://docs.nestjs.com/):
 
 ```
-npm i -g @nestjs/cli
+sudo npm i -g @nestjs/cli
 ```
 
 From the **`ppserver/`** folder, start the server:
@@ -453,7 +488,7 @@ You should get a `Nest application successfully started`.
 
 You can load this URL from a local browser on the server, to check that it works:
 
-[http://ppserver-gen-phy.localnetwork.org:3020/test/doNothing](http://ppserver-gen-phy.localnetwork.org:3020/test/doNothing)
+[https://ppserver-gen.localnetwork.org:3020/test/doNothing](https://ppserver-gen.localnetwork.org:3020/test/doNothing)
 
 From the **`emserver/`** folder, start the server:
 
@@ -471,7 +506,7 @@ Building the APK/AAB/IPA files is known as 'bare' or a 'production build', depen
 
 | Android                                                      |
 | ------------------------------------------------------------ |
-| We already have the Node.js, watchman, and Android Studio set up in previous steps. So now we have to install the JDK that we have downloaded from [here](https://wiki.openjdk.org/display/JDKUpdates/JDK+17u). NOTE: It does not work with Java 21.<br /><br />To install the JDK, just unpack it somewhere in your computer and add the path to the bin folder to the PATH environment variable, as we did in previous steps. In our case, the path is `/home/devuser/software/OpenJDK17/OpenJDK17U-jdk_x64_linux_hotspot_17.0.10_7/jdk-17.0.10+7/bin`<br /><br />After having restarted your computer, check:<br />`java --version`<br />In our environment, we have `openjdk 17.0.10 2024-01-16`<br /><br />Now, we have to follow steps 1 & 2 from the Expo Go 'Create your first build' guide, so:<br />Install EAS. Despite not being stated in the official guide, we needed a sudo:<br />`sudo npm install -g eas-cli`<br />Then log in to your EAS account. If you do not have any, just create one at https://expo.dev. Please note that this is the EAS account; not your Android Developer account.<br />`eas login`<br /><br />To prepare your environment for development builds, follow the steps explained in the '<u>Install with adb</u>' section of the [Expo Go 'Build APKs for Android Emulators and devices' guide](https://docs.expo.dev/build-reference/apk/#install-with-adb). |
+| We already have the Node.js, watchman, and Android Studio set up in previous steps. So now we have to install the JDK that we have downloaded from [here](https://wiki.openjdk.org/display/JDKUpdates/JDK+17u). NOTE: It does not work with Java 21.<br /><br />To install the JDK, just unpack it somewhere in your computer and add the path to the bin folder to the PATH environment variable, as we did in previous steps. In our case, the path is `/home/devuser/software/OpenJDK17/OpenJDK17U-jdk_x64_linux_hotspot_17.0.10_7/jdk-17.0.10+7/bin`<br /><br />After having restarted your computer, check:<br />`java --version`<br />In our environment, we have `openjdk 17.0.10 2024-01-16`<br /><br />Now, we have to follow steps 1 & 2 from the Expo Go 'Create your first build' guide, so:<br />Install EAS. Despite not being stated in the official guide, we needed a sudo:<br />`sudo npm install -g eas-cli`<br />Then log in to your EAS account. If you do not have any, just create one at https://expo.dev. Please note that this is the EAS account; not your Android Developer account.<br />`eas login`<br /><br />To prepare your environment for development builds, follow the steps explained in the '<u>Install with adb</u>' section of the [Expo Go 'Build APKs for Android Emulators and devices' guide](https://docs.expo.dev/build-reference/apk/#install-with-adb). When you install Android Studio, remember to add `/something/Android-studio/android-studio-2024.2.2.14-linux/android-studio/bin` to your PATH environment variable, as indicated in `Install-Linux-tar.txt`. Also remeber to add `/home/something/Android/Sdk/platform-tools` to your PATH environment variable after you have enabled the adb tool on Android Studio. Finally, remember to create the ANDROID_HOME environment variable pointing to `/home/something/Android/Sdk/`, as per the Expo Go guide. |
 
 
 
