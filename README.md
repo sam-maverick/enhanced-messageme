@@ -1,6 +1,6 @@
 Welcome! This is **Enhanced Messageme**, a messaging platform for mobile devices with a middleware for secure image sharing. The middleware automatically encrypts and decrypts the pictures shared over the messaging app, and uses remote attestation APIs (Android's Play Integrity and iOS' App Attest) to certify that the recipient does not break the security of ephemeral messaging features (such as the disappearing images).
 
-This code has been developed as part of the research explained in the paper "[Leveraging remote attestation APIs for secure image sharing in messaging apps](https://eprint.iacr.org/2024/2057)". The code is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/). Messageme is a no-frills playground messaging app that we take as our baseline onto which we deploy the middleware. Both projects are for testing and academic purposes.
+This code has been developed as part of the research explained in the paper ***Leveraging Remote Attestation APIs for Secure Image Sharing in Messaging Apps*** ([published version](https://doi.org/10.1109/EDCC66201.2025.00023) | [extended version](https://eprint.iacr.org/2024/2057)). The code is based on a fork of [Messageme](https://github.com/sam-maverick/messageme/). Messageme is a no-frills playground messaging app that we take as our baseline onto which we deploy the middleware. Both projects are for testing and academic purposes.
 
 Enhanced Messageme is composed of:
 
